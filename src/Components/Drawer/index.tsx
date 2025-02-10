@@ -42,7 +42,7 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    navigate('/');
+    navigate('/Top-level_int_2');
   };
   return (
     <>
@@ -92,12 +92,12 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
                 color: "#0c2a85",
                 cursor: "pointer",
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
                 e.currentTarget.style.backgroundColor = "#dbe4f3";
                 e.currentTarget.style.color = "#0c2a85";
 
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
 
                 e.currentTarget.style.backgroundColor = "transparent";
                 e.currentTarget.style.color = "#0c2a85";
@@ -118,12 +118,12 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
                 color: "#0c2a85",
                 cursor: "pointer",
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
                 e.currentTarget.style.backgroundColor = "#dbe4f3";
                 e.currentTarget.style.color = "#0c2a85";
 
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
 
                 e.currentTarget.style.backgroundColor = "transparent";
                 e.currentTarget.style.color = "#0c2a85";

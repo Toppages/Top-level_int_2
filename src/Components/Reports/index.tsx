@@ -1,74 +1,65 @@
-import axios from 'axios';
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Button, Group, Table, Text, Title } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
+
+const LOCAL_REPORTS = [
+  {
+    transactionId: 'TX123',
+    partnerReference: 'REF001',
+    productName: 'Producto A',
+    salesPrice: '50000 COP',
+    status: 'Completado',
+    transactionDate: '2024-02-01',
+    keySentToCustomer: true,
+  },
+  {
+    transactionId: 'TX124',
+    partnerReference: 'REF002',
+    productName: 'Producto B',
+    salesPrice: '75000 COP',
+    status: 'Pendiente',
+    transactionDate: '2024-02-05',
+    keySentToCustomer: false,
+  },
+  {
+    transactionId: 'TX125',
+    partnerReference: 'REF003',
+    productName: 'Producto C',
+    salesPrice: '120000 COP',
+    status: 'Cancelado',
+    transactionDate: '2024-01-15',
+    keySentToCustomer: false,
+  },
+];
 
 function Reports() {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [finishDate, setFinishDate] = useState<Date | null>(null);
-  const [reports, setReports] = useState<any[]>([]);
+  const [filteredReports, setFilteredReports] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const accessToken = localStorage.getItem('accessToken');
-
-  const fetchReports = async () => {
+  const fetchReports = () => {
     if (!startDate || !finishDate) {
       setError('Por favor, selecciona ambas fechas.');
+      setFilteredReports([]);
       return;
     }
 
-    const formattedStartDate = startDate.toISOString().split('T')[0];
-    const formattedFinishDate = finishDate.toISOString().split('T')[0];
-
-    if (new Date(finishDate).getTime() - new Date(startDate).getTime() > 31 * 24 * 60 * 60 * 1000) {
+    if (finishDate.getTime() - startDate.getTime() > 31 * 24 * 60 * 60 * 1000) {
       setError('El rango entre fechas no puede exceder 31 días.');
+      setFilteredReports([]);
       return;
     }
 
-    if (!accessToken) {
-      setError('No se encontró el token de acceso. Por favor, inicia sesión.');
-      return;
-    }
+    setError(null);
+    
+    const filtered = LOCAL_REPORTS.filter((report) => {
+      const reportDate = new Date(report.transactionDate);
+      return reportDate >= startDate && reportDate <= finishDate;
+    });
 
-    try {
-      setError(null);
-      const response = await axios.get(
-        `https://proxy.paginaswebstop.workers.dev/report/${formattedStartDate}/${formattedFinishDate}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      setReports(response.data);
-    } catch (error: any) {
-      console.error('Error fetching reports:', error);
-      setError('Hubo un error al obtener los reportes. Intenta nuevamente.');
-    }
+    setFilteredReports(filtered);
   };
-
-  const reportRows = reports.map((report) => (
-    <tr key={report.transactionId}>
-      <td>{report.transactionId}</td>
-      <td>{report.partnerReference}</td>
-      <td>{report.productName}</td>
-      <td>{report.salesPrice}</td>
-      <td>{report.status}</td>
-      <td>{report.transactionDate}</td>
-      <td>{report.keySentToCustomer ? 'Enviado' : 'No enviado'}</td>
-    </tr>
-  ));
-
-  const authenticate = useCallback(async () => {
-    if (!accessToken) {
-      console.error('No token found, please login');
-    }
-  }, [accessToken]);
-
-  useEffect(() => {
-    authenticate();
-  }, [authenticate]);
 
   return (
     <div
@@ -126,27 +117,47 @@ function Reports() {
         </Text>
       )}
 
-      <Table
-        striped
-        highlightOnHover
-        style={{
-          overflowX: 'auto',
-          fontSize: '0.9rem',
-        }}
-      >
-        <thead>
-          <tr>
-            <th>ID Transacción</th>
-            <th>Referencia</th>
-            <th>Producto</th>
-            <th>Precio</th>
-            <th>Estado</th>
-            <th>Fecha</th>
-            <th>Clave Enviada</th>
-          </tr>
-        </thead>
-        <tbody>{reportRows}</tbody>
-      </Table>
+      {filteredReports.length === 0 && !error && (
+        <Text color="gray" ta="center" size="lg">
+          No hay reportes en el rango de fechas seleccionado.
+        </Text>
+      )}
+
+      {filteredReports.length > 0 && (
+        <Table
+          striped
+          highlightOnHover
+          style={{
+            overflowX: 'auto',
+            fontSize: '0.9rem',
+          }}
+        >
+          <thead>
+            <tr>
+              <th>ID Transacción</th>
+              <th>Referencia</th>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Clave Enviada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredReports.map((report) => (
+              <tr key={report.transactionId}>
+                <td>{report.transactionId}</td>
+                <td>{report.partnerReference}</td>
+                <td>{report.productName}</td>
+                <td>{report.salesPrice}</td>
+                <td>{report.status}</td>
+                <td>{report.transactionDate}</td>
+                <td>{report.keySentToCustomer ? 'Enviado' : 'No enviado'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
     </div>
   );
 }

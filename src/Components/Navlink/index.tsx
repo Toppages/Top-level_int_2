@@ -43,13 +43,13 @@ function NavLinkItem({
           opacity: disabled ? 0.5 : 1,
           transition: "background-color 0.3s ease, color 0.3s ease",
         }}
-        onMouseEnter={(e) => {
+        onMouseEnter={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
           if (!disabled && index !== active) {
             e.currentTarget.style.backgroundColor = "#dbe4f3"; 
             e.currentTarget.style.color = "#0c2a85"; 
           }
         }}
-        onMouseLeave={(e) => {
+        onMouseLeave={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
           if (!disabled && index !== active) {
             e.currentTarget.style.backgroundColor = "transparent";
             e.currentTarget.style.color = "#0c2a85"; 
