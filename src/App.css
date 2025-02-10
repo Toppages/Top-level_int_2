@@ -1,0 +1,47 @@
+@media (min-width: 1200px) {
+  .carousel-image {
+    max-height: 600px;
+  }
+}
+
+@media (max-width: 1199px) and (min-width: 768px) {
+  .carousel-image {
+    max-height: 600px;
+  }
+}
+
+@media (max-width: 767px) {
+  .carousel-image {
+    max-height: 400px;
+  }
+}
+
+
+body {
+  background: #EEEEEE;
+  margin: 0;
+  padding: 0;
+  height: 95vh;
+}
+
+.lazy-load {
+  opacity: 0;
+  transform: translateY(20px); 
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.lazy-load.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.button {
+  background: #0c2a85;
+  color: white;
+  transition: background 0.3s ease; 
+}
+.button:hover {
+  background: white;
+  color: #0c2a85;
+  cursor: pointer;
+}
