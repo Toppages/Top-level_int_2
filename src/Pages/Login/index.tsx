@@ -7,7 +7,7 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    navigate('/home');
+    navigate('/Top-level_int_2/home');
   };
 
   return (

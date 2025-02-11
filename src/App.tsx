@@ -12,7 +12,7 @@ function AppContent() {
   const isMobile = useMediaQuery('(max-width: 1000px)');
   const location = useLocation();
 
-  const isLoginPage = location.pathname === "/";
+  const isLoginPage = location.pathname === "/Top-level_int_2";
 
   return (
     <>
@@ -24,7 +24,7 @@ function AppContent() {
         <Routes>
           <Route path="/Top-level_int_2" element={<Login />} />
           <Route
-            path="/Home"
+            path="/Top-level_int_2/Home"
             element={
               <Home
                 navOpen={navOpen}

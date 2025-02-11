@@ -1,4 +1,4 @@
-import Logo from '../../assets/Logo TopLevel PNG.png'
+import Logo from '../../assets/Logo TopLevel PNG.png';
 import NavLinkItem from "../Navlink/index";
 import { useState } from "react";
 import { useMediaQuery } from "@mantine/hooks";
@@ -39,11 +39,15 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
       }}
     />
   ));
+
   const navigate = useNavigate();
 
   const handleLogin = () => {
+    // Al hacer clic en "Cerrar Sesión", se cierra el drawer y luego se navega
+    setOpened(false);
     navigate('/Top-level_int_2');
   };
+
   return (
     <>
       {!isMobile && (
@@ -64,17 +68,10 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
         overlayBlur={3}
       >
         <Stack justify="space-between" style={{ height: '90vh' }}>
-
           <div>
-
             <div style={{ width: 150, marginLeft: 'auto', marginRight: 'auto' }}>
-              <Image
-                mt={-55}
-                src={Logo}
-                alt="Panda"
-              />
+              <Image mt={-55} src={Logo} alt="Panda" />
             </div>
-
             {items}
           </div>
 
@@ -95,13 +92,10 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
               onMouseEnter={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
                 e.currentTarget.style.backgroundColor = "#dbe4f3";
                 e.currentTarget.style.color = "#0c2a85";
-
               }}
               onMouseLeave={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
-
                 e.currentTarget.style.backgroundColor = "transparent";
                 e.currentTarget.style.color = "#0c2a85";
-
               }}
             />
             <NavLink
@@ -121,13 +115,10 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
               onMouseEnter={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
                 e.currentTarget.style.backgroundColor = "#dbe4f3";
                 e.currentTarget.style.color = "#0c2a85";
-
               }}
               onMouseLeave={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
-
                 e.currentTarget.style.backgroundColor = "transparent";
                 e.currentTarget.style.color = "#0c2a85";
-
               }}
             />
           </div>
