@@ -1,13 +1,14 @@
 import './App.css';
 import Logo from './assets/Logo TopLevel PNG.png'
 import TableC from './Components/TableC/Index';
+import TableM from './Components/TableM/Index';
 import Reports from './Components/Reports';
 import NavLinkItem from './Components/Navlink';
 import useLazyLoad from './Hooks/useLazyLoad';
 import { useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '@mantine/hooks';
-import { Card, Divider, Group, NavLink, Stack, Image } from '@mantine/core';
-import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX } from '@tabler/icons-react';
+import { Card, Divider, Group, NavLink, Stack, Image, Title } from '@mantine/core';
+import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX, IconUsers, IconSettings } from '@tabler/icons-react';
 
 interface HomeProps {
   navOpen: boolean;
@@ -20,6 +21,8 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
     { icon: IconGauge, label: 'Dashboard' },
     { icon: IconBuildingStore, label: 'Productos' },
     { icon: IconReport, label: 'Reportes' },
+    { icon: IconUsers, label: 'Clientes' },
+    { icon: IconSettings, label: 'Configuración' }
   ];
   const navigate = useNavigate();
 
@@ -34,7 +37,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   const items = data.map((item, index) => (
     <NavLinkItem
       key={index}
-
       index={index}
       active={activeLink}
       label={item.label}
@@ -47,6 +49,9 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   const renderContent = () => {
     if (data[activeLink].label === 'Reportes') {
       return <Reports />;
+    }
+    if (data[activeLink].label === 'Clientes') {
+      return <TableM />;
     }
     return <TableC />;
   };
@@ -74,20 +79,15 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
             }}
             radius="md"
           >
-
             <Stack justify="space-between" style={{ height: '90vh' }}>
-
               <div>
-                <Image
-                  mt={-55}
-                  src={Logo}
-                  alt="Panda"
-                />
-
+                <Image mt={-55} src={Logo} alt="Panda" />
                 {items}
               </div>
-
               <div>
+                <Title ta="center" c="#0c2a85" order={3}>
+                  300$
+                </Title>
                 <Divider />
                 <NavLink
                   mt={15}
@@ -104,13 +104,10 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
                   onMouseEnter={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
                     e.currentTarget.style.backgroundColor = "#dbe4f3";
                     e.currentTarget.style.color = "#0c2a85";
-
                   }}
                   onMouseLeave={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
-
                     e.currentTarget.style.backgroundColor = "transparent";
                     e.currentTarget.style.color = "#0c2a85";
-
                   }}
                 />
                 <NavLink
@@ -136,14 +133,10 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
                     e.currentTarget.style.color = "#0c2a85";
                   }}
                 />
-
               </div>
             </Stack>
-
-
           </Card>
         )}
-
         <Card
           id="lazy-load-card"
           className={`lazy-load ${isVisible ? 'visible' : ''}`}
@@ -157,7 +150,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
         >
           {renderContent()}
         </Card>
-
       </Group>
     </>
   );

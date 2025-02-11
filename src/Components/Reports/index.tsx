@@ -9,8 +9,7 @@ const LOCAL_REPORTS = [
     productName: 'Producto A',
     salesPrice: '50000 COP',
     status: 'Completado',
-    transactionDate: '2024-02-01',
-    keySentToCustomer: true,
+    transactionDate: '2025-02-02',
   },
   {
     transactionId: 'TX124',
@@ -18,8 +17,7 @@ const LOCAL_REPORTS = [
     productName: 'Producto B',
     salesPrice: '75000 COP',
     status: 'Pendiente',
-    transactionDate: '2024-02-05',
-    keySentToCustomer: false,
+    transactionDate: '2025-02-05',
   },
   {
     transactionId: 'TX125',
@@ -27,8 +25,7 @@ const LOCAL_REPORTS = [
     productName: 'Producto C',
     salesPrice: '120000 COP',
     status: 'Cancelado',
-    transactionDate: '2024-01-15',
-    keySentToCustomer: false,
+    transactionDate: '2025-02-05',
   },
 ];
 
@@ -127,6 +124,7 @@ function Reports() {
         <Table
           striped
           highlightOnHover
+          withColumnBorders
           style={{
             overflowX: 'auto',
             fontSize: '0.9rem',
@@ -140,7 +138,6 @@ function Reports() {
               <th>Precio</th>
               <th>Estado</th>
               <th>Fecha</th>
-              <th>Clave Enviada</th>
             </tr>
           </thead>
           <tbody>
@@ -152,7 +149,6 @@ function Reports() {
                 <td>{report.salesPrice}</td>
                 <td>{report.status}</td>
                 <td>{report.transactionDate}</td>
-                <td>{report.keySentToCustomer ? 'Enviado' : 'No enviado'}</td>
               </tr>
             ))}
           </tbody>
