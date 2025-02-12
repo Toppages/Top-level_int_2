@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ActionIcon,
   Modal,
@@ -10,62 +10,80 @@ import {
   TextInput,
   Button,
   Group,
-  Card
+  Card,
 } from '@mantine/core';
-import { IconShoppingBag, IconEye, IconUserFilled } from '@tabler/icons-react';
+import { IconEye, IconShoppingBag, IconUserFilled } from '@tabler/icons-react';
+import axios from 'axios';
+import CryptoJS from 'crypto-js';
+import moment from 'moment';
 
-const localCollections = [
-  {
-    id: 1,
-    name: "FREE FIRE",
-    products: [
-      { id: 101, name: "100+10 diamantes", salesPrice: 1 },
-      { id: 102, name: "310+31 diamantes", salesPrice: 2 },
-      { id: 103, name: "520+52 diamantes", salesPrice: 3 },
-      { id: 104, name: "1060+106 diamantes", salesPrice: 4 }
-    ]
-  },
-  {
-    id: 2,
-    name: "COD MOBILE",
-    products: [
-      { id: 201, name: "420 CP", salesPrice: 2 },
-      { id: 202, name: "880 CP", salesPrice: 4 },
-      { id: 203, name: "1980 CP", salesPrice: 6 }
-    ]
-  }
-];
+interface Product {
+  code: number;
+  name: string;
+  price: number;
+  // Otros campos que devuelva la API
+}
 
-function TableC() {
-  const [opened, setOpened] = useState(false);
-  const [collections] = useState(localCollections);
-  const [products, setProducts] = useState<any[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [loadingProducts, setLoadingProducts] = useState(false);
-  const [productLoading, setProductLoading] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
-  const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+const TableC: React.FC = () => {
+  // Estados para la lista de productos, el producto seleccionado y el estado del modal
+  const [opened, setOpened] = useState<boolean>(false);
+  const [fetchedProducts, setFetchedProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchProducts = (collectionId: number) => {
-    setLoadingProducts(true);
-    const collection = collections.find(c => c.id === collectionId);
-    setProducts(collection?.products || []);
-    setSelectedCollection(collection?.name || '');
-    setInputValue("");
+  // Estados para el flujo del modal (Stepper)
+  const [activeStep, setActiveStep] = useState<number>(0);
+  const [playerId, setPlayerId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Función para obtener productos desde la API usando las credenciales guardadas
+  const fetchProductsFromAPI = async () => {
+    const storedApiKey = localStorage.getItem('apiKey');
+    const storedApiSecret = localStorage.getItem('apiSecret');
+
+    if (!storedApiKey || !storedApiSecret) {
+      console.error('Credenciales no encontradas');
+      return;
+    }
+    setLoading(true);
+    const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
+    const verb = "GET";
+    const route = "api/products";
+    const hmacData = verb + route + date;
+    const hmacSignature = CryptoJS.HmacSHA256(hmacData, storedApiSecret).toString(CryptoJS.enc.Hex);
+    const authorizationHeader = `${storedApiKey}:${hmacSignature}`;
+
+    try {
+      const response = await axios.get('https://pincentral.baul.pro/api/products', {
+        headers: {
+          'X-Date': date,
+          'Authorization': authorizationHeader,
+        },
+      });
+      if (response.status === 200) {
+        setFetchedProducts(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Se ejecuta una vez al montar el componente
+  useEffect(() => {
+    fetchProductsFromAPI();
+  }, []);
+
+  // Abre el modal con el producto seleccionado
+  const openModalForProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setPlayerId('');
+    setActiveStep(0);
     setOpened(true);
-    setLoadingProducts(false);
   };
 
-  const fetchProductDetails = (productId: number) => {
-    setProductLoading(true);
-    const product = products.find(p => p.id === productId);
-    setSelectedProduct(product || null);
-    setProductLoading(false);
-    setActiveStep(1);
-  };
-
+  // Simula un procesamiento en el paso de confirmación
   const handleConfirmClick = () => {
     setIsLoading(true);
     setTimeout(() => {
@@ -74,25 +92,28 @@ function TableC() {
     }, 3000);
   };
 
+  // Finaliza el proceso y cierra el modal
   const handleFinishClick = () => {
-    setActiveStep(3); 
+    setActiveStep(3);
     setTimeout(() => {
       setOpened(false);
       setActiveStep(0);
-      setInputValue("");
-    }, 5000);
+      setPlayerId('');
+    }, 2000);
   };
 
-  const rows = useMemo(
+  // Se construyen las filas de la tabla con los productos obtenidos
+  const productRows = useMemo(
     () =>
-      collections.map(({ id, name }) => (
-        <tr key={id}>
-          <td style={{ textAlign: 'center' }}>{id}</td>
-          <td style={{ textAlign: 'center' }}>{name}</td>
-          <td>
+      fetchedProducts.map((product) => (
+        <tr key={product.code}>
+          <td style={{ textAlign: 'center' }}>{product.code}</td>
+          <td style={{ textAlign: 'center' }}>{product.name}</td>
+          <td style={{ textAlign: 'center' }}>{product.price} $</td>
+          <td style={{ textAlign: 'center' }}>
             <ActionIcon
-              onClick={() => fetchProducts(id)}
-              style={{ background: '#0c2a85' }}
+              onClick={() => openModalForProduct(product)}
+              style={{ background: '#0c2a85', color: 'white' }}
               size="lg"
               variant="filled"
             >
@@ -101,28 +122,7 @@ function TableC() {
           </td>
         </tr>
       )),
-    [collections]
-  );
-
-  const productRows = useMemo(
-    () =>
-      products.map(({ id, name, salesPrice }) => (
-        <tr key={id}>
-          <td style={{ textAlign: 'center' }}>{name}</td>
-          <td style={{ textAlign: 'center' }}>{salesPrice} $</td>
-          <td>
-            <ActionIcon
-              onClick={() => fetchProductDetails(id)}
-              style={{ background: '#0c2a85' }}
-              size="lg"
-              variant="filled"
-            >
-              <IconShoppingBag size={26} />
-            </ActionIcon>
-          </td>
-        </tr>
-      )),
-    [products]
+    [fetchedProducts]
   );
 
   return (
@@ -132,7 +132,7 @@ function TableC() {
         onClose={() => {
           setOpened(false);
           setActiveStep(0);
-          setInputValue("");
+          setPlayerId('');
         }}
         withCloseButton={false}
         size="xl"
@@ -144,88 +144,78 @@ function TableC() {
           allowNextStepsSelect={false}
           breakpoint="sm"
         >
-          <Stepper.Step label="Productos" description="Selecciona un producto">
-            <Title align="center" order={3} style={{ fontWeight: 700, color: '#333' }}>
-              {selectedCollection || 'Productos'}
-            </Title>
-            <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
-            <Table striped highlightOnHover>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'center' }}>Nombre del Producto</th>
-                  <th style={{ textAlign: 'center' }}>Precio de venta</th>
-                  <th style={{ textAlign: 'center' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingProducts ? (
-                  <tr>
-                    <td colSpan={3} style={{ textAlign: 'center' }}>
-                      <Loader color="indigo" size="xl" variant="dots" />
-                    </td>
-                  </tr>
-                ) : (
-                  productRows
-                )}
-              </tbody>
-            </Table>
+          <Stepper.Step label="Detalles del Producto" description="Revisa la información">
+            {selectedProduct ? (
+              <>
+                <Title align="center" order={3} style={{ fontWeight: 700, color: '#333' }}>
+                  {selectedProduct.name}
+                </Title>
+                <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
+                <p style={{ textAlign: 'center' }}>
+                  Precio: {selectedProduct.price} $
+                </p>
+                <Group position="center" mt="xl">
+                  <Button onClick={() => setActiveStep(1)} style={{ background: '#0c2a85' }}>
+                    Siguiente
+                  </Button>
+                </Group>
+              </>
+            ) : (
+              <Loader color="indigo" size="xl" variant="dots" />
+            )}
           </Stepper.Step>
 
+          {/* Paso 2: Se solicita el ID del jugador */}
           <Stepper.Step label="Confirmar" description="Ingresa el ID del jugador">
             <TextInput
               label="ID del jugador"
               placeholder="Ingresa el ID"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              value={playerId}
+              onChange={(e) => setPlayerId(e.currentTarget.value)}
             />
             <Group position="center" mt="xl">
               <Button variant="default" onClick={() => setActiveStep(0)}>
                 Atrás
               </Button>
               <Button
-                style={{ background: !inputValue.trim() ? 'grey' : '#0c2a85' }}
+                style={{ background: !playerId.trim() ? 'grey' : '#0c2a85' }}
                 onClick={handleConfirmClick}
-                disabled={!inputValue.trim()}
+                disabled={!playerId.trim()}
                 loading={isLoading}
               >
-
                 Confirmar
               </Button>
             </Group>
           </Stepper.Step>
 
+          {/* Paso 3: Se muestra la confirmación final con los datos del producto y jugador */}
           <Stepper.Step label="Confirmación" description="Detalles del producto y jugador">
-            {productLoading ? (
-              <Loader color="indigo" size="xl" variant="dots" />
-            ) : selectedProduct ? (
-              <>
-                <Group position="center">
-                  <Card radius="md" withBorder>
-                    <Group position="center">
-                      <IconUserFilled size={64} />
-                    </Group>
-                    <Title align="center" order={2}>
-                      Fulano de tal
-                    </Title>
-                    <Title align="center" order={4}>
-                      {inputValue}
-                    </Title>
-                  </Card>
-
-                  <div>
-                    <Title order={3} style={{ fontWeight: 700, color: '#333' }}>
-                      {selectedProduct.name}
-                    </Title>
-                    <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
-                    <p>Precio de venta: {selectedProduct.salesPrice} $</p>
-                  </div>
-                </Group>
-              </>
+            {selectedProduct ? (
+              <Group position="center">
+                <Card radius="md" withBorder>
+                  <Group position="center">
+                    <IconUserFilled size={64} />
+                  </Group>
+                  <Title align="center" order={2}>
+                    Jugador
+                  </Title>
+                  <Title align="center" order={4}>
+                    {playerId}
+                  </Title>
+                </Card>
+                <div>
+                  <Title order={3} style={{ fontWeight: 700, color: '#333' }}>
+                    {selectedProduct.name}
+                  </Title>
+                  <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
+                  <p>Precio: {selectedProduct.price} $</p>
+                </div>
+              </Group>
             ) : (
               <p style={{ textAlign: 'center' }}>No se ha seleccionado ningún producto.</p>
             )}
             <Group position="center" mt="xl">
-              <Button variant="default" onClick={() => setActiveStep(0)}>
+              <Button variant="default" onClick={() => setActiveStep(1)}>
                 Atrás
               </Button>
               <Button style={{ background: '#0c2a85' }} onClick={handleFinishClick}>
@@ -237,24 +227,28 @@ function TableC() {
           <Stepper.Completed>
             <div style={{ textAlign: 'center', padding: '20px' }}>
               <Title order={3}>Proceso completado</Title>
-
             </div>
           </Stepper.Completed>
         </Stepper>
       </Modal>
 
-      <Table striped highlightOnHover>
-        <thead>
-          <tr>
-            <th style={{ textAlign: 'center' }}>ID</th>
-            <th style={{ textAlign: 'center' }}>Juego</th>
-            <th style={{ textAlign: 'center' }}></th>
-          </tr>
-        </thead>
-        <tbody>{rows}</tbody>
-      </Table>
+      {loading ? (
+        <Loader color="indigo" size="xl" variant="dots" style={{ margin: 'auto', display: 'block' }} />
+      ) : (
+        <Table striped highlightOnHover>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'center' }}>ID</th>
+              <th style={{ textAlign: 'center' }}>Producto</th>
+              <th style={{ textAlign: 'center' }}>Precio</th>
+              <th style={{ textAlign: 'center' }}></th>
+            </tr>
+          </thead>
+          <tbody>{productRows}</tbody>
+        </Table>
+      )}
     </>
   );
-}
+};
 
 export default TableC;

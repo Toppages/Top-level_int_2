@@ -19,9 +19,9 @@ interface HomeProps {
 function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   const data = [
     { icon: IconGauge, label: 'Dashboard' },
-    { icon: IconBuildingStore, label: 'Productos' },
+    { icon: IconBuildingStore, label: 'Recarga directa' },
     { icon: IconReport, label: 'Reportes' },
-    { icon: IconUsers, label: 'Clientes' },
+    { icon: IconUsers, label: 'Mayorista' },
     { icon: IconSettings, label: 'Configuración' }
   ];
   const navigate = useNavigate();
@@ -50,11 +50,13 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
     if (data[activeLink].label === 'Reportes') {
       return <Reports />;
     }
-    if (data[activeLink].label === 'Clientes') {
+    if (data[activeLink].label === 'Mayorista') {
       return <TableM />;
     }
     return <TableC />;
   };
+
+  const isTableC = data[activeLink].label !== 'Reportes' && data[activeLink].label !== 'Mayorista';
 
   return (
     <>
@@ -139,7 +141,7 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
         )}
         <Card
           id="lazy-load-card"
-          className={`lazy-load ${isVisible ? 'visible' : ''}`}
+          className={`lazy-load ${isTableC ? 'visible' : (isVisible ? 'visible' : '')}`}
           radius="md"
           style={{
             flexGrow: 1,

@@ -1,56 +1,52 @@
-import './index.css';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Logo from '../../assets/Logo TopLevel PNG.png';
 import { Card, Text, TextInput, PasswordInput, Button, Stack, Image } from '@mantine/core';
+import Logo from '../../assets/Logo TopLevel PNG.png';
+import './index.css';
 
-function Login() {
-  const navigate = useNavigate();
+const Login: React.FC = () => {
+    const navigate = useNavigate();
+    const [apiKey, setApiKey] = useState<string>('');
+    const [apiSecret, setApiSecret] = useState<string>('');
 
-  const handleLogin = () => {
-    navigate('/Top-level_int_2/home');
-  };
+    const handleLogin = () => {
+        if (!apiKey.trim() || !apiSecret.trim()) {
+            alert("API Key y API Secret son requeridos.");
+            return;
+        }
 
-  return (
-    <div className="login-background">
-      <Card
-        shadow="md"
-        p="lg"
-        radius="md"
-        style={{ width: 350, textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }}
-      >
-        <Text size="lg" mb={15}>
-          Bienvenido
-        </Text>
-        <div style={{ width: 150, marginLeft: 'auto', marginRight: 'auto' }}>
-          <Image
-            mt={-55}
-            src={Logo}
-            alt="Logo"
-          />
+        localStorage.setItem('apiKey', apiKey);
+        localStorage.setItem('apiSecret', apiSecret);
+        navigate('/Top-level_int_2/home');
+    };
+
+    return (
+        <div className="login-background">
+            <Card shadow="md" p="lg" radius="md" style={{ width: 350, textAlign: 'center', margin: 'auto' }}>
+                <Text size="lg" mb={15}>Bienvenido</Text>
+                <div style={{ width: 150, margin: 'auto' }}>
+                    <Image mt={-55} src={Logo} alt="Logo" />
+                </div>
+                <Stack mt="lg" spacing="sm">
+                    <TextInput
+                        label="API Key"
+                        placeholder="Ingresa tu API Key"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.currentTarget.value)}
+                    />
+                    <PasswordInput
+                        label="API Secret"
+                        placeholder="Ingresa tu API Secret"
+                        value={apiSecret}
+                        onChange={(e) => setApiSecret(e.currentTarget.value)}
+                    />
+                    <Button fullWidth mt="md" onClick={handleLogin}>
+                        Iniciar Sesión
+                    </Button>
+                </Stack>
+            </Card>
         </div>
-
-        <Stack mt="lg" spacing="sm">
-          <TextInput
-            label="Usuario"
-            placeholder="Tu usuario"
-          />
-          <PasswordInput
-            label="Contraseña"
-            placeholder="Tu contraseña"
-          />
-          
-          <Button
-            className='button'
-            fullWidth
-            mt="md"
-            onClick={handleLogin}
-          >
-            Iniciar Sesión
-          </Button>
-        </Stack>
-      </Card>
-    </div>
-  );
-}
+    );
+};
 
 export default Login;
