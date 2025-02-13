@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios'; // Asegúrate de tener axios instalado
 import {
     Modal,
     Stepper,
@@ -9,12 +10,11 @@ import {
     Table,
     ActionIcon,
     Text,
-    NumberInput,
+    TextInput,
 } from '@mantine/core';
 import { IconEye } from '@tabler/icons-react';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
 import moment from 'moment';
+import CryptoJS from 'crypto-js'; // Si no tienes crypto-js, instálalo
 
 interface Product {
     code: string;
@@ -28,42 +28,51 @@ interface StepperMaProps {
     products: Product[];
 }
 
-const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
+const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
     const [activeStep, setActiveStep] = useState<number>(0);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [quantity, setQuantity] = useState<number>(1);
-    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
     const [capturedPins, setCapturedPins] = useState<string[]>([]);
+    const [playerId, setPlayerId] = useState<string>('');  // Estado para el ID del jugador
+    const [isValidId, setIsValidId] = useState<boolean>(false); // Estado para validar el ID
+    const [errorMessage, setErrorMessage] = useState<string>(''); // Estado para el mensaje de error
+    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false); // Estado de autorización
+    const [accountName, setAccountName] = useState<string>(''); // Estado para el nombre de cuenta recibido de la API
 
-    const handleAuthorize = async () => {
-        if (!selectedProduct) return;
+    const handleIdChange = (value: string) => {
+        setPlayerId(value);
+        setErrorMessage(''); // Limpiar el mensaje de error cada vez que el usuario escribe
+    };
+
+    const handleConfirmClick = async () => {
+        if (!selectedProduct || !playerId) {
+            setErrorMessage('Por favor, ingrese un ID válido y seleccione un producto.');
+            setIsValidId(false);
+            return;
+        }
+
+        // Realizamos la validación del ID con la API
         setIsAuthorizing(true);
-
         const apiKey = localStorage.getItem('apiKey');
         const apiSecret = localStorage.getItem('apiSecret');
 
         if (!apiKey || !apiSecret) {
             setIsAuthorizing(false);
+            setErrorMessage('No se encontraron las credenciales de autenticación.');
             return;
         }
 
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
-
-        const url = 'https://pincentral.baul.pro/api/pins/authorize';
+        const url = 'https://pincentral.baul.pro/api/recharges/validate';
         const verb = "POST";
-        const route = "/api/pins/authorize";
+        const route = "/api/recharges/validate";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
 
         const body = {
-            product: selectedProduct.code,
-            quantity,
-            order_id: moment().format("YYYYMMDD_HHmmss"),
-            client_name: "Juan Pérez",
-            client_email: "juanperez@email.com"
+            product_code: selectedProduct.code,
+            service_user_id: playerId,
         };
 
         const jsonBody = JSON.stringify(body);
-
         const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
         const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
         const authorizationHeader = `${apiKey}:${hmacSignature}`;
@@ -73,87 +82,42 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Date': date,
-                    'Authorization': authorizationHeader
+                    'Authorization': authorizationHeader,
                 }
             });
 
-            if (response.status === 200 && response.data.status === "authorized") {
-                console.log("Autorización exitosa", response.data);
-                handleCapture(response.data.id);
-                setActiveStep(1);
+            if (response.status === 200 && response.data.status === true) {
+                console.log("ID de jugador validado:", response.data);
+                setIsValidId(true); // Habilitamos el botón siguiente
+                setErrorMessage('');
+                setAccountName(response.data.account_name); // Guardamos el nombre de cuenta recibido
+                setActiveStep(2); // Avanzamos al siguiente paso
             } else {
-                console.error("Error en la solicitud de autorización:");
+                setIsValidId(false);
+                setErrorMessage('El ID del jugador no es válido o la validación falló.');
             }
         } catch (error) {
-            console.error("Error en la solicitud de autorización:", error);
+            console.error("Error en la validación:", error);
+            setIsValidId(false);
+            setErrorMessage('Hubo un error al validar el ID.');
         } finally {
             setIsAuthorizing(false);
         }
     };
 
-    const handleCapture = async (playerId: string) => {
-        if (!playerId) {
-            return;
-        }
-
-        const apiKey = localStorage.getItem('apiKey');
-        const apiSecret = localStorage.getItem('apiSecret');
-
-        if (!apiKey || !apiSecret) {
-            console.error("Error en la solicitud de autorización");
-            return;
-        }
-
-        const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
-
-        const captureUrl = 'https://pincentral.baul.pro/api/pins/capture';
-        const captureBody = {
-            id: playerId
-        };
-
-        const jsonBody = JSON.stringify(captureBody);
-
-        const verb = "POST";
-        const route = "/api/pins/capture";
-        const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
-
-        const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
-        const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
-        const authorizationHeader = `${apiKey}:${hmacSignature}`;
-
-        try {
-            const response = await axios.post(captureUrl, captureBody, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Date': date,
-                    'Authorization': authorizationHeader
-                }
-            });
-
-            if (response.status === 200 && response.data.status === "captured") {
-                console.log("PINs capturados:", response.data.pins);
-                setCapturedPins(response.data.pins.map((pin: { key: string }) => pin.key));
-                setActiveStep(2);
-            } else {
-                console.error("Error en la solicitud de captura:");
-            }
-        } catch (error) {
-            console.error("Error en la solicitud de captura:", error);
-        }
-    };
-
     const handleFinishClick = () => {
-      
+        setActiveStep(3);
+        setTimeout(() => {
             onClose();
             setActiveStep(0);
             setCapturedPins([]);
-  
+        }, 2000);
     };
 
     return (
         <Modal opened={opened} onClose={onClose} withCloseButton={false} size="xl">
             <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} breakpoint="sm">
-                <Stepper.Step label="Productos" description="Selecciona un producto">
+                <Stepper.Step label="Detalles del Producto" description="Selecciona un producto">
                     <div>
                         <Title align="center" order={3} style={{ fontWeight: 700, color: '#333' }}>
                             Selecciona un Producto
@@ -196,39 +160,39 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
                     </div>
                 </Stepper.Step>
 
-                <Stepper.Step label="Confirmar" description="Ingresa Ingrese cantidad de Pines">
-                    {selectedProduct && (
-                        <>
-                            <NumberInput
-                                min={1}
-                                max={10}
-                                ta="center"
-                                label="Cantidad"
-                                placeholder="Cantidad"
-                                radius="md"
-                                size="md"
-                                value={quantity}
-                                onChange={(value) => setQuantity(value ?? 1)}
-                                disabled={isAuthorizing}
-                            />
-                            <Group position="apart">
-                                <Title order={5}>Precio: {selectedProduct.price} $</Title>
-                                <Title order={5}>Total: {parseFloat(selectedProduct.price) * quantity} $</Title>
-                            </Group>
-                            <Group position="center" mt="xl">
-                                <Button
-                                    onClick={handleAuthorize}
-                                    style={{ background: '#0c2a85' }}
-                                    loading={isAuthorizing}
-                                >
-                                    Siguiente
-                                </Button>
-                            </Group>
-                        </>
+                <Stepper.Step label="Confirmar" description="Ingresa el ID del jugador">
+                    <TextInput
+                        label="ID del jugador"
+                        placeholder="Ingresa el ID"
+                        value={playerId}
+                        onChange={(e) => handleIdChange(e.target.value)}
+                        error={errorMessage} // Mostramos el mensaje de error aquí
+                    />
+                    {accountName && isValidId && (
+                        <Text align="center" mt="sm" style={{ fontWeight: 'bold', color: '#28a745' }}>
+                            Nombre de cuenta validado: {accountName}
+                        </Text>
                     )}
+                    <Group position="center" mt="xl">
+                        <Button variant="default" onClick={() => setActiveStep(0)}>
+                            Atrás
+                        </Button>
+                        <Button
+                            onClick={handleConfirmClick}
+                            disabled={isAuthorizing}
+                        >
+                            {isAuthorizing ? "Validando..." : "Confirmar"}
+                        </Button>
+                        <Button
+                            onClick={() => setActiveStep(2)}
+                            style={{ display: isValidId ? 'inline-block' : 'none' }}
+                        >
+                            Siguiente
+                        </Button>
+                    </Group>
                 </Stepper.Step>
 
-                <Stepper.Step label="Finalización" description="Detalles de la compra">
+                <Stepper.Step label="Finalización" description="Detalles del producto y jugador">
                     <div>
                         <Title order={3} align="center">Detalles de los PINs Capturados</Title>
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
@@ -257,10 +221,9 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
                         </Button>
                     </Group>
                 </Stepper.Step>
-
             </Stepper>
         </Modal>
     );
 };
 
-export default StepperMa;
+export default StepperRed;

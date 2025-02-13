@@ -48,6 +48,27 @@ const TableM: React.FC = () => {
     const productsInSelectedGroup = selectedProductGroup
         ? fetchedProducts.filter(product => product.product_group === selectedProductGroup)
         : [];
+    // Lista de grupos permitidos
+    const allowedGroups = [
+        "Arena Breakout",
+        "Honor of kings",
+        "Netflix Usa",
+        "Fortnite V-Bucks",
+        "Nintendo US USD",
+        "Parchis Club",
+        "PUBG UC",
+        "Razer Gold Brasil",
+        "Razer Gold Chile",
+        "Razer Gold Colombia",
+        "Recarga Mobile Legends",
+        "Roblox US USD",
+        "Steam US USD",
+        "Xbox US USD",
+        "Free Fire Latam"
+    ];
+
+    const filteredGroups = Array.from(new Set(fetchedProducts.map(product => product.product_group)))
+        .filter(group => allowedGroups.includes(group));
 
     return (
         <>
@@ -57,13 +78,13 @@ const TableM: React.FC = () => {
                 <Table striped highlightOnHover>
                     <thead>
                         <tr>
-                            <th >Grupos de Producto</th>
+                            <th >Juegos Disponibles </th>
                             <th ></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {Array.from(new Set(fetchedProducts.map(product => product.product_group)))
-                            .map((group, index) => (
+                        {filteredGroups.length > 0 ? (
+                            filteredGroups.map((group, index) => (
                                 <tr key={index}>
                                     <td >
                                         {group}
@@ -77,10 +98,14 @@ const TableM: React.FC = () => {
                                         >
                                             <IconEye size={26} />
                                         </ActionIcon>
-
                                     </td>
                                 </tr>
-                            ))}
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={2} style={{ textAlign: 'center' }}>No se encontraron grupos permitidos.</td>
+                            </tr>
+                        )}
                     </tbody>
                 </Table>
             }
