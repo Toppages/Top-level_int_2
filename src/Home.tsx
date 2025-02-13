@@ -1,10 +1,9 @@
 import './App.css';
-import Logo from './assets/Logo TopLevel PNG.png'
+import Logo from './assets/Logo TopLevel PNG.png';
 import TableC from './Components/TableC/Index';
 import TableM from './Components/TableM/Index';
 import Reports from './Components/Reports';
 import NavLinkItem from './Components/Navlink';
-import useLazyLoad from './Hooks/useLazyLoad';
 import { useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '@mantine/hooks';
 import { Card, Divider, Group, NavLink, Stack, Image, Title } from '@mantine/core';
@@ -32,7 +31,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   };
 
   const isMobile = useMediaQuery('(max-width: 1000px)');
-  const isVisible = useLazyLoad();
 
   const items = data.map((item, index) => (
     <NavLinkItem
@@ -56,7 +54,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
     return <TableC />;
   };
 
-  const isTableC = data[activeLink].label !== 'Reportes' && data[activeLink].label !== 'Mayorista';
 
   return (
     <>
@@ -141,7 +138,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
         )}
         <Card
           id="lazy-load-card"
-          className={`lazy-load ${isTableC ? 'visible' : (isVisible ? 'visible' : '')}`}
           radius="md"
           style={{
             flexGrow: 1,

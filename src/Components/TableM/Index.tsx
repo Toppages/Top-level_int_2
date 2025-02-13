@@ -6,30 +6,28 @@ import { getAuthHeaders } from '../../utils/auth';
 import StepperMa from '../StepperMa/Index';
 
 interface Product {
-    code: number;
+    product_group: string;
+    code: string;
     name: string;
-    price: number;
+    price: string;
 }
 
 const TableM: React.FC = () => {
     const [opened, setOpened] = useState<boolean>(false);
     const [fetchedProducts, setFetchedProducts] = useState<Product[]>([]);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [selectedProductGroup, setSelectedProductGroup] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     const fetchProductsFromAPI = async () => {
         const headers = getAuthHeaders("GET", "api/products");
         if (!headers) return;
-    
+
         setLoading(true);
         try {
             const response = await axios.get('https://pincentral.baul.pro/api/products', { headers });
             if (response.status === 200) {
-                // Filtrar productos que contengan "Free Fire" en su nombre
-                const freeFireProducts = response.data.filter((product: Product) => 
-                    product.name.toLowerCase().includes("free fire")
-                );
-                setFetchedProducts(freeFireProducts);
+                const products: Product[] = response.data;
+                setFetchedProducts(products);
             }
         } catch (error) {
             console.error("Error fetching products:", error);
@@ -37,49 +35,52 @@ const TableM: React.FC = () => {
             setLoading(false);
         }
     };
-    
 
     useEffect(() => {
         fetchProductsFromAPI();
     }, []);
 
-    const openModalForProduct = (product: Product) => {
-        setSelectedProduct(product);
+    const openModalForGroup = (group: string) => {
+        setSelectedProductGroup(group);
         setOpened(true);
     };
 
+    const productsInSelectedGroup = selectedProductGroup
+        ? fetchedProducts.filter(product => product.product_group === selectedProductGroup)
+        : [];
+
     return (
         <>
-            <StepperMa opened={opened} onClose={() => setOpened(false)} product={selectedProduct} />
+            <StepperMa opened={opened} onClose={() => setOpened(false)} products={productsInSelectedGroup} />
 
             {loading ? <Loader color="indigo" size="xl" variant="dots" style={{ margin: 'auto', display: 'block' }} /> :
                 <Table striped highlightOnHover>
                     <thead>
                         <tr>
-                            <th style={{ textAlign: 'center' }}>ID</th>
-                            <th style={{ textAlign: 'center' }}>Producto</th>
-                            <th style={{ textAlign: 'center' }}>Precio</th>
-                            <th style={{ textAlign: 'center' }}></th>
+                            <th >Grupos de Producto</th>
+                            <th ></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {fetchedProducts.map((product) => (
-                            <tr key={product.code}>
-                                <td style={{ textAlign: 'center' }}>{product.code}</td>
-                                <td style={{ textAlign: 'center' }}>{product.name}</td>
-                                <td style={{ textAlign: 'center' }}>{product.price} $</td>
-                                <td style={{ textAlign: 'center' }}>
-                                    <ActionIcon
-                                        onClick={() => openModalForProduct(product)}
-                                        style={{ background: '#0c2a85', color: 'white' }}
-                                        size="lg"
-                                        variant="filled"
-                                    >
-                                        <IconEye size={26} />
-                                    </ActionIcon>
-                                </td>
-                            </tr>
-                        ))}
+                        {Array.from(new Set(fetchedProducts.map(product => product.product_group)))
+                            .map((group, index) => (
+                                <tr key={index}>
+                                    <td >
+                                        {group}
+                                    </td>
+                                    <td >
+                                        <ActionIcon
+                                            onClick={() => openModalForGroup(group)}
+                                            style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
+                                            size="lg"
+                                            variant="filled"
+                                        >
+                                            <IconEye size={26} />
+                                        </ActionIcon>
+
+                                    </td>
+                                </tr>
+                            ))}
                     </tbody>
                 </Table>
             }

@@ -2,7 +2,7 @@ import Logo from '../../assets/Logo TopLevel PNG.png';
 import NavLinkItem from "../Navlink/index";
 import { useState } from "react";
 import { useMediaQuery } from "@mantine/hooks";
-import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
+import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX, IconSettings, IconUsers } from "@tabler/icons-react";
 import {
   Drawer as MantineDrawer,
   Burger,
@@ -19,9 +19,11 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
   const isMobile = useMediaQuery("(min-width: 1000px)");
 
   const data = [
-    { icon: IconGauge, label: "Dashboard" },
-    { icon: IconBuildingStore, label: "Productos" },
-    { icon: IconReport, label: "Reportes" },
+    { icon: IconGauge, label: 'Dashboard' },
+    { icon: IconBuildingStore, label: 'Recarga directa' },
+    { icon: IconReport, label: 'Reportes' },
+    { icon: IconUsers, label: 'Mayorista' },
+    { icon: IconSettings, label: 'Configuración' }
   ];
 
   const items = data.map((item, index) => (
@@ -43,7 +45,6 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    // Al hacer clic en "Cerrar Sesión", se cierra el drawer y luego se navega
     setOpened(false);
     navigate('/Top-level_int_2');
   };
