@@ -2,17 +2,25 @@ import './App.css';
 import Home from './Home';
 import Navbar from './Components/Navbar';
 import Login from './Pages/Login';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 
 function AppContent() {
   const [navOpen, setNavOpen] = useState(true);
-  const [activeLink, setActiveLink] = useState(1);
+  const [activeLink, setActiveLink] = useState(0);
   const isMobile = useMediaQuery('(max-width: 1000px)');
   const location = useLocation();
 
-  const isLoginPage = location.pathname === "/Top-level_int_2";
+  const isAuthenticated = localStorage.getItem('apiKey') && localStorage.getItem('apiSecret');
+  
+  const isLoginPage = location.pathname === "/";
+
+  useEffect(() => {
+    if (!isAuthenticated && location.pathname !== "/") {
+      window.location.replace('/');
+    }
+  }, [location.pathname, isAuthenticated]);
 
   return (
     <>
@@ -22,16 +30,18 @@ function AppContent() {
 
       <main style={{ flex: 1 }}>
         <Routes>
-          <Route path="/Top-level_int_2" element={<Login />} />
+          <Route path="/" element={<Login />} />
           <Route
-            path="/Top-level_int_2/Home"
-            element={
+            path="/home"
+            element={isAuthenticated ? (
               <Home
                 navOpen={navOpen}
                 activeLink={activeLink}
                 setActiveLink={setActiveLink}
               />
-            }
+            ) : (
+              <Navigate to="/" />
+            )}
           />
         </Routes>
       </main>

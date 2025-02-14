@@ -4,10 +4,9 @@ import TableC from './Components/TableC/Index';
 import TableM from './Components/TableM/Index';
 import Reports from './Components/Reports';
 import NavLinkItem from './Components/Navlink';
-import { useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '@mantine/hooks';
 import { Card, Divider, Group, NavLink, Stack, Image, Title } from '@mantine/core';
-import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX, IconUsers } from '@tabler/icons-react';
+import { IconReport, IconUserFilled, IconX, IconUsers } from '@tabler/icons-react';
 
 interface HomeProps {
   navOpen: boolean;
@@ -19,14 +18,14 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   const data = [
     // { icon: IconGauge, label: 'Dashboard' },
     // { icon: IconBuildingStore, label: 'Recarga directa' },
-    { icon: IconReport, label: 'Reportes' },
     { icon: IconUsers, label: 'Compra de pines' },
+    { icon: IconReport, label: 'Reportes' },
   ];
-  const navigate = useNavigate();
 
-  const handleLogin = () => {
-    localStorage.removeItem('accessToken');
-    navigate('/Top-level_int_2');
+  const handleLogout = () => {
+    localStorage.removeItem('apiKey');
+    localStorage.removeItem('apiSecret');
+    window.location.replace('/');
   };
 
   const isMobile = useMediaQuery('(max-width: 1000px)');
@@ -52,7 +51,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
     }
     return <TableC />;
   };
-
 
   return (
     <>
@@ -111,7 +109,7 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
                 <NavLink
                   mt={15}
                   label="Cerrar Sesión"
-                  onClick={handleLogin}
+                  onClick={handleLogout}
                   color="indigo"
                   icon={<IconX size={16} stroke={1.5} />}
                   active

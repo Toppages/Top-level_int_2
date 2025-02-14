@@ -11,13 +11,12 @@ const Login: React.FC = () => {
 
     const handleLogin = () => {
         if (!apiKey.trim() || !apiSecret.trim()) {
-            alert("API Key y API Secret son requeridos.");
             return;
         }
 
         localStorage.setItem('apiKey', apiKey);
         localStorage.setItem('apiSecret', apiSecret);
-        navigate('/Top-level_int_2/home');
+        navigate('/home');
     };
 
     return (

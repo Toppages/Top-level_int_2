@@ -2,7 +2,7 @@ import Logo from '../../assets/Logo TopLevel PNG.png';
 import NavLinkItem from "../Navlink/index";
 import { useState } from "react";
 import { useMediaQuery } from "@mantine/hooks";
-import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX, IconUsers } from "@tabler/icons-react";
+import { IconReport, IconUserFilled, IconX, IconUsers } from "@tabler/icons-react";
 import {
   Drawer as MantineDrawer,
   Burger,
@@ -11,18 +11,17 @@ import {
   Stack,
   Image,
 } from "@mantine/core";
-import { useNavigate } from "react-router-dom";
 
 function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
   const [opened, setOpened] = useState(false);
-  const [active, setActive] = useState(1);
+  const [active, setActive] = useState(0);
   const isMobile = useMediaQuery("(min-width: 1000px)");
 
   const data = [
     // { icon: IconGauge, label: 'Dashboard' },
     // { icon: IconBuildingStore, label: 'Recarga directa' },
-    { icon: IconReport, label: 'Reportes' },
     { icon: IconUsers, label: 'Mayorista' },
+    { icon: IconReport, label: 'Reportes' },
   ];
 
   const items = data.map((item, index) => (
@@ -41,11 +40,11 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
     />
   ));
 
-  const navigate = useNavigate();
-
-  const handleLogin = () => {
+  const handleLogout = () => {
+    localStorage.removeItem('apiKey');
+    localStorage.removeItem('apiSecret');
     setOpened(false);
-    navigate('/Top-level_int_2');
+    window.location.replace('/');
   };
 
   return (
@@ -99,7 +98,7 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
             />
             <NavLink
               label="Cerrar Sesión"
-              onClick={handleLogin}
+              onClick={handleLogout}
               color="indigo"
               icon={<IconX size={16} stroke={1.5} />}
               active
