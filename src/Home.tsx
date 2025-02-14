@@ -7,7 +7,7 @@ import NavLinkItem from './Components/Navlink';
 import { useNavigate } from 'react-router-dom';
 import { useMediaQuery } from '@mantine/hooks';
 import { Card, Divider, Group, NavLink, Stack, Image, Title } from '@mantine/core';
-import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX, IconUsers, IconSettings } from '@tabler/icons-react';
+import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX, IconUsers } from '@tabler/icons-react';
 
 interface HomeProps {
   navOpen: boolean;
@@ -17,11 +17,10 @@ interface HomeProps {
 
 function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   const data = [
-    { icon: IconGauge, label: 'Dashboard' },
-    { icon: IconBuildingStore, label: 'Recarga directa' },
+    // { icon: IconGauge, label: 'Dashboard' },
+    // { icon: IconBuildingStore, label: 'Recarga directa' },
     { icon: IconReport, label: 'Reportes' },
-    { icon: IconUsers, label: 'Mayorista' },
-    { icon: IconSettings, label: 'Configuración' }
+    { icon: IconUsers, label: 'Compra de pines' },
   ];
   const navigate = useNavigate();
 
@@ -48,7 +47,7 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
     if (data[activeLink].label === 'Reportes') {
       return <Reports />;
     }
-    if (data[activeLink].label === 'Mayorista') {
+    if (data[activeLink].label === 'Compra de pines') {
       return <TableM />;
     }
     return <TableC />;
@@ -90,7 +89,7 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
                 <Divider />
                 <NavLink
                   mt={15}
-                  label="User@user"
+                  label="User@gmail.com"
                   color="indigo"
                   icon={<IconUserFilled size={16} stroke={1.5} />}
                   style={{

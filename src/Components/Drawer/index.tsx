@@ -2,7 +2,7 @@ import Logo from '../../assets/Logo TopLevel PNG.png';
 import NavLinkItem from "../Navlink/index";
 import { useState } from "react";
 import { useMediaQuery } from "@mantine/hooks";
-import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX, IconSettings, IconUsers } from "@tabler/icons-react";
+import { IconGauge, IconBuildingStore, IconReport, IconUserFilled, IconX, IconUsers } from "@tabler/icons-react";
 import {
   Drawer as MantineDrawer,
   Burger,
@@ -19,11 +19,10 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
   const isMobile = useMediaQuery("(min-width: 1000px)");
 
   const data = [
-    { icon: IconGauge, label: 'Dashboard' },
-    { icon: IconBuildingStore, label: 'Recarga directa' },
+    // { icon: IconGauge, label: 'Dashboard' },
+    // { icon: IconBuildingStore, label: 'Recarga directa' },
     { icon: IconReport, label: 'Reportes' },
     { icon: IconUsers, label: 'Mayorista' },
-    { icon: IconSettings, label: 'Configuración' }
   ];
 
   const items = data.map((item, index) => (
@@ -68,19 +67,18 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
         overlayOpacity={0.55}
         overlayBlur={3}
       >
-        <Stack justify="space-between" style={{ height: '90vh' }}>
+        <Stack justify="space-between" style={{ height: '80vh' }}>
           <div>
             <div style={{ width: 150, marginLeft: 'auto', marginRight: 'auto' }}>
-              <Image mt={-55} src={Logo} alt="Panda" />
+              <Image mt={-70} src={Logo} alt="Panda" />
             </div>
             {items}
           </div>
 
           <div>
-            <Divider />
+            <Divider/>
             <NavLink
-              mt={15}
-              label="User@user"
+              label="User@gmail.com"
               color="indigo"
               icon={<IconUserFilled size={16} stroke={1.5} />}
               style={{
@@ -100,7 +98,6 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
               }}
             />
             <NavLink
-              mt={15}
               label="Cerrar Sesión"
               onClick={handleLogin}
               color="indigo"

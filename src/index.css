@@ -1,27 +1,17 @@
-body {
-    overflow-x: hidden;
-    /* background: #E8E8E8; */
-}
-
 ::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-    background:  #0c2a85;
-    border-radius: 50px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    display: none;
 }
 
 html {
-    scrollbar-color:  #0c2a85 #f1f1f1;  
-    scrollbar-width: thin;
+    scrollbar-width: none;
 }
+
+body {
+    -ms-overflow-style: none;
+}
+
 .active-link {
-    color:  #0c2a85;
+    color: #0c2a85;
     text-decoration: underline;
     text-decoration-thickness: 3px;
     transition: all 0.3s ease-in-out;
@@ -30,4 +20,3 @@ html {
 .active-link:hover {
     text-decoration-thickness: 5px;
 }
-    

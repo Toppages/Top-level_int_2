@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Asegúrate de tener axios instalado
+import axios from 'axios'; 
 import {
     Modal,
     Stepper,
@@ -14,7 +14,7 @@ import {
 } from '@mantine/core';
 import { IconEye } from '@tabler/icons-react';
 import moment from 'moment';
-import CryptoJS from 'crypto-js'; // Si no tienes crypto-js, instálalo
+import CryptoJS from 'crypto-js';
 
 interface Product {
     code: string;
@@ -32,15 +32,15 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
     const [activeStep, setActiveStep] = useState<number>(0);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [capturedPins, setCapturedPins] = useState<string[]>([]);
-    const [playerId, setPlayerId] = useState<string>('');  // Estado para el ID del jugador
-    const [isValidId, setIsValidId] = useState<boolean>(false); // Estado para validar el ID
-    const [errorMessage, setErrorMessage] = useState<string>(''); // Estado para el mensaje de error
-    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false); // Estado de autorización
-    const [accountName, setAccountName] = useState<string>(''); // Estado para el nombre de cuenta recibido de la API
+    const [playerId, setPlayerId] = useState<string>('');  
+    const [isValidId, setIsValidId] = useState<boolean>(false); 
+    const [errorMessage, setErrorMessage] = useState<string>(''); 
+    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false); 
+    const [accountName, setAccountName] = useState<string>(''); 
 
     const handleIdChange = (value: string) => {
         setPlayerId(value);
-        setErrorMessage(''); // Limpiar el mensaje de error cada vez que el usuario escribe
+        setErrorMessage('');
     };
 
     const handleConfirmClick = async () => {
@@ -50,7 +50,6 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
             return;
         }
 
-        // Realizamos la validación del ID con la API
         setIsAuthorizing(true);
         const apiKey = localStorage.getItem('apiKey');
         const apiSecret = localStorage.getItem('apiSecret');
@@ -88,10 +87,10 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
 
             if (response.status === 200 && response.data.status === true) {
                 console.log("ID de jugador validado:", response.data);
-                setIsValidId(true); // Habilitamos el botón siguiente
+                setIsValidId(true); 
                 setErrorMessage('');
-                setAccountName(response.data.account_name); // Guardamos el nombre de cuenta recibido
-                setActiveStep(2); // Avanzamos al siguiente paso
+                setAccountName(response.data.account_name); 
+                setActiveStep(2); 
             } else {
                 setIsValidId(false);
                 setErrorMessage('El ID del jugador no es válido o la validación falló.');
@@ -166,7 +165,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
                         placeholder="Ingresa el ID"
                         value={playerId}
                         onChange={(e) => handleIdChange(e.target.value)}
-                        error={errorMessage} // Mostramos el mensaje de error aquí
+                        error={errorMessage} 
                     />
                     {accountName && isValidId && (
                         <Text align="center" mt="sm" style={{ fontWeight: 'bold', color: '#28a745' }}>

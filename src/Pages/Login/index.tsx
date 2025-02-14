@@ -29,18 +29,18 @@ const Login: React.FC = () => {
                 </div>
                 <Stack mt="lg" spacing="sm">
                     <TextInput
-                        label="API Key"
-                        placeholder="Ingresa tu API Key"
+                        label="Usuario"
+                        placeholder="Ingrese su usuario"
                         value={apiKey}
                         onChange={(e) => setApiKey(e.currentTarget.value)}
                     />
                     <PasswordInput
-                        label="API Secret"
-                        placeholder="Ingresa tu API Secret"
+                        label="Clave"
+                        placeholder="Ingresa tu clave"
                         value={apiSecret}
                         onChange={(e) => setApiSecret(e.currentTarget.value)}
                     />
-                    <Button fullWidth mt="md" onClick={handleLogin}>
+                    <Button className='button' fullWidth mt="md" onClick={handleLogin}>
                         Iniciar Sesión
                     </Button>
                 </Stack>

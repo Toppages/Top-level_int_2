@@ -11,10 +11,11 @@ import {
     Text,
     NumberInput,
 } from '@mantine/core';
-import { IconEye } from '@tabler/icons-react';
+import { IconShoppingBag } from '@tabler/icons-react';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
 import moment from 'moment';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface Product {
     code: string;
@@ -26,14 +27,16 @@ interface StepperMaProps {
     opened: boolean;
     onClose: () => void;
     products: Product[];
+    activeStep: number;
+    setActiveStep: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
-    const [activeStep, setActiveStep] = useState<number>(0);
+const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep }) => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [quantity, setQuantity] = useState<number>(1);
     const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
     const [capturedPins, setCapturedPins] = useState<string[]>([]);
+    const isMobile = useMediaQuery('(max-width: 1000px)');
 
     const handleAuthorize = async () => {
         if (!selectedProduct) return;
@@ -80,7 +83,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
             if (response.status === 200 && response.data.status === "authorized") {
                 console.log("Autorización exitosa", response.data);
                 handleCapture(response.data.id);
-                setActiveStep(1);
+                setActiveStep(1); // Cambia al paso 1 después de la autorización
             } else {
                 console.error("Error en la solicitud de autorización:");
             }
@@ -143,16 +146,17 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
     };
 
     const handleFinishClick = () => {
-      
-            onClose();
-            setActiveStep(0);
-            setCapturedPins([]);
-  
+        onClose();
+        setActiveStep(0);
+        setCapturedPins([]);
     };
-
+    const tableTextStyle = {
+        fontSize: isMobile ? '14px' : '14px',
+        whiteSpace: 'normal',
+    };
     return (
         <Modal opened={opened} onClose={onClose} withCloseButton={false} size="xl">
-            <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} breakpoint="sm">
+            <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} allowNextStepsSelect={false} breakpoint="sm">
                 <Stepper.Step label="Productos" description="Selecciona un producto">
                     <div>
                         <Title align="center" order={3} style={{ fontWeight: 700, color: '#333' }}>
@@ -163,32 +167,39 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
                             <Table striped highlightOnHover>
                                 <thead>
                                     <tr>
-                                        <th>Producto</th>
-                                        <th>Precio</th>
-                                        <th>Acción</th>
+                                        <th style={tableTextStyle}>Producto</th>
+                                        <th style={tableTextStyle}>Precio</th>
+                                        <th style={tableTextStyle}>Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {products.map(product => (
-                                        <tr key={product.code}>
-                                            <td>{product.name}</td>
-                                            <td>{product.price}$</td>
-                                            <td>
-                                                <ActionIcon
-                                                    onClick={() => {
-                                                        setSelectedProduct(product);
-                                                        setActiveStep(1);
-                                                    }}
-                                                    style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
-                                                    size="lg"
-                                                    variant="filled"
-                                                >
-                                                    <IconEye size={26} />
-                                                </ActionIcon>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {products
+                                        .slice()
+                                        .sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
+                                        .map(product => (
+                                            <tr key={product.code}>
+                                                <td style={tableTextStyle}>
+                                                    {product.name.replace(/free fire\s*-\s*/gi, '').replace(/free fire/gi, '')}
+                                                </td>
+                                                <td style={{ fontSize: '12px' }}>{product.price}$</td>
+                                                <td>
+                                                    <ActionIcon
+                                                        onClick={() => {
+                                                            setSelectedProduct(product);
+                                                            setActiveStep(1);
+                                                        }}
+                                                        style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
+                                                        size="lg"
+                                                        variant="filled"
+                                                    >
+                                                        <IconShoppingBag size={26} />
+                                                    </ActionIcon>
+                                                </td>
+                                            </tr>
+                                        ))}
                                 </tbody>
+
+
                             </Table>
                         ) : (
                             <p>No hay productos disponibles para este grupo.</p>
