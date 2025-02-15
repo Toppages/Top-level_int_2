@@ -186,7 +186,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                                 <td style={tableTextStyle}>
                                                     {product.name.replace(/free fire\s*-\s*/gi, '').replace(/free fire/gi, '')}
                                                 </td>
-                                                <td style={{ fontSize: '12px' }}>{product.price}$</td>
+                                                <td style={{ fontSize: '12px' }}>{product.price} USD</td>
                                                 <td>
                                                     <ActionIcon
                                                         onClick={() => {
@@ -240,9 +240,9 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                 disabled={isAuthorizing}
                             />
                             <Group position="apart">
-                                <Title order={5}>Precio: {selectedProduct.price} $</Title>
+                                <Title order={5}>Precio: {selectedProduct.price} USD</Title>
                                 <Title order={5}>
-                                    Total: {(parseFloat(selectedProduct.price) * quantity).toFixed(2)} $
+                                    Total: {(parseFloat(selectedProduct.price) * quantity).toFixed(2)} USD
                                 </Title>
                             </Group>
                             <Group position="center" mt="xl">
