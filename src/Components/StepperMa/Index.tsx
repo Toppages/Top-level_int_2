@@ -41,13 +41,13 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
     const handleAuthorize = async () => {
         if (!selectedProduct) return;
-        setIsAuthorizing(true); 
+        setIsAuthorizing(true);
 
         const apiKey = localStorage.getItem('apiKey');
         const apiSecret = localStorage.getItem('apiSecret');
 
         if (!apiKey || !apiSecret) {
-            setIsAuthorizing(false); 
+            setIsAuthorizing(false);
             return;
         }
 
@@ -137,14 +137,14 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                 console.log("PINs capturados:", response.data.pins);
                 setCaptureId(response.data.id);
                 setCapturedPins(response.data.pins.map((pin: { key: string }) => pin.key));
-                setActiveStep(2); 
+                setActiveStep(2);
             } else {
                 console.error("Error en la solicitud de captura:");
             }
         } catch (error) {
             console.error("Error en la solicitud de captura:", error);
         } finally {
-            setIsAuthorizing(false); 
+            setIsAuthorizing(false);
         }
     };
 
@@ -229,8 +229,8 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                     }
                                 }}
                                 onInput={(e) => {
-                                    const inputElement = e.target as HTMLInputElement; 
-                                    inputElement.value = inputElement.value.replace(/\D/g, ""); 
+                                    const inputElement = e.target as HTMLInputElement;
+                                    inputElement.value = inputElement.value.replace(/\D/g, "");
 
                                     if (inputElement.value !== "" && Number(inputElement.value) > 100) {
                                         inputElement.value = "100";
@@ -249,10 +249,11 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                 <Button
                                     onClick={handleAuthorize}
                                     style={{ background: '#0c2a85' }}
-                                    loading={isAuthorizing} // Mantén el loading mientras se autoriza y captura
+                                    loading={isAuthorizing}
                                 >
-                                    Siguiente
+                                    {isAuthorizing ? 'Generando...' : 'Generar'}
                                 </Button>
+
                             </Group>
                         </>
                     )}
