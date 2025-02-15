@@ -37,16 +37,17 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
     const [capturedPins, setCapturedPins] = useState<string[]>([]);
     const isMobile = useMediaQuery('(max-width: 1000px)');
+    const [captureId, setCaptureId] = useState<string | null>(null);
 
     const handleAuthorize = async () => {
         if (!selectedProduct) return;
-        setIsAuthorizing(true);
+        setIsAuthorizing(true); 
 
         const apiKey = localStorage.getItem('apiKey');
         const apiSecret = localStorage.getItem('apiSecret');
 
         if (!apiKey || !apiSecret) {
-            setIsAuthorizing(false);
+            setIsAuthorizing(false); 
             return;
         }
 
@@ -83,19 +84,17 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             if (response.status === 200 && response.data.status === "authorized") {
                 console.log("Autorización exitosa", response.data);
                 handleCapture(response.data.id);
-                setActiveStep(1); // Cambia al paso 1 después de la autorización
             } else {
                 console.error("Error en la solicitud de autorización:");
             }
         } catch (error) {
             console.error("Error en la solicitud de autorización:", error);
-        } finally {
-            setIsAuthorizing(false);
         }
     };
 
     const handleCapture = async (playerId: string) => {
         if (!playerId) {
+            setIsAuthorizing(false);
             return;
         }
 
@@ -104,6 +103,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
         if (!apiKey || !apiSecret) {
             console.error("Error en la solicitud de autorización");
+            setIsAuthorizing(false);
             return;
         }
 
@@ -135,13 +135,16 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
             if (response.status === 200 && response.data.status === "captured") {
                 console.log("PINs capturados:", response.data.pins);
+                setCaptureId(response.data.id);
                 setCapturedPins(response.data.pins.map((pin: { key: string }) => pin.key));
-                setActiveStep(2);
+                setActiveStep(2); 
             } else {
                 console.error("Error en la solicitud de captura:");
             }
         } catch (error) {
             console.error("Error en la solicitud de captura:", error);
+        } finally {
+            setIsAuthorizing(false); 
         }
     };
 
@@ -150,10 +153,12 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         setActiveStep(0);
         setCapturedPins([]);
     };
+
     const tableTextStyle = {
         fontSize: isMobile ? '14px' : '14px',
         whiteSpace: 'normal',
     };
+
     return (
         <Modal opened={opened} onClose={onClose} withCloseButton={false} size="xl">
             <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} allowNextStepsSelect={false} breakpoint="sm">
@@ -198,8 +203,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                             </tr>
                                         ))}
                                 </tbody>
-
-
                             </Table>
                         ) : (
                             <p>No hay productos disponibles para este grupo.</p>
@@ -207,30 +210,46 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                     </div>
                 </Stepper.Step>
 
-                <Stepper.Step label="Confirmar" description="Ingresa Ingrese cantidad de Pines">
+                <Stepper.Step label="Confirmar" description="Ingresa cantidad de Pines">
                     {selectedProduct && (
                         <>
                             <NumberInput
                                 min={1}
-                                max={10}
+                                max={100}
                                 ta="center"
                                 label="Cantidad"
                                 placeholder="Cantidad"
                                 radius="md"
                                 size="md"
                                 value={quantity}
-                                onChange={(value) => setQuantity(value ?? 1)}
+                                onChange={(value) => {
+                                    const numericValue = Number(value);
+                                    if (!isNaN(numericValue) && numericValue >= 1 && numericValue <= 100) {
+                                        setQuantity(numericValue);
+                                    }
+                                }}
+                                onInput={(e) => {
+                                    const inputElement = e.target as HTMLInputElement; 
+                                    inputElement.value = inputElement.value.replace(/\D/g, ""); 
+
+                                    if (inputElement.value !== "" && Number(inputElement.value) > 100) {
+                                        inputElement.value = "100";
+                                    }
+                                }}
+                                step={1}
                                 disabled={isAuthorizing}
                             />
                             <Group position="apart">
                                 <Title order={5}>Precio: {selectedProduct.price} $</Title>
-                                <Title order={5}>Total: {parseFloat(selectedProduct.price) * quantity} $</Title>
+                                <Title order={5}>
+                                    Total: {(parseFloat(selectedProduct.price) * quantity).toFixed(2)} $
+                                </Title>
                             </Group>
                             <Group position="center" mt="xl">
                                 <Button
                                     onClick={handleAuthorize}
                                     style={{ background: '#0c2a85' }}
-                                    loading={isAuthorizing}
+                                    loading={isAuthorizing} // Mantén el loading mientras se autoriza y captura
                                 >
                                     Siguiente
                                 </Button>
@@ -243,11 +262,16 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                     <div>
                         <Title order={3} align="center">Detalles de los PINs Capturados</Title>
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
+                        {captureId && (
+                            <Text align="center" weight={700} size="md" style={{ marginBottom: '10px' }}>
+                                ID de la compra: {captureId}
+                            </Text>
+                        )}
                         {capturedPins.length > 0 ? (
                             <Table striped highlightOnHover>
                                 <thead>
                                     <tr>
-                                        <th>Claves</th>
+                                        <th>Pins</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -268,7 +292,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                         </Button>
                     </Group>
                 </Stepper.Step>
-
             </Stepper>
         </Modal>
     );

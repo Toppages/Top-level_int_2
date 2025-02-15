@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios'; 
+import axios from 'axios';
 import {
     Modal,
     Stepper,
@@ -32,11 +32,11 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
     const [activeStep, setActiveStep] = useState<number>(0);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [capturedPins, setCapturedPins] = useState<string[]>([]);
-    const [playerId, setPlayerId] = useState<string>('');  
-    const [isValidId, setIsValidId] = useState<boolean>(false); 
-    const [errorMessage, setErrorMessage] = useState<string>(''); 
-    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false); 
-    const [accountName, setAccountName] = useState<string>(''); 
+    const [playerId, setPlayerId] = useState<string>('');
+    const [isValidId, setIsValidId] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
+    const [accountName, setAccountName] = useState<string>('');
 
     const handleIdChange = (value: string) => {
         setPlayerId(value);
@@ -87,10 +87,10 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
 
             if (response.status === 200 && response.data.status === true) {
                 console.log("ID de jugador validado:", response.data);
-                setIsValidId(true); 
+                setIsValidId(true);
                 setErrorMessage('');
-                setAccountName(response.data.account_name); 
-                setActiveStep(2); 
+                setAccountName(response.data.account_name);
+                setActiveStep(2);
             } else {
                 setIsValidId(false);
                 setErrorMessage('El ID del jugador no es válido o la validación falló.');
@@ -135,7 +135,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
                                     {products.map(product => (
                                         <tr key={product.code}>
                                             <td>{product.name}</td>
-                                            <td>{product.price}$</td>
+                                            <td>{product.price}USD</td>
                                             <td>
                                                 <ActionIcon
                                                     onClick={() => {
@@ -165,7 +165,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
                         placeholder="Ingresa el ID"
                         value={playerId}
                         onChange={(e) => handleIdChange(e.target.value)}
-                        error={errorMessage} 
+                        error={errorMessage}
                     />
                     {accountName && isValidId && (
                         <Text align="center" mt="sm" style={{ fontWeight: 'bold', color: '#28a745' }}>
