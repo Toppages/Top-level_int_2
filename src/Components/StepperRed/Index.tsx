@@ -51,8 +51,8 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
         }
 
         setIsAuthorizing(true);
-        const apiKey = localStorage.getItem('apiKey');
-        const apiSecret = localStorage.getItem('apiSecret');
+        const apiKey = import.meta.env.VITE_API_KEY;
+        const apiSecret = import.meta.env.VITE_API_SECRET;
 
         if (!apiKey || !apiSecret) {
             setIsAuthorizing(false);

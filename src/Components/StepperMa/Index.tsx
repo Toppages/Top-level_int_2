@@ -43,8 +43,8 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         if (!selectedProduct) return;
         setIsAuthorizing(true);
 
-        const apiKey = localStorage.getItem('apiKey');
-        const apiSecret = localStorage.getItem('apiSecret');
+        const apiKey = import.meta.env.VITE_API_KEY;
+        const apiSecret = import.meta.env.VITE_API_SECRET;
 
         if (!apiKey || !apiSecret) {
             setIsAuthorizing(false);
@@ -98,8 +98,8 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             return;
         }
 
-        const apiKey = localStorage.getItem('apiKey');
-        const apiSecret = localStorage.getItem('apiSecret');
+        const apiKey = import.meta.env.VITE_API_KEY;
+        const apiSecret = import.meta.env.VITE_API_SECRET;
 
         if (!apiKey || !apiSecret) {
             console.error("Error en la solicitud de autorización");

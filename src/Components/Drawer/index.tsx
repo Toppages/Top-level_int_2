@@ -41,8 +41,7 @@ function Drawer({ setActiveLink }: { setActiveLink: (index: number) => void }) {
   ));
 
   const handleLogout = () => {
-    localStorage.removeItem('apiKey');
-    localStorage.removeItem('apiSecret');
+
     setOpened(false);
     window.location.replace('/');
   };

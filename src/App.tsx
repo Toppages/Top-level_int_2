@@ -6,14 +6,16 @@ import { useState, useEffect } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 
+const apiKey = import.meta.env.VITE_API_KEY;
+const apiSecret = import.meta.env.VITE_API_SECRET;
+
 function AppContent() {
   const [navOpen, setNavOpen] = useState(true);
   const [activeLink, setActiveLink] = useState(0);
   const isMobile = useMediaQuery('(max-width: 1000px)');
   const location = useLocation();
 
-  const isAuthenticated = localStorage.getItem('apiKey') && localStorage.getItem('apiSecret');
-  
+  const isAuthenticated = apiKey && apiSecret;
   const isLoginPage = location.pathname === "/";
 
   useEffect(() => {

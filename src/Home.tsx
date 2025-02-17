@@ -23,8 +23,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('apiKey');
-    localStorage.removeItem('apiSecret');
     window.location.replace('/');
   };
 
