@@ -1,12 +1,14 @@
 import './App.css';
 import Logo from './assets/Logo TopLevel PNG.png';
-import TableC from './Components/TableC/Index';
+// import TableC from './Components/TableC/Index';
 import TableM from './Components/TableM/Index';
 import Reports from './Components/Reports';
 import NavLinkItem from './Components/Navlink';
+import Dashboard from './Components/Dashboard/Index';
 import { useMediaQuery } from '@mantine/hooks';
 import { Card, Divider, Group, NavLink, Stack, Image, Title } from '@mantine/core';
-import { IconReport, IconUserFilled, IconX, IconUsers } from '@tabler/icons-react';
+import { IconReport, IconUserFilled, IconX, IconUsers, IconGauge } from '@tabler/icons-react';
+import { Toaster } from 'sonner'
 
 interface HomeProps {
   navOpen: boolean;
@@ -16,7 +18,7 @@ interface HomeProps {
 
 function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   const data = [
-    // { icon: IconGauge, label: 'Dashboard' },
+    { icon: IconGauge, label: 'Dashboard' },
     // { icon: IconBuildingStore, label: 'Recarga directa' },
     { icon: IconUsers, label: 'Compra de pines' },
     { icon: IconReport, label: 'Reportes' },
@@ -35,23 +37,27 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
       active={activeLink}
       label={item.label}
       icon={item.icon}
-      disabled={item.label === 'Dashboard'}
       onClick={() => setActiveLink(index)}
     />
   ));
 
   const renderContent = () => {
+    if (data[activeLink].label === 'Dashboard') {
+      return <Dashboard />; 
+    }
     if (data[activeLink].label === 'Reportes') {
       return <Reports />;
     }
     if (data[activeLink].label === 'Compra de pines') {
       return <TableM />;
     }
-    return <TableC />;
+    return <Dashboard />;
   };
+  
 
   return (
     <>
+<Toaster position="bottom-right" />
       <Group
         mt={15}
         mx="sm"

@@ -45,6 +45,7 @@ function AppContent() {
               <Navigate to="/" />
             )}
           />
+        
         </Routes>
       </main>
     </>

@@ -9,7 +9,7 @@ const Login: React.FC = () => {
 
     const handleLogin = () => {
       
-        
+        navigate('/home');
     };
 
     return (
