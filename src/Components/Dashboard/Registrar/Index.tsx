@@ -93,9 +93,9 @@ function Registrar() {
                 role: data.role,
                 saldo: data.saldo,
             });
-    
+
             toast.success('Registro exitoso: ' + response.data.message || 'Usuario registrado correctamente');
-    
+
             setOpened(false);
             reset();
         } catch (error: unknown) {
@@ -182,12 +182,14 @@ function Registrar() {
                                     value: 100,
                                     message: "El saldo debe ser al menos 100",
                                 },
+                                disabled: watch('role') !== 'cliente',
                             })}
                             onChange={(value) => setValue("saldo", value || 0)}
                             max={1000000}
                             min={100}
                             error={errors.saldo?.message}
                         />
+
 
                         <Popover opened={popoverOpened} position="bottom" width="target" transition="pop">
                             <Popover.Target>
@@ -196,7 +198,7 @@ function Registrar() {
                                     onBlurCapture={() => setPopoverOpened(false)}
                                 >
                                     <PasswordInput
-                            radius='md'
+                                        radius='md'
                                         label="Contraseña"
                                         placeholder="Contraseña"
                                         {...register("password", {

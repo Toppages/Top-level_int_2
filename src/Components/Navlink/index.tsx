@@ -5,25 +5,18 @@ interface NavLinkItemProps {
   index: number;
   active: number;
   label: string;
-  icon: React.ComponentType<any>; 
+  icon: React.ComponentType<any>;
   onClick: () => void;
   disabled?: boolean;
 }
 
-function NavLinkItem({
-  index,
-  active,
-  label,
-  icon: Icon,
-  onClick,
-  disabled = false,
-}: NavLinkItemProps) {
+function NavLinkItem({ index, active, label, icon: Icon, onClick, disabled = false }: NavLinkItemProps) {
   return (
     <motion.div
       key={`${label}-${index}`}
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.2, duration: 0.5 }}
+      transition={{ delay: index * 0.1, duration: 0.3 }}
     >
       <NavLink
         variant="subtle"
@@ -45,20 +38,19 @@ function NavLinkItem({
         }}
         onMouseEnter={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
           if (!disabled && index !== active) {
-            e.currentTarget.style.backgroundColor = "#dbe4f3"; 
-            e.currentTarget.style.color = "#0c2a85"; 
+            e.currentTarget.style.backgroundColor = "#dbe4f3";
+            e.currentTarget.style.color = "#0c2a85";
           }
         }}
         onMouseLeave={(e: { currentTarget: { style: { backgroundColor: string; color: string; }; }; }) => {
           if (!disabled && index !== active) {
             e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.color = "#0c2a85"; 
+            e.currentTarget.style.color = "#0c2a85";
           }
         }}
       />
     </motion.div>
   );
 }
-
 
 export default NavLinkItem;

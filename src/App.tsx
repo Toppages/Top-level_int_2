@@ -5,6 +5,7 @@ import Login from './Pages/Login';
 import { useState, useEffect } from 'react';
 import { useMediaQuery } from '@mantine/hooks';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 
 const apiKey = import.meta.env.VITE_API_KEY;
 const apiSecret = import.meta.env.VITE_API_SECRET;
@@ -45,7 +46,7 @@ function AppContent() {
               <Navigate to="/" />
             )}
           />
-        
+
         </Routes>
       </main>
     </>
@@ -56,6 +57,8 @@ function App() {
   return (
     <Router>
       <AppContent />
+
+      <Toaster position="bottom-right" />
     </Router>
   );
 }
