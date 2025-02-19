@@ -24,23 +24,28 @@ function AppContent() {
       setIsAuthenticated(false); 
     }
   }, [token]);
+  
 
   const verifyToken = async (token: string) => {
     try {
-      await axios.get('http://localhost:4000/user', {
+      const response = await axios.get('http://localhost:4000/user', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      const userData = response.data;
       setIsAuthenticated(true);
       localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userData', JSON.stringify(userData)); // Actualiza userData en localStorage
     } catch (error) {
       localStorage.removeItem('token');
+      localStorage.removeItem('userData');
       setIsAuthenticated(false);
       localStorage.setItem('isAuthenticated', 'false');
       toast.error('Sesión expirada. Inicie sesión nuevamente.');
     }
   };
+  
 
   if (isAuthenticated === null) {
     return null;

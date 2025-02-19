@@ -1,9 +1,11 @@
+import { useEffect, useState } from "react";
 import Logo from '../../assets/Logo TopLevel PNG.png';
 import NavLinkItem from "../Navlink";
 import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
-import { IconGauge, IconUsers, IconReport, IconUserFilled, IconX, } from "@tabler/icons-react";
+import { IconGauge, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
 import { useMediaQuery } from "@mantine/hooks";
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface NavLinksProps {
     active: number;
@@ -11,34 +13,58 @@ interface NavLinksProps {
     handleLogout: () => void;
 }
 
-
 const data = [
     { icon: IconGauge, label: 'Dashboard' },
     { icon: IconUsers, label: 'Compra de pines' },
     { icon: IconReport, label: 'Reportes' },
 ];
 
-function NavLinks({ active, setActiveLink}: NavLinksProps) {
-    
-        const navigate = useNavigate();
+function NavLinks({ active, setActiveLink }: NavLinksProps) {
+    const [userData, setUserData] = useState(() => JSON.parse(localStorage.getItem('userData') || '{}'));
+    const [lastFetched, setLastFetched] = useState<number>(Date.now());
+    const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width: 1000px)");
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.setItem('isAuthenticated', 'false');
-
         navigate('/');
-      };
-      
+    };
+
+    const fetchUserData = async () => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const response = await axios.get('http://localhost:4000/user', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (JSON.stringify(response.data) !== JSON.stringify(userData)) {
+                    setUserData(response.data);
+                    localStorage.setItem('userData', JSON.stringify(response.data));
+                    setLastFetched(Date.now());
+                }
+            } catch (error) {
+                console.error('Error al obtener datos del usuario:', error);
+            }
+        }
+    };
+
+    useEffect(() => {
+        fetchUserData();
+        const intervalId = setInterval(() => {
+            if (Date.now() - lastFetched > 5000) {
+                fetchUserData();
+            }
+        }, 5000);
+
+        return () => clearInterval(intervalId);
+    }, [lastFetched]);
+
     return (
         <Stack justify="space-between" style={{ height: isMobile ? '85vh' : '90vh' }}>
             <div>
                 <div style={{ width: 150, marginLeft: 'auto', marginRight: 'auto' }}>
-
-
-                <Image mt={-50} src={Logo} alt="Panda" />
-
-
-
+                    <Image mt={-50} src={Logo} alt="Panda" />
                 </div>
                 {data.map((item, index) => (
                     <NavLinkItem
@@ -53,12 +79,12 @@ function NavLinks({ active, setActiveLink}: NavLinksProps) {
             </div>
             <div>
                 <Title ta="center" c="#0c2a85" order={3}>
-                    300$
+                    {userData.saldo ? `${userData.saldo}$` : 'Saldo no disponible'}
                 </Title>
                 <Divider />
                 <NavLink
                     mt={15}
-                    label="User@gmail.com"
+                    label={userData.email || 'User@gmail.com'}
                     color="indigo"
                     icon={<IconUserFilled size={16} stroke={1.5} />}
                     style={{
