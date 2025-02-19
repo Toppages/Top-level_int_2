@@ -13,12 +13,7 @@ function Navbar({
 
   return (
     <>
-      <Card
-                  style={{
-                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-                  }}
-                  
-      mx="sm" radius="md" mt={15}>
+      <Card mx="sm" radius="md" mt={15}>
         <Group position="apart" style={{ width: "100%", background: "white" }}>
           <Drawer setActiveLink={setActiveLink} />
 

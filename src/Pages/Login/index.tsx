@@ -12,7 +12,11 @@ interface ILoginFormInputs {
     password: string;
 }
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onLoginSuccess: () => void;  
+}
+
+const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {  
     const navigate = useNavigate();
 
     const { register, handleSubmit, formState: { errors } } = useForm<ILoginFormInputs>();
@@ -20,14 +24,13 @@ const Login: React.FC = () => {
     const onSubmit = async (data: ILoginFormInputs) => {
         try {
             const response = await axios.post('http://localhost:4000/auth/login', data);
-
-            console.log('Respuesta del backend:', response.data);
-
             const token = response.data;
+    
             if (token) {
                 localStorage.setItem('token', token);
                 toast.success('Inicio de sesión exitoso');
-                navigate('/home');
+                onLoginSuccess();  
+                navigate('/home'); 
             } else {
                 toast.error('No se recibió el token');
             }
@@ -40,8 +43,7 @@ const Login: React.FC = () => {
             }
         }
     };
-
-
+    
 
     return (
         <div className="login-background">
@@ -62,7 +64,7 @@ const Login: React.FC = () => {
                                     value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
                                     message: 'El email no es válido'
                                 }
-                            })}
+                            })} 
                         />
                         {errors.email && (
                             <Alert color="red" mt="md">
@@ -73,7 +75,7 @@ const Login: React.FC = () => {
                         <PasswordInput
                             label="Clave"
                             placeholder="Ingresa tu clave"
-                            {...register('password', { required: 'La clave es obligatoria' })}
+                            {...register('password', { required: 'La clave es obligatoria' })} 
                         />
                         {errors.password && (
                             <Alert color="red" mt="md">

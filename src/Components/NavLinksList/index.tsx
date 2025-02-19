@@ -2,6 +2,8 @@ import Logo from '../../assets/Logo TopLevel PNG.png';
 import NavLinkItem from "../Navlink";
 import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
 import { IconGauge, IconUsers, IconReport, IconUserFilled, IconX, } from "@tabler/icons-react";
+import { useMediaQuery } from "@mantine/hooks";
+import { useNavigate } from 'react-router-dom';
 
 interface NavLinksProps {
     active: number;
@@ -9,17 +11,35 @@ interface NavLinksProps {
     handleLogout: () => void;
 }
 
+
 const data = [
     { icon: IconGauge, label: 'Dashboard' },
     { icon: IconUsers, label: 'Compra de pines' },
     { icon: IconReport, label: 'Reportes' },
 ];
 
-function NavLinks({ active, setActiveLink, handleLogout }: NavLinksProps) {
+function NavLinks({ active, setActiveLink}: NavLinksProps) {
+    
+        const navigate = useNavigate();
+    const isMobile = useMediaQuery("(max-width: 1000px)");
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.setItem('isAuthenticated', 'false');
+
+        navigate('/');
+      };
+      
     return (
-        <Stack justify="space-between" style={{ height: '90vh' }}>
+        <Stack justify="space-between" style={{ height: isMobile ? '85vh' : '90vh' }}>
             <div>
-                <Image mt={-55} src={Logo} alt="Panda" />
+                <div style={{ width: 150, marginLeft: 'auto', marginRight: 'auto' }}>
+
+
+                <Image mt={-50} src={Logo} alt="Panda" />
+
+
+
+                </div>
                 {data.map((item, index) => (
                     <NavLinkItem
                         key={index}

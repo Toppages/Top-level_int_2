@@ -15,7 +15,8 @@ interface HomeProps {
 
 function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   const handleLogout = () => {
-    window.location.replace('/');
+    localStorage.removeItem('token'); // Elimina el token
+    window.location.replace('/'); // Redirige a la página de login
   };
 
   const isMobile = useMediaQuery('(max-width: 1000px)');
@@ -58,7 +59,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
             radius="md"
           >
             <NavLinks active={activeLink} setActiveLink={setActiveLink} handleLogout={handleLogout} />
-
           </Card>
         )}
         <Card
