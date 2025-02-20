@@ -4,7 +4,7 @@ import Reports from './Components/Reports';
 import NavLinks from './Components/NavLinksList';
 import Dashboard from './Components/Dashboard/Index';
 import { useMediaQuery } from '@mantine/hooks';
-import { Card, Group } from '@mantine/core';
+import { Card, Group, ScrollArea } from '@mantine/core';
 import { Toaster } from 'sonner';
 
 interface HomeProps {
@@ -15,11 +15,11 @@ interface HomeProps {
 
 function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Elimina el token
-    window.location.replace('/'); // Redirige a la página de login
+    localStorage.removeItem('token');
+    window.location.replace('/');
   };
 
-  const isMobile = useMediaQuery('(max-width: 1000px)');
+  const isMobile = useMediaQuery('(max-width: 1000px)');  // Agregar condición para dispositivos móviles
 
   const renderContent = () => {
     switch (activeLink) {
@@ -42,7 +42,7 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
         mx="sm"
         style={{
           display: 'flex',
-          flexDirection: 'row',
+          flexDirection: isMobile ? 'column' : 'row',  // Cambiar dirección de los elementos en pantallas móviles
           alignItems: 'flex-start',
           gap: 15,
         }}
@@ -61,18 +61,22 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
             <NavLinks active={activeLink} setActiveLink={setActiveLink} handleLogout={handleLogout} />
           </Card>
         )}
-        <Card
-          id="lazy-load-card"
-          radius="md"
-          style={{
-            flexGrow: 1,
-            padding: '20px',
-            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-            height: activeLink === 2 ? '95vh' : 'auto',
-          }}
-        >
-          {renderContent()}
-        </Card>
+
+        <ScrollArea style={{ height: '95vh', width: '80%' }}>
+
+          <Card
+            style={{
+              flexGrow: 1,
+              padding: '20px',
+              boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+              height: activeLink === 2 ? '95vh' : 'auto',
+              maxWidth: '100%', // Asegura que el Card se adapte al ancho
+            }}
+          >
+            {renderContent()}
+          </Card>
+        </ScrollArea>
+
       </Group>
     </>
   );

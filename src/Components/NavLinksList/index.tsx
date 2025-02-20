@@ -6,12 +6,8 @@ import { IconGauge, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler
 import { useMediaQuery } from "@mantine/hooks";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { UserData, NavLinksProps } from "../../types/types";
 
-interface NavLinksProps {
-    active: number;
-    setActiveLink: (index: number) => void;
-    handleLogout: () => void;
-}
 
 const data = [
     { icon: IconGauge, label: 'Dashboard' },
@@ -20,8 +16,8 @@ const data = [
 ];
 
 function NavLinks({ active, setActiveLink }: NavLinksProps) {
-    const [userData, setUserData] = useState(() => JSON.parse(localStorage.getItem('userData') || '{}'));
-    const [lastFetched, setLastFetched] = useState<number>(Date.now());
+    const [userData, setUserData] = useState<UserData | null>(null);
+
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width: 1000px)");
 
@@ -38,11 +34,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 const response = await axios.get('http://localhost:4000/user', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                if (JSON.stringify(response.data) !== JSON.stringify(userData)) {
-                    setUserData(response.data);
-                    localStorage.setItem('userData', JSON.stringify(response.data));
-                    setLastFetched(Date.now());
-                }
+                setUserData(response.data);
             } catch (error) {
                 console.error('Error al obtener datos del usuario:', error);
             }
@@ -51,14 +43,9 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
 
     useEffect(() => {
         fetchUserData();
-        const intervalId = setInterval(() => {
-            if (Date.now() - lastFetched > 5000) {
-                fetchUserData();
-            }
-        }, 5000);
-
+        const intervalId = setInterval(fetchUserData, 5000);
         return () => clearInterval(intervalId);
-    }, [lastFetched]);
+    }, []);
 
     return (
         <Stack justify="space-between" style={{ height: isMobile ? '85vh' : '90vh' }}>
@@ -79,12 +66,13 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
             </div>
             <div>
                 <Title ta="center" c="#0c2a85" order={3}>
-                    {userData.saldo ? `${userData.saldo}$` : 'Saldo no disponible'}
+                    {userData ? `${userData.saldo}$` : 'Saldo no disponible'}
                 </Title>
+
                 <Divider />
                 <NavLink
                     mt={15}
-                    label={userData.email || 'User@gmail.com'}
+                    label={userData ? userData.email : 'User@gmail.com'}
                     color="indigo"
                     icon={<IconUserFilled size={16} stroke={1.5} />}
                     style={{

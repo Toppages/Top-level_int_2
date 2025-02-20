@@ -4,13 +4,8 @@ import { IconEye } from '@tabler/icons-react';
 import axios from 'axios';
 import { getAuthHeaders } from '../../utils/auth';
 import StepperRed from '../StepperRed/Index';
+import { Product } from "../../types/types";
 
-interface Product {
-    product_group: string;
-    code: string;
-    name: string;
-    price: string;
-}
 
 const TableC: React.FC = () => {
     const [opened, setOpened] = useState<boolean>(false);

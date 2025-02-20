@@ -19,33 +19,26 @@ function AppContent() {
 
   useEffect(() => {
     if (token) {
-      verifyToken(token);
+        verifyToken(token);
     } else {
-      setIsAuthenticated(false); 
+        setIsAuthenticated(false);
     }
-  }, [token]);
-  
+}, [token]);
 
-  const verifyToken = async (token: string) => {
+const verifyToken = async (token: string) => {
     try {
-      const response = await axios.get('http://localhost:4000/user', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const userData = response.data;
-      setIsAuthenticated(true);
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userData', JSON.stringify(userData)); // Actualiza userData en localStorage
+         await axios.get('http://localhost:4000/user', {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        setIsAuthenticated(true);
     } catch (error) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userData');
-      setIsAuthenticated(false);
-      localStorage.setItem('isAuthenticated', 'false');
-      toast.error('Sesión expirada. Inicie sesión nuevamente.');
+        setIsAuthenticated(false);
+        toast.error('Sesión expirada. Inicie sesión nuevamente.');
     }
-  };
-  
+};
+
 
   if (isAuthenticated === null) {
     return null;

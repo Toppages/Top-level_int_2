@@ -89,7 +89,6 @@ function Registrar() {
                 name: data.name,
                 email: data.email,
                 password: data.password,
-                confirmPassword: data.confirmPassword,
                 role: data.role,
                 saldo: data.saldo,
             });
