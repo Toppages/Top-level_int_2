@@ -33,7 +33,6 @@ function Dashboard() {
                     })
                         .then((res) => res.json())
                         .then((counts: UserCounts) => {
-                            console.log("Conteo recibido:", counts);
                             setUserCounts(counts);
                         })
                         .catch((err) => console.error("Error al obtener los conteos:", err));
@@ -62,10 +61,12 @@ function Dashboard() {
                             <Card
                                 style={{
                                     padding: "20px",
-                                    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                                     transition: "all 0.3s ease",
                                     transform: "scale(1)",
-                                    width: '100%', // Asegura que el Card ocupe todo el espacio disponible
+                                    width: '100%',
+                                    color: 'white',
+                                    backgroundColor: '#0c2a85' 
                                 }}
                                 radius="md"
                                 onMouseEnter={(e: { currentTarget: any; }) => {
@@ -81,16 +82,19 @@ function Dashboard() {
                             >
                                 <Title order={4}>Administradores: {userCounts.adminCount}</Title>
                             </Card>
+
                         </Grid.Col>
 
                         <Grid.Col xs={12} sm={6} md={4}>
                             <Card
                                 style={{
                                     padding: "20px",
-                                    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                                     transition: "all 0.3s ease",
                                     transform: "scale(1)",
-                                    maxWidth: '100%', // Asegura que el Card se adapte al ancho
+                                    maxWidth: '100%', 
+                                    color: 'white',
+                                    backgroundColor: '#1446df' 
                                 }}
                                 radius="md"
                                 onMouseEnter={(e: { currentTarget: any; }) => {
@@ -111,10 +115,10 @@ function Dashboard() {
                             <Card
                                 style={{
                                     padding: "20px",
-                                    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                                     transition: "all 0.3s ease",
                                     transform: "scale(1)",
-                                    maxWidth: '100%', // Asegura que el Card se adapte al ancho
+                                    maxWidth: '100%',
                                 }}
                                 radius="md"
                                 onMouseEnter={(e: { currentTarget: any; }) => {
@@ -139,7 +143,7 @@ function Dashboard() {
                 <Grid.Col xs={12} sm={6} md={6}>
                     <Card
                         style={{
-                            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                            boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                             transition: "all 0.3s ease",
                             transform: "scale(1)",
                         }}
@@ -156,10 +160,10 @@ function Dashboard() {
                         }}
                     >
                         <LineChart
-                            width={isSmallScreen ? 320 : 400} // Usamos un valor numérico
-                            height={isSmallScreen ? 200 : 300}
+                            width={isSmallScreen ? 380 : 500}
+                            height={isSmallScreen ? 300 : 300}
                             series={[
-                                { data: clientem, label: 'Clientes', color: '#829ef4' },
+                                { data: clientem, label: 'Clientes', color: '#1446df' },
                                 { data: venM, label: 'Vendedores', color: '#0c2a85' },
                             ]}
                             xAxis={[{ scaleType: 'point', data: xLabels }]}
@@ -169,7 +173,7 @@ function Dashboard() {
                 <Grid.Col xs={12} sm={6} md={6}>
                     <Card
                         style={{
-                            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                            boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                             transition: "all 0.3s ease",
                             transform: "scale(1)",
                         }}
@@ -188,11 +192,11 @@ function Dashboard() {
 
 
                         <BarChart
-                            width={500}
-                            height={300}
+                            width={isSmallScreen ? 380 : 450}
+                            height={isSmallScreen ? 300 : 300}
                             borderRadius={12}
                             series={[
-                                { data: clientep, label: 'Clientes', id: 'pvId', stack: 'total', color: '#829ef4' },
+                                { data: clientep, label: 'Clientes', id: 'pvId', stack: 'total', color: '#1446df' },
                                 { data: venp, label: 'Vendedores', id: 'uvId', stack: 'total', color: '#0c2a85' },
                             ]}
                             xAxis={[{ data: xLabels, scaleType: 'band' }]}

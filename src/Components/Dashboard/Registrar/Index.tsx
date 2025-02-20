@@ -24,7 +24,7 @@ interface UserFormData {
     password: string;
     confirmPassword: string;
     email: string;
-    role: "admin" | "vendedor" | "cliente";
+    role: "admin" | "vendedor" | "cliente"| "master";
     saldo: number;
 }
 
@@ -164,9 +164,10 @@ function Registrar() {
                                 { value: "admin", label: "Administrador" },
                                 { value: "vendedor", label: "Vendedor" },
                                 { value: "cliente", label: "Cliente" },
+                                { value: "master", label: "Master" },
                             ]}
                             onChange={(value) =>
-                                setValue("role", value as "admin" | "vendedor" | "cliente")
+                                setValue("role", value as "admin" | "vendedor" | "cliente"|"master")
                             }
                             error={errors.role?.message}
                         />

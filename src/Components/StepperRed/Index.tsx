@@ -86,7 +86,6 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
             });
 
             if (response.status === 200 && response.data.status === true) {
-                console.log("ID de jugador validado:", response.data);
                 setIsValidId(true);
                 setErrorMessage('');
                 setAccountName(response.data.account_name);

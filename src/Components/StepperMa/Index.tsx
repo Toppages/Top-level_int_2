@@ -82,7 +82,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             });
 
             if (response.status === 200 && response.data.status === "authorized") {
-                console.log("Autorización exitosa", response.data);
                 handleCapture(response.data.id);
             } else {
                 console.error("Error en la solicitud de autorización:");
@@ -134,7 +133,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             });
 
             if (response.status === 200 && response.data.status === "captured") {
-                console.log("PINs capturados:", response.data.pins);
                 setCaptureId(response.data.id);
                 setCapturedPins(response.data.pins.map((pin: { key: string }) => pin.key));
                 setActiveStep(2);

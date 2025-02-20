@@ -19,7 +19,7 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
     window.location.replace('/');
   };
 
-  const isMobile = useMediaQuery('(max-width: 1000px)');  // Agregar condición para dispositivos móviles
+  const isMobile = useMediaQuery('(max-width: 1000px)'); 
 
   const renderContent = () => {
     switch (activeLink) {
@@ -42,7 +42,7 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
         mx="sm"
         style={{
           display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',  // Cambiar dirección de los elementos en pantallas móviles
+          flexDirection: isMobile ? 'column' : 'row', 
           alignItems: 'flex-start',
           gap: 15,
         }}
@@ -62,7 +62,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
           </Card>
         )}
 
-        <ScrollArea style={{ height: '95vh', width: '80%' }}>
 
           <Card
             style={{
@@ -75,7 +74,6 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
           >
             {renderContent()}
           </Card>
-        </ScrollArea>
 
       </Group>
     </>
