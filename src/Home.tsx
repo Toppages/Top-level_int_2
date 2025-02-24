@@ -11,22 +11,23 @@ interface HomeProps {
   navOpen: boolean;
   activeLink: number;
   setActiveLink: (index: number) => void;
+  user: { id: string; name: string; email: string,handle: string } | null; 
 }
 
-function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
+function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
   const handleLogout = () => {
     localStorage.removeItem('token');
     window.location.replace('/');
   };
 
-  const isMobile = useMediaQuery('(max-width: 1000px)'); 
+  const isMobile = useMediaQuery('(max-width: 1000px)');
 
   const renderContent = () => {
     switch (activeLink) {
       case 0:
         return <Dashboard />;
       case 1:
-        return <TableM />;
+        return <TableM user={user}  />; 
       case 2:
         return <Reports />;
       default:
@@ -42,7 +43,7 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
         mx="sm"
         style={{
           display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row', 
+          flexDirection: isMobile ? 'column' : 'row',
           alignItems: 'flex-start',
           gap: 15,
         }}
@@ -62,22 +63,21 @@ function Home({ navOpen, activeLink, setActiveLink }: HomeProps) {
           </Card>
         )}
 
-
-          <Card
-            style={{
-              flexGrow: 1,
-              padding: '20px',
-              boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-              height: activeLink === 2 ? '95vh' : 'auto',
-              maxWidth: '100%', // Asegura que el Card se adapte al ancho
-            }}
-          >
-            {renderContent()}
-          </Card>
-
+        <Card
+          style={{
+            flexGrow: 1,
+            padding: '20px',
+            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+            height: activeLink === 2 ? '95vh' : 'auto',
+            maxWidth: '100%',
+          }}
+        >
+          {renderContent()}
+        </Card>
       </Group>
     </>
   );
 }
 
 export default Home;
+

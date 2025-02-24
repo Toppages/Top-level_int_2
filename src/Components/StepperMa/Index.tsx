@@ -29,9 +29,10 @@ interface StepperMaProps {
     products: Product[];
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-}
+    user: { id: string; name: string; email: string,handle: string } | null; 
+  }
 
-const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep }) => {
+  const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [quantity, setQuantity] = useState<number>(1);
     const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
@@ -96,33 +97,33 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             setIsAuthorizing(false);
             return;
         }
-
+    
         const apiKey = import.meta.env.VITE_API_KEY;
         const apiSecret = import.meta.env.VITE_API_SECRET;
-
+    
         if (!apiKey || !apiSecret) {
             console.error("Error en la solicitud de autorización");
             setIsAuthorizing(false);
             return;
         }
-
+    
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
-
+    
         const captureUrl = 'https://pincentral.baul.pro/api/pins/capture';
         const captureBody = {
             id: playerId
         };
-
+    
         const jsonBody = JSON.stringify(captureBody);
-
+    
         const verb = "POST";
         const route = "/api/pins/capture";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
-
+    
         const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
         const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
         const authorizationHeader = `${apiKey}:${hmacSignature}`;
-
+    
         try {
             const response = await axios.post(captureUrl, captureBody, {
                 headers: {
@@ -131,11 +132,13 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                     'Authorization': authorizationHeader
                 }
             });
-
+    
             if (response.status === 200 && response.data.status === "captured") {
                 setCaptureId(response.data.id);
                 setCapturedPins(response.data.pins.map((pin: { key: string }) => pin.key));
                 setActiveStep(2);
+    
+                sendSaleToBackend(response.data.pins, response.data.id);
             } else {
                 console.error("Error en la solicitud de captura:");
             }
@@ -145,7 +148,35 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             setIsAuthorizing(false);
         }
     };
-
+    
+    const sendSaleToBackend = async (pins: { key: string }[], orderId: string) => {
+        try {
+            const saleData = {
+                quantity,
+                product: selectedProduct?.code,
+                status: "captured",
+                order_id: orderId,
+                user: user ? { id: user.id, handle: user.handle, name: user.name, email: user.email } : null,
+                pins: pins.map(pin => ({ serial: "", key: pin.key }))
+            };
+    
+            const response = await axios.post('http://localhost:4000/sales', saleData, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+    
+            if (response.status === 201) {
+                console.log("Venta registrada con éxito en el backend");
+            } else {
+                console.error("Error al registrar la venta en el backend");
+            }
+        } catch (error) {
+            console.error("Error al enviar la venta al backend:", error);
+        }
+    };
+    
+    
     const handleFinishClick = () => {
         onClose();
         setActiveStep(0);

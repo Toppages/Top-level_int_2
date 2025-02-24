@@ -11,7 +11,9 @@ import axios from 'axios';
 function AppContent() {
   const [navOpen, setNavOpen] = useState(true);
   const [activeLink, setActiveLink] = useState(0);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);  
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string; email: string ;handle: string}  | null>(null);
+
   const isMobile = useMediaQuery('(max-width: 1000px)');
   const location = useLocation();
   const token = localStorage.getItem('token');
@@ -19,26 +21,28 @@ function AppContent() {
 
   useEffect(() => {
     if (token) {
-        verifyToken(token);
+      verifyToken(token);
     } else {
-        setIsAuthenticated(false);
+      setIsAuthenticated(false);
     }
-}, [token]);
+  }, [token]);
 
-const verifyToken = async (token: string) => {
+  const verifyToken = async (token: string) => {
     try {
-         await axios.get('http://localhost:4000/user', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        setIsAuthenticated(true);
-    } catch (error) {
-        setIsAuthenticated(false);
-        toast.error('Sesión expirada. Inicie sesión nuevamente.');
-    }
-};
+      const response = await axios.get('http://localhost:4000/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
+      setIsAuthenticated(true);
+      setUser(response.data);
+    } catch (error) {
+      setIsAuthenticated(false);
+      setUser(null);
+      toast.error('Sesión expirada. Inicie sesión nuevamente.');
+    }
+  };
 
   if (isAuthenticated === null) {
     return null;
@@ -60,6 +64,8 @@ const verifyToken = async (token: string) => {
                 navOpen={navOpen}
                 activeLink={activeLink}
                 setActiveLink={setActiveLink}
+                user={user}
+                
               />
             ) : (
               <Navigate to="/" />
