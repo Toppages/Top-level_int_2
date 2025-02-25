@@ -29,10 +29,10 @@ interface StepperMaProps {
     products: Product[];
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-    user: { _id: string; name: string; email: string,handle: string } | null; 
-  }
+    user: { _id: string; name: string; email: string, handle: string } | null;
+}
 
-  const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
+const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [quantity, setQuantity] = useState<number>(1);
     const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
@@ -41,7 +41,11 @@ interface StepperMaProps {
     const [captureId, setCaptureId] = useState<string | null>(null);
 
     const handleAuthorize = async () => {
-        if (!selectedProduct) return;
+        if (!selectedProduct) {
+            console.error("Producto no seleccionado.");
+            return;
+        }
+
         setIsAuthorizing(true);
 
         const apiKey = import.meta.env.VITE_API_KEY;
@@ -53,77 +57,88 @@ interface StepperMaProps {
         }
 
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
-
         const url = 'https://pincentral.baul.pro/api/pins/authorize';
         const verb = "POST";
         const route = "/api/pins/authorize";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
 
-        const body = {
-            product: selectedProduct.code,
-            quantity,
-            order_id: moment().format("YYYYMMDD_HHmmss"),
-            client_name: "Juan Pérez",
-            client_email: "juanperez@email.com"
-        };
+        const chunks = Math.ceil(quantity / 10);
+        let allCapturedPins: string[] = [];
 
-        const jsonBody = JSON.stringify(body);
+        for (let i = 0; i < chunks; i++) {
+            const batchQuantity = i === chunks - 1 ? quantity % 10 : 10;
+            const body = {
+                product: selectedProduct.code,
+                quantity: batchQuantity,
+                order_id: moment().format("YYYYMMDD_HHmmss") + `_${i}`,
+                client_name: "Juan Pérez",
+                client_email: "juanperez@email.com"
+            };
 
-        const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
-        const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
-        const authorizationHeader = `${apiKey}:${hmacSignature}`;
+            const jsonBody = JSON.stringify(body);
+            const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
+            const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
+            const authorizationHeader = `${apiKey}:${hmacSignature}`;
 
-        try {
-            const response = await axios.post(url, body, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Date': date,
-                    'Authorization': authorizationHeader
+            try {
+                const response = await axios.post(url, body, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Date': date,
+                        'Authorization': authorizationHeader
+                    }
+                });
+
+                if (response.status === 200 && response.data.status === "authorized") {
+                    const captureResponse = await handleCapture(response.data.id);
+                    allCapturedPins = [...allCapturedPins, ...captureResponse];
+                } else {
+                    console.error("Error en la solicitud de autorización:");
                 }
-            });
-
-            if (response.status === 200 && response.data.status === "authorized") {
-                handleCapture(response.data.id);
-            } else {
-                console.error("Error en la solicitud de autorización:");
+            } catch (error) {
+                console.error("Error en la solicitud de autorización:", error);
             }
-        } catch (error) {
-            console.error("Error en la solicitud de autorización:", error);
         }
+
+        if (allCapturedPins.length > 0) {
+            sendSaleToBackend(allCapturedPins);
+            setActiveStep(2);
+        }
+
+        setIsAuthorizing(false);
     };
 
     const handleCapture = async (playerId: string) => {
         if (!playerId || !selectedProduct) {
             setIsAuthorizing(false);
-            return;
+            return [];
         }
-    
+
         const apiKey = import.meta.env.VITE_API_KEY;
         const apiSecret = import.meta.env.VITE_API_SECRET;
-    
+
         if (!apiKey || !apiSecret) {
-            console.error("Error en la solicitud de autorización");
+            console.error("Error en la solicitud de captura");
             setIsAuthorizing(false);
-            return;
+            return [];
         }
-    
+
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
-    
         const captureUrl = 'https://pincentral.baul.pro/api/pins/capture';
         const captureBody = {
             id: playerId
         };
-    
+
         const jsonBody = JSON.stringify(captureBody);
-    
+
         const verb = "POST";
         const route = "/api/pins/capture";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
-    
+
         const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
         const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
         const authorizationHeader = `${apiKey}:${hmacSignature}`;
-    
+
         try {
             const response = await axios.post(captureUrl, captureBody, {
                 headers: {
@@ -132,14 +147,11 @@ interface StepperMaProps {
                     'Authorization': authorizationHeader
                 }
             });
-    
+
             if (response.status === 200 && response.data.status === "captured") {
                 setCaptureId(response.data.id);
                 setCapturedPins(response.data.pins.map((pin: { key: string }) => pin.key));
-                setActiveStep(2);
-    
-                const totalPrice = parseFloat(selectedProduct.price) * quantity;
-                sendSaleToBackend(response.data.pins, response.data.id, totalPrice, selectedProduct);
+                return response.data.pins.map((pin: { key: string }) => pin.key);
             } else {
                 console.error("Error en la solicitud de captura:");
             }
@@ -148,32 +160,36 @@ interface StepperMaProps {
         } finally {
             setIsAuthorizing(false);
         }
+
+        return [];
     };
-    
-    const sendSaleToBackend = async (pins: { key: string }[], orderId: string, totalPrice: number, product: Product) => {
+
+    const sendSaleToBackend = async (pins: string[]) => {
         try {
+            const totalPrice = parseFloat(selectedProduct?.price || "0") * quantity;
             const saleData = {
                 quantity,
-                product: product.code,
-                productName: product.name,
-                price: product.price,
+                product: selectedProduct?.code,
+                productName: selectedProduct?.name,
+                price: selectedProduct?.price,
                 totalPrice: totalPrice.toFixed(2),
                 status: "captured",
-                order_id: orderId,
+                order_id: moment().format("YYYYMMDD_HHmmss"),
                 user: user ? { id: user._id, handle: user.handle, name: user.name, email: user.email } : null,
-                pins: pins.map(pin => ({ serial: "", key: pin.key }))
+                pins: pins.map(pin => ({ serial: "", key: pin }))
             };
-    
+
             console.log("Enviando venta:", saleData);
-    
+
             const response = await axios.post('http://localhost:4000/sales', saleData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             if (response.status === 201) {
                 console.log("Venta registrada con éxito en el backend");
+                setCapturedPins(pins);
             } else {
                 console.error("Error al registrar la venta en el backend");
             }
@@ -181,8 +197,8 @@ interface StepperMaProps {
             console.error("Error al enviar la venta al backend:", error);
         }
     };
-    
-       
+
+
     const handleFinishClick = () => {
         onClose();
         setActiveStep(0);
@@ -300,7 +316,7 @@ interface StepperMaProps {
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
                         {captureId && (
                             <Text align="center" weight={700} size="md" style={{ marginBottom: '10px' }}>
-                                ID de la compra: {captureId}
+                                Compra realizada
                             </Text>
                         )}
                         {capturedPins.length > 0 ? (
