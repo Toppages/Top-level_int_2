@@ -160,6 +160,8 @@ interface StepperMaProps {
                 pins: pins.map(pin => ({ serial: "", key: pin.key }))
             };
     
+            console.log("Enviando venta:", saleData);
+    
             const response = await axios.post('http://localhost:4000/sales', saleData, {
                 headers: {
                     'Content-Type': 'application/json'
@@ -175,8 +177,7 @@ interface StepperMaProps {
             console.error("Error al enviar la venta al backend:", error);
         }
     };
-    
-    
+       
     const handleFinishClick = () => {
         onClose();
         setActiveStep(0);
