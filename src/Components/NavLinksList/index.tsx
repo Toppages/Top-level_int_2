@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
 import Logo from '../../assets/Logo TopLevel PNG.png';
 import NavLinkItem from "../Navlink";
+import { useNavigate } from 'react-router-dom';
+import { useMediaQuery } from "@mantine/hooks";
+import { useEffect, useState } from "react";
+import { UserData, NavLinksProps } from "../../types/types";
+import { fetchUserData, handleLogout } from "../../utils/utils";
 import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
 import { IconGauge, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
-import { useMediaQuery } from "@mantine/hooks";
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { UserData, NavLinksProps } from "../../types/types";
-
 
 const data = [
     { icon: IconGauge, label: 'Dashboard' },
@@ -21,29 +20,9 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width: 1000px)");
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.setItem('isAuthenticated', 'false');
-        navigate('/');
-    };
-
-    const fetchUserData = async () => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            try {
-                const response = await axios.get('http://localhost:4000/user', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setUserData(response.data);
-            } catch (error) {
-                console.error('Error al obtener datos del usuario:', error);
-            }
-        }
-    };
-
     useEffect(() => {
-        fetchUserData();
-        const intervalId = setInterval(fetchUserData, 5000);
+        fetchUserData(setUserData); 
+        const intervalId = setInterval(() => fetchUserData(setUserData), 5000);
         return () => clearInterval(intervalId);
     }, []);
 
@@ -94,7 +73,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 <NavLink
                     mt={15}
                     label="Cerrar Sesión"
-                    onClick={handleLogout}
+                    onClick={() => handleLogout(navigate)} // Llamada a la función de utilidad
                     color="indigo"
                     icon={<IconX size={16} stroke={1.5} />}
                     active
