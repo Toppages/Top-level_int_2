@@ -29,7 +29,7 @@ interface StepperMaProps {
     products: Product[];
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-    user: { id: string; name: string; email: string,handle: string } | null; 
+    user: { _id: string; name: string; email: string,handle: string } | null; 
   }
 
   const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
@@ -93,7 +93,7 @@ interface StepperMaProps {
     };
 
     const handleCapture = async (playerId: string) => {
-        if (!playerId) {
+        if (!playerId || !selectedProduct) {
             setIsAuthorizing(false);
             return;
         }
@@ -138,7 +138,8 @@ interface StepperMaProps {
                 setCapturedPins(response.data.pins.map((pin: { key: string }) => pin.key));
                 setActiveStep(2);
     
-                sendSaleToBackend(response.data.pins, response.data.id);
+                const totalPrice = parseFloat(selectedProduct.price) * quantity;
+                sendSaleToBackend(response.data.pins, response.data.id, totalPrice, selectedProduct);
             } else {
                 console.error("Error en la solicitud de captura:");
             }
@@ -149,14 +150,17 @@ interface StepperMaProps {
         }
     };
     
-    const sendSaleToBackend = async (pins: { key: string }[], orderId: string) => {
+    const sendSaleToBackend = async (pins: { key: string }[], orderId: string, totalPrice: number, product: Product) => {
         try {
             const saleData = {
                 quantity,
-                product: selectedProduct?.code,
+                product: product.code,
+                productName: product.name,
+                price: product.price,
+                totalPrice: totalPrice.toFixed(2),
                 status: "captured",
                 order_id: orderId,
-                user: user ? { id: user.id, handle: user.handle, name: user.name, email: user.email } : null,
+                user: user ? { id: user._id, handle: user.handle, name: user.name, email: user.email } : null,
                 pins: pins.map(pin => ({ serial: "", key: pin.key }))
             };
     
@@ -177,6 +181,7 @@ interface StepperMaProps {
             console.error("Error al enviar la venta al backend:", error);
         }
     };
+    
        
     const handleFinishClick = () => {
         onClose();

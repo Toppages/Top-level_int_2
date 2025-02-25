@@ -11,7 +11,7 @@ interface HomeProps {
   navOpen: boolean;
   activeLink: number;
   setActiveLink: (index: number) => void;
-  user: { id: string; name: string; email: string,handle: string } | null; 
+  user: { _id: string; name: string; email: string, handle: string } | null;
 }
 
 function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
@@ -27,9 +27,9 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
       case 0:
         return <Dashboard />;
       case 1:
-        return <TableM user={user}  />; 
+        return <TableM user={user} />;
       case 2:
-        return <Reports />;
+        return <Reports user={user} />
       default:
         return <Dashboard />;
     }

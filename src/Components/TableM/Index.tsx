@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import StepperMa from '../StepperMa/Index';
-import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
 import { IconSearch, IconEye } from '@tabler/icons-react';
+import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
 
 interface Product {
     product_group: string;
@@ -12,7 +12,7 @@ interface Product {
 }
 
 interface TableMProps {
-    user: { id: string; name: string; email: string,handle: string } | null; 
+    user: { _id: string; name: string; email: string,handle: string } | null; 
   }
   
   const TableM: React.FC<TableMProps> = ({ user }) => {
@@ -75,7 +75,7 @@ interface TableMProps {
           products={productsInSelectedGroup}
           activeStep={activeStep}
           setActiveStep={setActiveStep}
-          user={user} // Pasamos el usuario a StepperMa
+          user={user}
         />
   
         {loading ? <Loader color="indigo" size="xl" variant="dots" style={{ margin: 'auto', display: 'block' }} /> :
