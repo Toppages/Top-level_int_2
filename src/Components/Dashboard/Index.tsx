@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { Card, Grid, Title } from "@mantine/core";
-import Registrar from "./Registrar/Index";
 import AdminBR from "./AdminBR";
-import { LineChart } from '@mui/x-charts/LineChart';
+import Registrar from "./Registrar/Index";
 import { BarChart } from '@mui/x-charts/BarChart';
-import { format, subDays } from 'date-fns';
+import { LineChart } from '@mui/x-charts/LineChart';
 import { useMediaQuery } from "@mantine/hooks";
+import { format, subDays } from 'date-fns';
+import { useEffect, useState } from "react";
+import { Card, Grid, Group, Title } from "@mantine/core";
 
 interface UserCounts {
     adminCount: number;
@@ -26,7 +26,7 @@ function Dashboard() {
             .then((data) => {
                 setUserRole(data.role);
 
-                if (data.role === "admin") {
+                if (data.role === "master") {
                     fetch("http://localhost:4000/users/count", {
                         method: "GET",
                         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -55,7 +55,7 @@ function Dashboard() {
 
 
             <Grid mb={10} gutter="md">
-                {userRole === "admin" && userCounts && (
+                {userRole === "master" && userCounts && (
                     <>
                         <Grid.Col xs={12} sm={6} md={4}>
                             <Card
@@ -66,7 +66,7 @@ function Dashboard() {
                                     transform: "scale(1)",
                                     width: '100%',
                                     color: 'white',
-                                    backgroundColor: '#0c2a85' 
+                                    backgroundColor: '#0c2a85'
                                 }}
                                 radius="md"
                                 onMouseEnter={(e: { currentTarget: any; }) => {
@@ -92,9 +92,9 @@ function Dashboard() {
                                     boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                                     transition: "all 0.3s ease",
                                     transform: "scale(1)",
-                                    maxWidth: '100%', 
+                                    maxWidth: '100%',
                                     color: 'white',
-                                    backgroundColor: '#1446df' 
+                                    backgroundColor: '#1446df'
                                 }}
                                 radius="md"
                                 onMouseEnter={(e: { currentTarget: any; }) => {
@@ -139,71 +139,62 @@ function Dashboard() {
                 )}
             </Grid>
 
-            <Grid mb={10} gutter="md">
-                <Grid.Col xs={12} sm={6} md={6}>
-                    <Card
-                        style={{
-                            boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                            transition: "all 0.3s ease",
-                            transform: "scale(1)",
-                        }}
-                        radius="md"
-                        onMouseEnter={(e: { currentTarget: any; }) => {
-                            const card = e.currentTarget;
-                            card.style.transform = "scale(1.05)";
-                            card.style.boxShadow = "0px 6px 15px rgba(0, 0, 0, 0.2)";
-                        }}
-                        onMouseLeave={(e: { currentTarget: any; }) => {
-                            const card = e.currentTarget;
-                            card.style.transform = "scale(1)";
-                            card.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
-                        }}
-                    >
-                        <LineChart
-                            width={isSmallScreen ? 380 : 500}
-                            height={isSmallScreen ? 300 : 300}
-                            series={[
-                                { data: clientem, label: 'Clientes', color: '#1446df' },
-                                { data: venM, label: 'Vendedores', color: '#0c2a85' },
-                            ]}
-                            xAxis={[{ scaleType: 'point', data: xLabels }]}
-                        />
-                    </Card>
-                </Grid.Col>
-                <Grid.Col xs={12} sm={6} md={6}>
-                    <Card
-                        style={{
-                            boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                            transition: "all 0.3s ease",
-                            transform: "scale(1)",
-                        }}
-                        radius="md"
-                        onMouseEnter={(e: { currentTarget: any; }) => {
-                            const card = e.currentTarget;
-                            card.style.transform = "scale(1.05)";
-                            card.style.boxShadow = "0px 6px 15px rgba(0, 0, 0, 0.2)";
-                        }}
-                        onMouseLeave={(e: { currentTarget: any; }) => {
-                            const card = e.currentTarget;
-                            card.style.transform = "scale(1)";
-                            card.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
-                        }}
-                    >
+            <Group
+                mt={15}
+                mb={15}
+                mx="sm"
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: isSmallScreen ? '1fr' : '1fr 1fr',
+                    gap: 15,
+                    width: '100%',
+                }}
+            >
+                <Card
+                    style={{
+                        boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                        transition: "all 0.3s ease",
+                        transform: "scale(1)",
+                        width: '100%',
+                    }}
+                    radius="md"
+
+                >
+                    <LineChart
+                        height={isSmallScreen ? 300 : 300}
+                        series={[
+                            { data: clientem, label: 'Clientes', color: '#1446df' },
+                            { data: venM, label: 'Vendedores', color: '#0c2a85' },
+                        ]}
+                        xAxis={[{ scaleType: 'point', data: xLabels }]}
+                    />
 
 
-                        <BarChart
-                            width={isSmallScreen ? 380 : 450}
-                            height={isSmallScreen ? 300 : 300}
-                            borderRadius={12}
-                            series={[
-                                { data: clientep, label: 'Clientes', id: 'pvId', stack: 'total', color: '#1446df' },
-                                { data: venp, label: 'Vendedores', id: 'uvId', stack: 'total', color: '#0c2a85' },
-                            ]}
-                            xAxis={[{ data: xLabels, scaleType: 'band' }]}
-                        />
-                    </Card>
-                </Grid.Col>
-            </Grid>
+                </Card>
+
+                <Card
+                    style={{
+                        boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                        transition: "all 0.3s ease",
+                        transform: "scale(1)",
+                        width: '100%',
+                    }}
+                    radius="md"
+
+                >
+                    <BarChart
+                        height={isSmallScreen ? 300 : 300}
+                        borderRadius={12}
+                        series={[
+                            { data: clientep, label: 'Clientes', id: 'pvId', stack: 'total', color: '#1446df' },
+                            { data: venp, label: 'Vendedores', id: 'uvId', stack: 'total', color: '#0c2a85' },
+                        ]}
+                        xAxis={[{ data: xLabels, scaleType: 'band' }]}
+                    />
+                </Card>
+            </Group>
+
+
             <Registrar />
             <AdminBR />
         </>

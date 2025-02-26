@@ -42,19 +42,17 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
         mt={15}
         mx="sm"
         style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          alignItems: 'flex-start',
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '0.8fr 3fr', 
           gap: 15,
         }}
       >
         {!isMobile && (
           <Card
             style={{
-              width: 250,
-              height: '95vh',
               padding: '20px',
               boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+              height: '95vh',
               display: navOpen ? 'block' : 'none',
             }}
             radius="md"
@@ -65,14 +63,13 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
 
         <Card
           style={{
-            flexGrow: 1,
             padding: '20px',
             boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-            height: activeLink === 2 ? '95vh' : 'auto',
+            height: activeLink === 2 ? '95vh' : '100%',
             maxWidth: '100%',
           }}
         >
-          {renderContent()}
+            {renderContent()}
         </Card>
       </Group>
     </>
@@ -80,4 +77,3 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
 }
 
 export default Home;
-

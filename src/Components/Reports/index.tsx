@@ -20,7 +20,7 @@ function Reports({ user }: ReportsProps) {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const itemsPerPage = 10;
+  const itemsPerPage = 7;
 
   const userId = user?._id || null;
 
@@ -130,7 +130,7 @@ function Reports({ user }: ReportsProps) {
       )}
 
       {filteredReports.length > 0 && (
-        <ScrollArea style={{ height: '300px', width: '100%' }} type="never">
+        <ScrollArea style={{ height: '342px', width: '100%' }} type="never">
           <Table striped highlightOnHover withBorder withColumnBorders>
             <thead>
               <tr>

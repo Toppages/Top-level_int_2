@@ -21,8 +21,9 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
   const [fetchedProducts, setFetchedProducts] = useState<Product[]>([]);
   const [selectedProductGroup, setSelectedProductGroup] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
 
   useEffect(() => {
     fetchProductsFromAPI(setFetchedProducts, setLoading);
@@ -38,16 +39,7 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
     ? fetchedProducts.filter((product) => product.product_group === selectedProductGroup)
     : [];
 
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowHeight(window.innerHeight);
-    };
 
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   const filteredGroups = Array.from(new Set(fetchedProducts.map((product) => product.product_group)))
     .sort((a, b) => (a === "Free Fire Latam" ? -1 : b === "Free Fire Latam" ? 1 : 0))
