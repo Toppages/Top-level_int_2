@@ -3,15 +3,15 @@ import TableM from './Components/TableM/Index';
 import Reports from './Components/Reports';
 import NavLinks from './Components/NavLinksList';
 import Dashboard from './Components/Dashboard/Index';
-import { useMediaQuery } from '@mantine/hooks';
-import { Card, Group, ScrollArea } from '@mantine/core';
 import { Toaster } from 'sonner';
+import { Card, Group } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface HomeProps {
   navOpen: boolean;
   activeLink: number;
   setActiveLink: (index: number) => void;
-  user: { _id: string; name: string; email: string, handle: string } | null;
+  user: { _id: string; name: string; email: string, handle: string;role:string;saldo: number; } | null;
 }
 
 function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {

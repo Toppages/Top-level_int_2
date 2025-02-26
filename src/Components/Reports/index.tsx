@@ -1,7 +1,7 @@
-import { useState, useEffect, SetStateAction } from 'react';
-import { Button, Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Input, Pagination } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
+import { useState, useEffect, SetStateAction } from 'react';
 import { IconAdjustments, IconCopy, IconEye, IconSearch } from '@tabler/icons-react';
+import { Button, Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Input, Pagination } from '@mantine/core';
 import { fetchUserRole, fetchReports, handleSearchChange, formatDate, handlePinClick, copyToClipboard } from '../../utils/utils';
 
 interface ReportsProps {

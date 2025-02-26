@@ -1,11 +1,11 @@
 import './index.css';
+import axios from 'axios';
 import Logo from '../../assets/Logo TopLevel PNG.png';
 import React from 'react';
+import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { Card, Text, TextInput, PasswordInput, Button, Stack, Image, Alert } from '@mantine/core';
-import axios from 'axios';
-import { toast } from 'sonner';
 
 interface ILoginFormInputs {
     email: string;
@@ -43,7 +43,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             }
         }
     };
-    
 
     return (
         <div className="login-background">

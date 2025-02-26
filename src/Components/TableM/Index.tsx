@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { IconSearch, IconEye } from '@tabler/icons-react';
-import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
 import StepperMa from '../StepperMa/Index';
-import { fetchProductsFromAPI, handleSearchChange } from '../../utils/utils'; // Importar las funciones desde utils.ts
+import { IconSearch, IconEye } from '@tabler/icons-react';
+import { fetchProductsFromAPI, handleSearchChange } from '../../utils/utils'; 
+import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
 
 interface Product {
   product_group: string;
@@ -12,7 +12,7 @@ interface Product {
 }
 
 interface TableMProps {
-  user: { _id: string; name: string; email: string; handle: string } | null;
+  user: { _id: string; name: string; email: string; handle: string;role:string;saldo: number; } | null;
 }
 
 const TableM: React.FC<TableMProps> = ({ user }) => {

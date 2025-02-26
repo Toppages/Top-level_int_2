@@ -29,7 +29,7 @@ interface StepperMaProps {
     products: Product[];
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-    user: { _id: string; name: string; email: string, handle: string } | null;
+    user: { _id: string; name: string; email: string, handle: string;role:string;saldo: number; } | null;
 }
 
 const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
@@ -175,18 +175,25 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                 totalPrice: totalPrice.toFixed(2),
                 status: "captured",
                 order_id: moment().format("YYYYMMDD_HHmmss"),
-                user: user ? { id: user._id, handle: user.handle, name: user.name, email: user.email } : null,
+                user: user ? { 
+                    id: user._id, 
+                    handle: user.handle, 
+                    name: user.name, 
+                    email: user.email,
+                    role: user.role,
+                    saldo:user.saldo
+                } : null,
                 pins: pins.map(pin => ({ serial: "", key: pin }))
             };
-
+    
             console.log("Enviando venta:", saleData);
-
+    
             const response = await axios.post('http://localhost:4000/sales', saleData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-
+    
             if (response.status === 201) {
                 console.log("Venta registrada con éxito en el backend");
                 setCapturedPins(pins);
@@ -196,8 +203,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         } catch (error) {
             console.error("Error al enviar la venta al backend:", error);
         }
-    };
-
+    };    
 
     const handleFinishClick = () => {
         onClose();
