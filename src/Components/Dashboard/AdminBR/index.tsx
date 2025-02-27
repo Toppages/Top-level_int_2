@@ -25,8 +25,10 @@ const AdminBR = () => {
 
     const onSubmit = async (data: AdminBalanceFormData) => {
         try {
+            const saldoRedondeado = parseFloat(data.saldo.toFixed(2));
+
             const response = await axios.put(`${import.meta.env.VITE_API_Url}/admin/balance`, {
-                saldo: data.saldo,
+                saldo: saldoRedondeado,
             });
 
             if (response.status === 200) {
@@ -63,11 +65,15 @@ const AdminBR = () => {
                                     value: 1,
                                     message: "El saldo debe ser al menos 1",
                                 },
+                                validate: value => value <= 1000000 || "El saldo no puede ser mayor a 1,000,000",
                             })}
                             max={1000000}
-                            min={1}
+                            min={0.01}
                             error={errors.saldo?.message}
-                            onChange={(value) => setValue("saldo", value || 0)} 
+                            onChange={(value) => {
+                                setValue("saldo", value || 0);
+                            }}
+                            precision={2}
                         />
                     </Stack>
 
@@ -77,8 +83,9 @@ const AdminBR = () => {
                 </form>
             </Modal>
 
-                <Button style={{ background: '#0c2a85' }}  onClick={() => setOpened(true)}>
-                    Añadir Saldo</Button>
+            <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
+                Añadir Saldo
+            </Button>
         </>
     );
 };
