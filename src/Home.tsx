@@ -37,7 +37,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
 
   return (
     <>
-      <Toaster position="bottom-right" />
+      <Toaster richColors position="bottom-right" />
       <Group
         mt={15}
         mx="sm"

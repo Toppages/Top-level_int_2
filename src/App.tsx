@@ -81,7 +81,7 @@ function App() {
   return (
     <Router>
       <AppContent />
-      <Toaster position="bottom-right" />
+      <Toaster richColors  position="bottom-right" />
     </Router>
   );
 }

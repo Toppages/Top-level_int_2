@@ -5,15 +5,12 @@ import {
     Modal,
     Button,
     Group,
-    TextInput,
     NumberInput,
     Stack,
 } from "@mantine/core";
 import { toast } from 'sonner';
 
 interface AdminBalanceFormData {
-    api_key: string;
-    api_secret: string;
     saldo: number;
 }
 
@@ -22,8 +19,6 @@ const AdminBR = () => {
 
     const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<AdminBalanceFormData>({
         defaultValues: {
-            api_key: "",
-            api_secret: "",
             saldo: 100,
         },
     });
@@ -31,11 +26,9 @@ const AdminBR = () => {
     const onSubmit = async (data: AdminBalanceFormData) => {
         try {
             const response = await axios.put(`${import.meta.env.VITE_API_Url}/admin/balance`, {
-                api_key: data.api_key,
-                api_secret: data.api_secret,
                 saldo: data.saldo,
             });
-    
+
             if (response.status === 200) {
                 toast.success('Saldo del administrador actualizado correctamente');
                 setOpened(false);
@@ -49,7 +42,6 @@ const AdminBR = () => {
             }
         }
     };
-    
 
     const handleClose = () => {
         setOpened(false);
@@ -61,50 +53,32 @@ const AdminBR = () => {
             <Modal radius="lg" opened={opened} onClose={handleClose} withCloseButton={false}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Stack>
-                        <TextInput
-                            label="API Key"
-                            radius="md"
-                            {...register("api_key", {
-                                required: "La API Key es obligatoria",
-                            })}
-                            error={errors.api_key?.message}
-                        />
-
-                        <TextInput
-                            label="API Secret"
-                            radius="md"
-                            {...register("api_secret", {
-                                required: "El API Secret es obligatorio",
-                            })}
-                            error={errors.api_secret?.message}
-                        />
-
                         <NumberInput
                             radius="md"
-                            label="Saldo"
+                            label="Saldo a Sumar"
                             {...register("saldo", {
                                 valueAsNumber: true,
                                 required: "El saldo es obligatorio",
                                 min: {
-                                    value: 100,
-                                    message: "El saldo debe ser al menos 100",
+                                    value: 1,
+                                    message: "El saldo debe ser al menos 1",
                                 },
                             })}
                             max={1000000}
-                            min={100}
+                            min={1}
                             error={errors.saldo?.message}
                             onChange={(value) => setValue("saldo", value || 0)} 
                         />
                     </Stack>
 
                     <Group position="center" mt="md">
-                        <Button type="submit">Actualizar Saldo Admin</Button>
+                        <Button type="submit">Sumar Saldo Admin</Button>
                     </Group>
                 </form>
             </Modal>
 
             <Group position="center">
-                <Button mt={15} onClick={() => setOpened(true)}>Saldo Admin</Button>
+                <Button mt={15} onClick={() => setOpened(true)}>Añadir Saldo</Button>
             </Group>
         </>
     );
