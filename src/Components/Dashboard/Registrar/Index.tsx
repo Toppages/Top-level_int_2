@@ -24,7 +24,7 @@ interface UserFormData {
     password: string;
     confirmPassword: string;
     email: string;
-    role: "admin" | "vendedor" | "cliente"| "master";
+    role: "admin" | "vendedor" | "cliente" | "master";
     saldo: number;
 }
 
@@ -167,22 +167,21 @@ function Registrar() {
                                 { value: "master", label: "Master" },
                             ]}
                             onChange={(value) =>
-                                setValue("role", value as "admin" | "vendedor" | "cliente"|"master")
+                                setValue("role", value as "admin" | "vendedor" | "cliente" | "master")
                             }
                             error={errors.role?.message}
                         />
-
                         <NumberInput
                             radius='md'
                             label="Saldo"
                             {...register("saldo", {
                                 valueAsNumber: true,
-                                required: watch('role') === 'cliente' ? 'El saldo es obligatorio' : false,
+                                required: watch('role') !== 'vendedor' && watch('role') !== 'master' ? 'El saldo es obligatorio' : false,
                                 min: {
                                     value: 100,
                                     message: "El saldo debe ser al menos 100",
                                 },
-                                disabled: watch('role') !== 'cliente',
+                                disabled: watch('role') === 'vendedor' || watch('role') === 'master',
                             })}
                             onChange={(value) => setValue("saldo", value || 0)}
                             max={1000000}
