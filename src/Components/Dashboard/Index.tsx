@@ -1,5 +1,6 @@
 import AdminBR from "./AdminBR";
 import Registrar from "./Registrar/Index";
+import EditClient from "./EditClient/Index";
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { useMediaQuery } from "@mantine/hooks";
@@ -194,9 +195,11 @@ function Dashboard() {
                 </Card>
             </Group>
 
-
-            <Registrar />
-            <AdminBR />
+            <Group>
+                <EditClient />
+                <Registrar />
+                <AdminBR />
+            </Group>
         </>
     );
 }

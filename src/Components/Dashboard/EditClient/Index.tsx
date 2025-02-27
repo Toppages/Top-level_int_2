@@ -14,7 +14,7 @@ interface AdminBalanceFormData {
     saldo: number;
 }
 
-const AdminBR = () => {
+const EditClient = () => {
     const [opened, setOpened] = useState(false);
 
     const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<AdminBalanceFormData>({
@@ -78,9 +78,10 @@ const AdminBR = () => {
             </Modal>
 
                 <Button style={{ background: '#0c2a85' }}  onClick={() => setOpened(true)}>
-                    Añadir Saldo</Button>
+                    Añadir Saldo cliente
+                    </Button>
         </>
     );
 };
 
-export default AdminBR;
+export default EditClient;
