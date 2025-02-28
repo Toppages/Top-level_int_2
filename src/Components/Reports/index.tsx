@@ -132,13 +132,13 @@ function Reports({ user }: ReportsProps) {
       {filteredReports.length > 0 && (
         <ScrollArea style={{ height: '342px', width: '100%' }} type="never">
           <Table striped highlightOnHover withBorder withColumnBorders>
-            <thead>
+            <thead style={{ background: '#0c2a85' }}>
               <tr>
-                <th style={{ textAlign: 'center' }}><Title order={3}>Producto</Title></th>
-                <th style={{ textAlign: 'center' }}><Title order={3}>Precio</Title></th>
-                <th style={{ textAlign: 'center' }}><Title order={3}>Cantidad</Title></th>
-                <th style={{ textAlign: 'center' }}><Title order={3}>Fecha</Title></th>
-                <th style={{ textAlign: 'center' }}><Title order={3}>Usuarios</Title></th>
+                <th style={{ textAlign: 'center',color:'white' }}><Title order={3}>Producto</Title></th>
+                <th style={{ textAlign: 'center',color:'white' }}><Title order={3}>Precio</Title></th>
+                <th style={{ textAlign: 'center' ,color:'white'}}><Title order={3}>Cantidad</Title></th>
+                <th style={{ textAlign: 'center',color:'white' }}><Title order={3}>Fecha</Title></th>
+                <th style={{ textAlign: 'center',color:'white' }}><Title order={3}>Usuarios</Title></th>
                 <th></th>
               </tr>
             </thead>

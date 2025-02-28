@@ -227,11 +227,26 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
                         {products.length > 0 ? (
                             <Table striped highlightOnHover>
-                                <thead>
+                                <thead style={{ background: '#0c2a85' }}>
                                     <tr>
-                                        <th style={tableTextStyle}>Producto</th>
-                                        <th style={tableTextStyle}>Precio</th>
-                                        <th style={tableTextStyle}>Acción</th>
+                                        <th style={tableTextStyle}>
+                                        <Text c='white' ta={'center'}>
+
+                                            Producto
+                                        </Text>
+                                            </th>
+                                        <th style={tableTextStyle}>
+                                        <Text c='white' ta={'center'}>
+
+Precio
+</Text>
+                                        </th>
+                                        <th style={tableTextStyle}>
+                                        <Text c='white' ta={'center'}>
+
+                                           
+</Text>
+                                            </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -243,7 +258,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                                 <td style={tableTextStyle}>
                                                     {product.name.replace(/free fire\s*-\s*/gi, '').replace(/free fire/gi, '')}
                                                 </td>
-                                                <td style={{ fontSize: '12px' }}>{product.price} USD</td>
+                                                <td style={{ fontSize: '12px', textAlign: 'center' }}>{product.price} USD</td>
                                                 <td>
                                                     <ActionIcon
                                                         onClick={() => {
