@@ -1,20 +1,28 @@
 import { Product } from '../../../types/types';
 import { useMediaQuery } from '@mantine/hooks';
+import { useForm, Controller } from 'react-hook-form';
 import { useState, useEffect } from 'react';
-import { fetchProductsFromAPI } from '../../../utils/utils';
 import { IconAdjustments, IconSearch } from '@tabler/icons-react';
-import { Table, Button, Modal, ScrollArea, ActionIcon, Title, Group, TextInput, Loader } from '@mantine/core';
+import { fetchProductsFromAPI, updateProductAPI } from '../../../utils/utils';
+import { Table, Button, Modal, ScrollArea, ActionIcon, Title, Group, Loader, Text, TextInput, Switch, NumberInput } from '@mantine/core';
 
 function ManagePro() {
     const [opened, setOpened] = useState(false);
     const [productModalOpen, setProductModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const isMobile = useMediaQuery('(max-width: 1000px)');
-
     const [products, setProducts] = useState<Product[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const { control, handleSubmit, formState: { errors }, setValue } = useForm({
+        defaultValues: {
+            price_oro: selectedProduct?.price_oro || 0,
+            price_plata: selectedProduct?.price_plata || 0,
+            price_bronce: selectedProduct?.price_bronce || 0,
+        }
+    });
 
     useEffect(() => {
         if (opened) {
@@ -37,23 +45,41 @@ function ManagePro() {
 
     const openProductModal = (product: Product) => {
         setSelectedProduct(product);
+        setOpened(false);
         setProductModalOpen(true);
+        setValue('price_oro', product.price_oro || 0);
+        setValue('price_plata', product.price_plata || 0);
+        setValue('price_bronce', product.price_bronce || 0);
+    };
+
+    const handleUpdateProduct = async (data: any) => {
+        if (selectedProduct) {
+            const updatedProduct = { ...selectedProduct, ...data };
+            await updateProductAPI(updatedProduct);
+            setProductModalOpen(false);
+            setOpened(true);
+        }
+    };
+
+    const closeModal = () => {
+        setSearchQuery('');
+        setOpened(false);
     };
 
     const rows = filteredProducts.map((product) => (
-        <tr key={product.id}>
+        <tr key={product._id}>
             <td>{product.name}</td>
-            <td>${product.price}</td>
+            <td>{product.price} USD</td>
             {!isMobile && (
                 <>
-                    <td>${product.price_oro}</td>
-                    <td>${product.price_plata}</td>
-                    <td>${product.price_bronce}</td>
+                    <td>{product.price_oro} USD</td>
+                    <td>{product.price_plata} USD</td>
+                    <td>{product.price_bronce} USD</td>
                     <td>{product.available ? 'Sí' : 'No'}</td>
                 </>
             )}
             <td>
-                <ActionIcon color="yellow" variant="filled" onClick={() => openProductModal(product)}>
+                <ActionIcon style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }} variant="filled" onClick={() => openProductModal(product)}>
                     <IconAdjustments size={18} />
                 </ActionIcon>
             </td>
@@ -62,12 +88,13 @@ function ManagePro() {
 
     return (
         <>
-            <Modal size={isMobile ? '100%' : '80%'} opened={opened} onClose={() => setOpened(false)} withCloseButton={false}>
+            <Modal radius='lg' size={isMobile ? '100%' : '80%'} opened={opened} onClose={closeModal} withCloseButton={false}>
                 <Group mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr', gap: '10px', width: '100%' }}>
                     <Title order={1}>Lista de productos</Title>
-                    <TextInput 
-                        placeholder="Buscar producto" 
-                        icon={<IconSearch />} 
+                    <TextInput
+                        radius="lg"
+                        placeholder="Buscar producto"
+                        icon={<IconSearch />}
                         value={searchQuery}
                         onChange={(e) => handleSearchChange(e.currentTarget.value)}
                     />
@@ -80,19 +107,27 @@ function ManagePro() {
                 ) : (
                     <ScrollArea type="never" style={{ height: 300, maxWidth: '100%' }}>
                         <Table striped highlightOnHover withBorder withColumnBorders>
-                            <thead>
+                            <thead style={{ background: '#0c2a85' }}>
                                 <tr>
-                                    <th>Nombre</th>
-                                    <th>Precio</th>
+                                    <th>
+                                        <Text c='white' ta={'center'}>
+                                            Nombre
+                                        </Text>
+                                    </th>
+                                    <th>
+                                        <Text c='white' ta={'center'}>
+                                            Precio
+                                        </Text>
+                                    </th>
                                     {!isMobile && (
                                         <>
-                                            <th>Precio Oro</th>
-                                            <th>Precio Plata</th>
-                                            <th>Precio Bronce</th>
-                                            <th>Disponible</th>
+                                            <th> <Text c='white' ta={'center'}>Precio Oro</Text></th>
+                                            <th> <Text c='white' ta={'center'}>Precio Plata</Text></th>
+                                            <th> <Text c='white' ta={'center'}>Precio Bronce</Text></th>
+                                            <th> <Text c='white' ta={'center'}>Disponible</Text></th>
                                         </>
                                     )}
-                                    <th>Acción</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>{rows}</tbody>
@@ -101,23 +136,95 @@ function ManagePro() {
                 )}
             </Modal>
 
-            <Modal size={isMobile ? '100%' : '80%'} opened={productModalOpen} onClose={() => setProductModalOpen(false)} withCloseButton={false}>
+            <Modal radius='lg' size={isMobile ? '100%' : '80%'} opened={productModalOpen} onClose={() => { setProductModalOpen(false); setOpened(true); }} withCloseButton={false}>
                 {selectedProduct && (
-                    <div>
-                        <h2>{selectedProduct.name}</h2>
-                        <p><strong>Grupo:</strong> {selectedProduct.product_group}</p>
-                        <p><strong>Código:</strong> {selectedProduct.code}</p>
-                        <p><strong>Tipo:</strong> {selectedProduct.type}</p>
-                        <p><strong>Precio:</strong> ${selectedProduct.price}</p>
-                        <p><strong>Precio Oro:</strong> ${selectedProduct.price_oro}</p>
-                        <p><strong>Precio Plata:</strong> ${selectedProduct.price_plata}</p>
-                        <p><strong>Precio Bronce:</strong> ${selectedProduct.price_bronce}</p>
-                        <p><strong>Disponible:</strong> {selectedProduct.available ? 'Sí' : 'No'}</p>
-                        <p><strong>Creado el:</strong> {new Date(selectedProduct.created_at).toLocaleDateString()}</p>
-                    </div>
+                    <form onSubmit={handleSubmit(handleUpdateProduct)}>
+
+                        <Title order={1} ta='center'>{selectedProduct.name}</Title>
+                        <Title order={3} ta='center'>Precio Base: {selectedProduct.price}</Title>
+
+                        <Group mt={15} mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '10px', width: '100%' }}>
+                            <Controller
+                                control={control}
+                                name="price_oro"
+                                render={({ field }) => (
+                                    <NumberInput
+                                        {...field}
+                                        label="Precio Oro"
+                                        min={Number(selectedProduct?.price) || 0}
+                                        step={0.01}
+                                        precision={2}
+                                        error={errors.price_oro ? "El precio oro no puede ser menor que el precio base." : null}
+                                    />
+                                )}
+                                rules={{
+                                    required: "Este campo es obligatorio.",
+                                    validate: (value) => {
+                                        const minPrice = Number(selectedProduct?.price) || 0;
+                                        return value >= minPrice || "El precio oro no puede ser menor que el precio base.";
+                                    }
+                                }}
+                            />
+
+                            <Controller
+                                control={control}
+                                name="price_plata"
+                                render={({ field }) => (
+                                    <NumberInput
+                                        {...field}
+                                        label="Precio Plata"
+                                        min={Number(selectedProduct?.price_oro) || 0}
+                                        step={0.01}
+                                        precision={2}
+                                        error={errors.price_plata ? "El precio plata no puede ser menor que el precio oro." : null}
+                                    />
+                                )}
+                                rules={{
+                                    required: "Este campo es obligatorio.",
+                                    validate: (value) => {
+                                        const minPriceOro = Number(selectedProduct?.price_oro) || 0;
+                                        return value >= minPriceOro || "El precio plata no puede ser menor que el precio oro.";
+                                    }
+                                }}
+                            />
+
+                            <Controller
+                                control={control}
+                                name="price_bronce"
+                                render={({ field }) => (
+                                    <NumberInput
+                                        {...field}
+                                        label="Precio Bronce"
+                                        min={Number(selectedProduct?.price_plata) || 0}
+                                        step={0.01}
+                                        precision={2}
+                                        error={errors.price_bronce ? "El precio bronce no puede ser menor que el precio plata." : null}
+                                    />
+                                )}
+                                rules={{
+                                    required: "Este campo es obligatorio.",
+                                    validate: (value) => {
+                                        const minPricePlata = Number(selectedProduct?.price_plata) || 0;
+                                        return value >= minPricePlata || "El precio bronce no puede ser menor que el precio plata.";
+                                    }
+                                }}
+                            />
+                        </Group>
+
+                        <Switch
+                            mb={15}
+                            label="Disponible"
+                            color="lime"
+                            checked={selectedProduct?.available}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, available: e.currentTarget.checked })}
+                        />
+
+                        <Button mt={15} fullWidth style={{ background: '#0c2a85' }} type="submit">Guardar cambios</Button>
+                    </form>
                 )}
             </Modal>
-            <Button onClick={() => setOpened(true)}>Ver Productos</Button>
+
+            <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver Productos</Button>
         </>
     );
 }

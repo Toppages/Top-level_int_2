@@ -14,7 +14,7 @@ export const fetchUserRole = async (
     const data = await response.json();
     setUserRole(data.role);
   } catch (err) {
-    toast.error('Hubo un problema al obtener el rol del usuario.'); 
+    toast.error('Hubo un problema al obtener el rol del usuario.');
   }
 };
 
@@ -34,8 +34,8 @@ export const fetchReports = async (
   }
 
   try {
-    const url = userRole === 'master' 
-      ? 'http://localhost:4000/sales' 
+    const url = userRole === 'master'
+      ? 'http://localhost:4000/sales'
       : `http://localhost:4000/sales/user/${userId}`;
 
     const response = await axios.get(url, {
@@ -44,21 +44,20 @@ export const fetchReports = async (
 
     setAllReports(response.data);
     setFilteredReports(response.data);
-    toast.success('Reportes cargados exitosamente'); 
+    toast.success('Reportes cargados exitosamente');
 
   } catch (err) {
-    console.error('Error al obtener los reportes:', err);
     toast.error('Hubo un problema al obtener los reportes.');
   }
 };
 
 export const handleSearchChange = (
-  query: string, 
-  allReports: any[], 
+  query: string,
+  allReports: any[],
   setFilteredReports: React.Dispatch<React.SetStateAction<any[]>>
 ) => {
   const filtered = allReports.filter((report) =>
-    report.productName.toLowerCase().includes(query.toLowerCase()) || 
+    report.productName.toLowerCase().includes(query.toLowerCase()) ||
     report.user.handle.toLowerCase().includes(query.toLowerCase())
   );
   setFilteredReports(filtered);
@@ -70,8 +69,8 @@ export const formatDate = (dateString: string) => {
 };
 
 export const handlePinClick = (
-  pins: any[], 
-  setPines: React.Dispatch<React.SetStateAction<any[]>>, 
+  pins: any[],
+  setPines: React.Dispatch<React.SetStateAction<any[]>>,
   setPinsModalOpened: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   setPines(pins);
@@ -81,10 +80,9 @@ export const handlePinClick = (
 export const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text)
     .then(() => {
-      toast.success('Pin copiado al portapapeles'); 
+      toast.success('Pin copiado al portapapeles');
     })
     .catch((err) => {
-      console.error('Error al copiar al portapapeles:', err);
       toast.error('Error al copiar al portapapeles');
     });
 };
@@ -97,31 +95,66 @@ export const fetchProductsFromAPI = async (setFetchedProducts: React.Dispatch<Re
       setFetchedProducts(response.data);
     }
   } catch (error) {
-    console.error("Error fetching products:", error);
+    toast.error('Hubo un problema al obtener los productos');
   } finally {
     setLoading(false);
   }
 };
 
 export const fetchUserData = async (
-    setUserData: React.Dispatch<React.SetStateAction<any | null>>,
-  ) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const response = await axios.get('http://localhost:4000/user', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUserData(response.data);
-      } catch (error) {
-        console.error('Error al obtener datos del usuario:', error);
-        toast.error('Error al obtener los datos del usuario');
-      }
+  setUserData: React.Dispatch<React.SetStateAction<any | null>>,
+) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const response = await axios.get('http://localhost:4000/user', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUserData(response.data);
+    } catch (error) {
+      toast.error('Error al obtener los datos del usuario');
     }
-  };
-  
-  export const handleLogout = (navigate: Function) => {
-    localStorage.removeItem('token');
-    localStorage.setItem('isAuthenticated', 'false');
-    navigate('/');
-  };
+  }
+};
+
+export const handleLogout = (navigate: Function) => {
+  localStorage.removeItem('token');
+  localStorage.setItem('isAuthenticated', 'false');
+  navigate('/');
+};
+
+export const updateProductAPI = async (product: Product) => {
+
+  if (!product._id) {
+    toast.error('El ID del producto no fue proporcionado');
+    throw new Error('ID del producto no proporcionado');
+  }
+
+  try {
+    const response = await fetch(`http://localhost:4000/products/${product._id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        price_oro: product.price_oro,
+        price_plata: product.price_plata,
+        price_bronce: product.price_bronce,
+        available: product.available,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      toast.success('Producto actualizado exitosamente');
+      return data;
+    } else {
+      toast.error(data.error || 'Error al actualizar el producto');
+      throw new Error(data.error || 'Error al actualizar el producto');
+    }
+  } catch (error) {
+    toast.error('Hubo un problema al actualizar el producto');
+    throw error;
+  }
+};
