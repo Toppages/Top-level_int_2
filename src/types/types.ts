@@ -1,9 +1,18 @@
 export interface Product {
+    id: string;
     product_group: string;
-    code: string;
     name: string;
+    code: string;
+    type: string;
     price: string;
+    price_oro: number;
+    price_plata: number;
+    price_bronce: number;
+    available: boolean;
+    created_at: string;
 }
+
+
 
 export interface UserData {
     _id: string;

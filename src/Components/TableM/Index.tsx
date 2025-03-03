@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import StepperMa from '../StepperMa/Index';
+import { Product } from '../../types/types';
 import { IconSearch, IconEye } from '@tabler/icons-react';
 import { fetchProductsFromAPI, handleSearchChange } from '../../utils/utils'; 
 import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
-
-interface Product {
-  product_group: string;
-  code: string;
-  name: string;
-  price: string;
-}
 
 interface TableMProps {
   user: { _id: string; name: string; email: string; handle: string;role:string;saldo: number; } | null;

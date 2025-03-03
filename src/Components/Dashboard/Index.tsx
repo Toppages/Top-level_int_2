@@ -1,6 +1,7 @@
 import AdminBR from "./AdminBR";
 import Registrar from "./Registrar/Index";
 import EditClient from "./EditClient/Index";
+import ManagePro from "./ManagePro";
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { useMediaQuery } from "@mantine/hooks";
@@ -199,6 +200,7 @@ function Dashboard() {
                 <EditClient />
                 <Registrar />
                 <AdminBR />
+                <ManagePro />
             </Group>
         </>
     );
