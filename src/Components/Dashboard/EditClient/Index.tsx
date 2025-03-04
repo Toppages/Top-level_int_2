@@ -70,10 +70,12 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
     
         handleClose();
     
+        // Aquí pasamos el rol del usuario (admin o cliente)
         const response = await axios.put('http://localhost:4000/user/balance', {
             userId: data.clientId,
             amount: data.saldo,
-            transactionUserName: user?.name, 
+            transactionUserName: user?.handle,
+            role: user?.role, // Enviamos el rol del usuario que está realizando la transacción
         });
     
         if (response.data?.saldo !== undefined) {
@@ -83,7 +85,6 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
             toast.error('Error al obtener el saldo actualizado');
         }
     };
-    
     
     return (
         <>
