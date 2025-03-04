@@ -3,10 +3,10 @@ import TableM from './Components/TableM/Index';
 import Reports from './Components/Reports';
 import NavLinks from './Components/NavLinksList';
 import Dashboard from './Components/Dashboard/Index';
+import BalanceReports from './Components/BalanceReports';
 import { Toaster } from 'sonner';
 import { Card, Group } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-
 interface HomeProps {
   navOpen: boolean;
   activeLink: number;
@@ -22,14 +22,16 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
 
   const isMobile = useMediaQuery('(max-width: 1000px)');
 
-  const renderContent = () => {
+const renderContent = () => {
     switch (activeLink) {
       case 0:
         return <Dashboard user={user}/>;
       case 1:
         return <TableM user={user} />;
       case 2:
-        return <Reports user={user} />
+        return <Reports user={user} />;
+      case 3:
+        return <BalanceReports user={user}  />; 
       default:
         return <Dashboard user={user} />;
     }

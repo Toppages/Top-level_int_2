@@ -51,6 +51,40 @@ export const fetchReports = async (
   }
 };
 
+export const fetchTransactions = async (
+  userId: string,
+  userRole: string,
+  setAllTransactions: React.Dispatch<React.SetStateAction<any[]>>,
+  setFilteredTransactions: React.Dispatch<React.SetStateAction<any[]>>,
+  setError: React.Dispatch<React.SetStateAction<string | null>>
+) => {
+  if (!userId) return;
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    setError('No se encontró el token. Inicia sesión nuevamente.');
+    return;
+  }
+
+  try {
+    const url =
+      userRole === 'master'
+        ? 'http://localhost:4000/transactions'
+        : `http://localhost:4000/transactions/${userId}`;
+
+    const response = await axios.get(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setAllTransactions(response.data);
+    setFilteredTransactions(response.data);
+    toast.success('Transacciones cargadas exitosamente');
+
+  } catch (err) {
+    toast.error('Hubo un problema al obtener las transacciones.');
+  }
+};
+
 export const handleSearchChange = (
   query: string,
   allReports: any[],
