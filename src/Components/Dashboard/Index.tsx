@@ -1,3 +1,4 @@
+// Dashboard.tsx
 import AdminBR from "./AdminBR";
 import Registrar from "./Registrar/Index";
 import EditClient from "./EditClient/Index";
@@ -15,10 +16,18 @@ interface UserCounts {
     clientCount: number;
 }
 
-function Dashboard() {
+interface DashboardProps {
+    user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
+}
+
+function Dashboard({ user }: DashboardProps) {
     const [userCounts, setUserCounts] = useState<UserCounts | null>(null);
     const [userRole, setUserRole] = useState<string | null>(null);
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
+    const onBalanceUpdate = (newBalance: number) => {
+        // Lógica para manejar la actualización del saldo (esto depende de tu implementación)
+        console.log('Nuevo saldo:', newBalance);
+      };
     useEffect(() => {
         fetch("http://localhost:4000/user", {
             method: "GET",
@@ -54,8 +63,6 @@ function Dashboard() {
 
     return (
         <>
-
-
             <Grid mb={10} gutter="md">
                 {userRole === "master" && userCounts && (
                     <>
@@ -71,20 +78,9 @@ function Dashboard() {
                                     backgroundColor: '#0c2a85'
                                 }}
                                 radius="md"
-                                onMouseEnter={(e: { currentTarget: any; }) => {
-                                    const card = e.currentTarget;
-                                    card.style.transform = "scale(1.05)";
-                                    card.style.boxShadow = "0px 6px 15px rgba(0, 0, 0, 0.2)";
-                                }}
-                                onMouseLeave={(e: { currentTarget: any; }) => {
-                                    const card = e.currentTarget;
-                                    card.style.transform = "scale(1)";
-                                    card.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
-                                }}
                             >
                                 <Title order={4}>Administradores: {userCounts.adminCount}</Title>
                             </Card>
-
                         </Grid.Col>
 
                         <Grid.Col xs={12} sm={6} md={4}>
@@ -99,20 +95,11 @@ function Dashboard() {
                                     backgroundColor: '#1446df'
                                 }}
                                 radius="md"
-                                onMouseEnter={(e: { currentTarget: any; }) => {
-                                    const card = e.currentTarget;
-                                    card.style.transform = "scale(1.05)";
-                                    card.style.boxShadow = "0px 6px 15px rgba(0, 0, 0, 0.2)";
-                                }}
-                                onMouseLeave={(e: { currentTarget: any; }) => {
-                                    const card = e.currentTarget;
-                                    card.style.transform = "scale(1)";
-                                    card.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
-                                }}
                             >
                                 <Title order={4}>Vendedores: {userCounts.sellerCount}</Title>
                             </Card>
                         </Grid.Col>
+
                         <Grid.Col xs={12} sm={6} md={4}>
                             <Card
                                 style={{
@@ -123,16 +110,6 @@ function Dashboard() {
                                     maxWidth: '100%',
                                 }}
                                 radius="md"
-                                onMouseEnter={(e: { currentTarget: any; }) => {
-                                    const card = e.currentTarget;
-                                    card.style.transform = "scale(1.05)";
-                                    card.style.boxShadow = "0px 6px 15px rgba(0, 0, 0, 0.2)";
-                                }}
-                                onMouseLeave={(e: { currentTarget: any; }) => {
-                                    const card = e.currentTarget;
-                                    card.style.transform = "scale(1)";
-                                    card.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
-                                }}
                             >
                                 <Title order={4}>Clientes: {userCounts.clientCount}</Title>
                             </Card>
@@ -160,18 +137,12 @@ function Dashboard() {
                         width: '100%',
                     }}
                     radius="md"
-
                 >
                     <LineChart
                         height={isSmallScreen ? 300 : 300}
-                        series={[
-                            { data: clientem, label: 'Clientes', color: '#1446df' },
-                            { data: venM, label: 'Vendedores', color: '#0c2a85' },
-                        ]}
+                        series={[{ data: clientem, label: 'Clientes', color: '#1446df' }, { data: venM, label: 'Vendedores', color: '#0c2a85' }]}
                         xAxis={[{ scaleType: 'point', data: xLabels }]}
                     />
-
-
                 </Card>
 
                 <Card
@@ -182,23 +153,19 @@ function Dashboard() {
                         width: '100%',
                     }}
                     radius="md"
-
                 >
                     <BarChart
                         height={isSmallScreen ? 300 : 300}
                         borderRadius={12}
-                        series={[
-                            { data: clientep, label: 'Clientes', id: 'pvId', stack: 'total', color: '#1446df' },
-                            { data: venp, label: 'Vendedores', id: 'uvId', stack: 'total', color: '#0c2a85' },
-                        ]}
+                        series={[{ data: clientep, label: 'Clientes', id: 'pvId', stack: 'total', color: '#1446df' }, { data: venp, label: 'Vendedores', id: 'uvId', stack: 'total', color: '#0c2a85' }]}
                         xAxis={[{ data: xLabels, scaleType: 'band' }]}
                     />
                 </Card>
             </Group>
 
             <Group>
-                <EditClient />
-                <Registrar />
+            <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
+            <Registrar />
                 <AdminBR />
                 <ManagePro />
             </Group>

@@ -25,13 +25,13 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
   const renderContent = () => {
     switch (activeLink) {
       case 0:
-        return <Dashboard />;
+        return <Dashboard user={user}/>;
       case 1:
         return <TableM user={user} />;
       case 2:
         return <Reports user={user} />
       default:
-        return <Dashboard />;
+        return <Dashboard user={user} />;
     }
   };
 

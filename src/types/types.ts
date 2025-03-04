@@ -12,8 +12,6 @@ export interface Product {
     created_at: string;
 }
 
-
-
 export interface UserData {
     _id: string;
     handle: string;
