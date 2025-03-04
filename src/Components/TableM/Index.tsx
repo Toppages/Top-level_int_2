@@ -6,7 +6,7 @@ import { fetchProductsFromAPI, handleSearchChange } from '../../utils/utils';
 import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
 
 interface TableMProps {
-  user: { _id: string; name: string; email: string; handle: string;role:string;saldo: number; } | null;
+  user: { _id: string; name: string; email: string; handle: string;role:string;saldo: number; rango: string;} | null;
 }
 
 const TableM: React.FC<TableMProps> = ({ user }) => {

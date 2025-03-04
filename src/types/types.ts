@@ -21,6 +21,7 @@ export interface UserData {
     email: string;
     role: "admin" | "vendedor" | "cliente";
     saldo: number;
+    rango: string;
 }
 
 export interface NavLinksProps {

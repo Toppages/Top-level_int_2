@@ -82,7 +82,7 @@ export const copyToClipboard = (text: string) => {
     .then(() => {
       toast.success('Pin copiado al portapapeles');
     })
-    .catch((err) => {
+    .catch(() => {
       toast.error('Error al copiar al portapapeles');
     });
 };

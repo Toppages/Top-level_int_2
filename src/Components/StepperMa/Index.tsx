@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Modal,
     Stepper,
@@ -16,12 +16,8 @@ import axios from 'axios';
 import CryptoJS from 'crypto-js';
 import moment from 'moment';
 import { useMediaQuery } from '@mantine/hooks';
+import { Product } from '../../types/types';
 
-interface Product {
-    code: string;
-    name: string;
-    price: string;
-}
 
 interface StepperMaProps {
     opened: boolean;
@@ -29,7 +25,7 @@ interface StepperMaProps {
     products: Product[];
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
-    user: { _id: string; name: string; email: string, handle: string;role:string;saldo: number; } | null;
+    user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
 }
 
 const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
@@ -39,6 +35,26 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     const [capturedPins, setCapturedPins] = useState<string[]>([]);
     const isMobile = useMediaQuery('(max-width: 1000px)');
     const [captureId, setCaptureId] = useState<string | null>(null);
+    useEffect(() => {
+        if (opened) {
+            setQuantity(1);
+        }
+    }, [opened]);
+    const getPriceForUser = (product: Product, user: { rango: string } | null) => {
+        const userRango = user ? user.rango : 'default';
+
+        switch (userRango) {
+            case 'oro':
+                return product.price_oro;
+            case 'plata':
+                return product.price_plata;
+            case 'bronce':
+                return product.price_bronce;
+            default:
+                return product.price;
+        }
+    };
+
 
     const handleAuthorize = async () => {
         if (!selectedProduct) {
@@ -175,25 +191,25 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                 totalPrice: totalPrice.toFixed(2),
                 status: "captured",
                 order_id: moment().format("YYYYMMDD_HHmmss"),
-                user: user ? { 
-                    id: user._id, 
-                    handle: user.handle, 
-                    name: user.name, 
+                user: user ? {
+                    id: user._id,
+                    handle: user.handle,
+                    name: user.name,
                     email: user.email,
                     role: user.role,
-                    saldo:user.saldo
+                    saldo: user.saldo
                 } : null,
                 pins: pins.map(pin => ({ serial: "", key: pin }))
             };
-    
+
             console.log("Enviando venta:", saleData);
-    
+
             const response = await axios.post('http://localhost:4000/sales', saleData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             if (response.status === 201) {
                 console.log("Venta registrada con éxito en el backend");
                 setCapturedPins(pins);
@@ -203,7 +219,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         } catch (error) {
             console.error("Error al enviar la venta al backend:", error);
         }
-    };    
+    };
 
     const handleFinishClick = () => {
         onClose();
@@ -230,23 +246,23 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                 <thead style={{ background: '#0c2a85' }}>
                                     <tr>
                                         <th style={tableTextStyle}>
-                                        <Text c='white' ta={'center'}>
+                                            <Text c='white' ta={'center'}>
 
-                                            Producto
-                                        </Text>
-                                            </th>
-                                        <th style={tableTextStyle}>
-                                        <Text c='white' ta={'center'}>
-
-Precio
-</Text>
+                                                Producto
+                                            </Text>
                                         </th>
                                         <th style={tableTextStyle}>
-                                        <Text c='white' ta={'center'}>
+                                            <Text c='white' ta={'center'}>
 
-                                           
-</Text>
-                                            </th>
+                                                Precio
+                                            </Text>
+                                        </th>
+                                        <th style={tableTextStyle}>
+                                            <Text c='white' ta={'center'}>
+
+
+                                            </Text>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -258,7 +274,10 @@ Precio
                                                 <td style={tableTextStyle}>
                                                     {product.name.replace(/free fire\s*-\s*/gi, '').replace(/free fire/gi, '')}
                                                 </td>
-                                                <td style={{ fontSize: '12px', textAlign: 'center' }}>{product.price} USD</td>
+                                                <td style={{ fontSize: '12px', textAlign: 'center' }}>
+                                                    {getPriceForUser(product, user)} USD
+                                                </td>
+
                                                 <td>
                                                     <ActionIcon
                                                         onClick={() => {
@@ -281,9 +300,8 @@ Precio
                         )}
                     </div>
                 </Stepper.Step>
-
                 <Stepper.Step label="Confirmar" description="Ingresa cantidad de Pines">
-                    {selectedProduct && (
+                    {selectedProduct && user && (
                         <>
                             <NumberInput
                                 min={1}
@@ -312,9 +330,12 @@ Precio
                                 disabled={isAuthorizing}
                             />
                             <Group position="apart">
-                                <Title order={5}>Precio: {selectedProduct.price} USD</Title>
                                 <Title order={5}>
-                                    Total: {(parseFloat(selectedProduct.price) * quantity).toFixed(2)} USD
+                                    Precio: {Number(getPriceForUser(selectedProduct, user))} USD
+                                </Title>
+
+                                <Title order={5}>
+                                    Total: {(Number(getPriceForUser(selectedProduct, user)) * quantity).toFixed(2)} USD
                                 </Title>
                             </Group>
                             <Group position="center" mt="xl">
@@ -325,11 +346,12 @@ Precio
                                 >
                                     {isAuthorizing ? 'Generando...' : 'Generar'}
                                 </Button>
-
                             </Group>
                         </>
                     )}
                 </Stepper.Step>
+
+
 
                 <Stepper.Step label="Finalización" description="Detalles de la compra">
                     <div>

@@ -11,7 +11,7 @@ interface HomeProps {
   navOpen: boolean;
   activeLink: number;
   setActiveLink: (index: number) => void;
-  user: { _id: string; name: string; email: string, handle: string;role:string;saldo: number; } | null;
+  user: { _id: string; name: string; email: string, handle: string;role:string;saldo: number; rango: string;} | null;
 }
 
 function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
