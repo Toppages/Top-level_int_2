@@ -25,7 +25,6 @@ function Dashboard({ user }: DashboardProps) {
     const [userRole, setUserRole] = useState<string | null>(null);
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
     const onBalanceUpdate = (newBalance: number) => {
-        // Lógica para manejar la actualización del saldo (esto depende de tu implementación)
         console.log('Nuevo saldo:', newBalance);
       };
     useEffect(() => {

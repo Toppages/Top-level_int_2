@@ -1,9 +1,8 @@
 import * as XLSX from 'xlsx';
-import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from '@mantine/hooks';
 import { useState, useEffect, SetStateAction } from 'react';
 import { IconSearch, IconReload, IconDownload, IconAdjustments } from '@tabler/icons-react';
-import { Button, Group, ScrollArea, Table, Text, Title, ActionIcon, Input, Pagination } from '@mantine/core';
+import { Group, ScrollArea, Table, Text, Title, ActionIcon, Input, Pagination } from '@mantine/core';
 import { fetchTransactions } from '../../utils/utils';
 
 const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
@@ -21,7 +20,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
     useEffect(() => {
         if (user) {
             fetchTransactions(
-                user._id, 
+                user._id,
                 user.role,
                 setAllTransactions,
                 setFilteredTransactions,
@@ -128,6 +127,8 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                     <Table mt={15} mb={isMobile ? 100 : 5} striped highlightOnHover withBorder withColumnBorders>
                         <thead style={{ background: '#0c2a85' }}>
                             <tr>
+                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={3}>ID</Title></th>
+                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={3}>Usuario</Title></th>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={3}>Monto</Title></th>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={3}>Balance Anterior</Title></th>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={3}>Tipo</Title></th>
@@ -137,6 +138,8 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                         <tbody>
                             {paginatedReports.map((transaction) => (
                                 <tr key={transaction._id}>
+                                    <td style={{ textAlign: 'center' }}>{transaction._id}</td>
+                                    <td style={{ textAlign: 'center' }}>{transaction.transactionUserName}</td>
                                     <td style={{ textAlign: 'center' }}>{transaction.amount}</td>
                                     <td style={{ textAlign: 'center' }}>{transaction.previousBalance}</td>
                                     <td style={{ textAlign: 'center' }}>{transaction.type}</td>

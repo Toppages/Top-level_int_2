@@ -67,10 +67,12 @@ export const fetchTransactions = async (
   }
 
   try {
-    const url =
-      userRole === 'master'
-        ? 'http://localhost:4000/transactions'
-        : `http://localhost:4000/transactions/${userId}`;
+    let url = '';
+    if (userRole === 'master') {
+      url = 'http://localhost:4000/transactions';
+    } else {
+      url = `http://localhost:4000/transactions/${userId}`;
+    }
 
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -79,11 +81,12 @@ export const fetchTransactions = async (
     setAllTransactions(response.data);
     setFilteredTransactions(response.data);
     toast.success('Transacciones cargadas exitosamente');
-
   } catch (err) {
+    setError('Hubo un problema al obtener las transacciones.');
     toast.error('Hubo un problema al obtener las transacciones.');
   }
 };
+
 
 export const handleSearchChange = (
   query: string,
