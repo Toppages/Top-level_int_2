@@ -2,12 +2,12 @@ import * as XLSX from 'xlsx';
 import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from '@mantine/hooks';
 import { useState, useEffect } from 'react';
-import { IconAdjustments, IconCopy, IconReload, IconEye, IconSearch, IconDownload } from '@tabler/icons-react';
-import { Button, Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Input, Pagination,Divider } from '@mantine/core';
+import { IconCopy, IconReload, IconEye, IconDownload, IconCalendarWeek, IconUser } from '@tabler/icons-react';
 import { fetchUserRole, fetchReports, formatDate, handlePinClick, copyToClipboard } from '../../utils/utils';
+import { Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Pagination, Divider, Select } from '@mantine/core';
 
 interface ReportsProps {
-  user: { _id: string; name: string; email: string; handle: string; role: string;} | null;
+  user: { _id: string; name: string; email: string; handle: string; role: string; } | null;
 }
 
 function Reports({ user }: ReportsProps) {
@@ -37,14 +37,9 @@ function Reports({ user }: ReportsProps) {
     XLSX.writeFile(wb, 'reportes_ventas.xlsx');
   };
 
-
-
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [finishDate, setFinishDate] = useState<Date | null>(null);
   const [filteredReports, setFilteredReports] = useState<any[]>([]);
   const [allReports, setAllReports] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [opened, setOpened] = useState(false);
   const [pinsModalOpened, setPinsModalOpened] = useState(false);
   const [pines, setPines] = useState<any[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -53,53 +48,37 @@ function Reports({ user }: ReportsProps) {
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
 
   const isMobile = useMediaQuery('(max-width: 1000px)');
-  const userHandle = user?.handle || null; 
+  const userHandle = user?.handle || null;
+
+  const [userHandles, setUserHandles] = useState<string[]>([]);
 
   useEffect(() => {
     if (userHandle) {
       fetchUserRole(setUserRole);
     }
   }, [userHandle]);
-  
+
   useEffect(() => {
-    if (userHandle && userRole) {  
+    if (userHandle && userRole) {
       fetchReports(userHandle, userRole, setAllReports, setFilteredReports, setError);
     }
   }, [userHandle, userRole]);
 
-  const handleFilterDates = () => {
-    if (startDate && finishDate) {
-      const filtered = allReports.filter((report) => {
-        const reportDate = new Date(report.created_at);
-        const finishDateEndOfDay = new Date(finishDate);
-        finishDateEndOfDay.setHours(23, 59, 59, 999);
-
-        return reportDate >= startDate && reportDate <= finishDateEndOfDay;
-      });
-      setFilteredReports(filtered);
-    }
-    setOpened(false);
-  };
+  useEffect(() => {
+    // Obtener los handles únicos de los reportes
+    const uniqueHandles = [...new Set(allReports.map((report) => report.user.handle))];
+    setUserHandles(uniqueHandles);
+  }, [allReports]);
 
   const clearDateFilter = () => {
-    setStartDate(null);
-    setFinishDate(null);
     setFilteredReports(allReports);
   };
-
 
   const paginatedReports = filteredReports.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-
-  useEffect(() => {
-    if (opened) {
-      setStartDate(null);
-      setFinishDate(null);
-    }
-  }, [opened]);
 
   return (
     <>
@@ -115,21 +94,21 @@ function Reports({ user }: ReportsProps) {
 
             <Group mt='md' position="apart" mb="md">
 
-<Title order={4}>Total:</Title>
-<Title order={4}>{selectedReport.totalPrice} USD</Title>
-</Group>
+              <Title order={4}>Total:</Title>
+              <Title order={4}>{selectedReport.totalPrice} USD</Title>
+            </Group>
 
-<Group mt='md' position="apart" mb="md">
+            <Group mt='md' position="apart" mb="md">
 
-<Title order={4}>Fecha:</Title>
-<Title order={4}> {formatDate(selectedReport.created_at)}</Title>
-</Group>
+              <Title order={4}>Fecha:</Title>
+              <Title order={4}> {formatDate(selectedReport.created_at)}</Title>
+            </Group>
 
 
-              {userRole !== 'cliente' && userRole !== 'vendedor' && (
-                <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
-              )}
-           
+            {userRole !== 'cliente' && userRole !== 'vendedor' && (
+              <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
+            )}
+
             <Divider my="sm" size='md' variant="dashed" />
           </>
         )}
@@ -159,66 +138,53 @@ function Reports({ user }: ReportsProps) {
         </ScrollArea>
       </Modal>
 
-
-      <Modal radius="lg" withCloseButton={false} opened={opened} onClose={() => setOpened(false)}>
-
-        <Title ta="center" weight={700} mb="md" order={2}>Filtrar por fecha</Title>
-
-        <Group
-          mt={15}
-          mb={15}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '10px',
-            width: '100%',
-          }}
-        >
-          <DatePicker
-            placeholder="Fecha de inicio"
-            label="Inicio"
-            value={startDate}
-            radius="md"
-            size="lg"
-            onChange={setStartDate}
-          />
-          <DatePicker
-            placeholder="Fecha de fin"
-            label="Fin"
-            value={finishDate}
-            radius="md"
-            size="lg"
-            onChange={setFinishDate}
-          />
-        </Group>
-
-
-        <Group position="center" mb="md">
-          <Button radius="lg" className="button" size="lg" onClick={handleFilterDates}>Filtrar Reportes</Button>
-        </Group>
-
-      </Modal>
       <Title ta="center" weight={700} mb="sm" order={2}>Reportes de Ventas</Title>
 
       <Group
         style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : ' 4fr 1fr',
+          gridTemplateColumns: isMobile ? '1fr' : ' 3fr 3fr 1fr',
           gap: '10px',
           width: '100%',
         }}
       >
-
-        <Input
+        <Select
           radius="md"
           size="lg"
-          icon={<IconSearch />}
-          placeholder="Producto o Usuario"
+          icon={<IconUser />}
+          placeholder="Filtrar Usuario"
+          label="Filtrar Usuario"
+          transition="pop-top-left"
+          transitionDuration={80}
+          transitionTimingFunction="ease"
+          data={[
+            { value: 'todos', label: 'Todos' },
+            ...userHandles.map(handle => ({ value: handle, label: handle })),
+          ]}
+          styles={() => ({
+            item: {
+              '&[data-selected]': {
+                '&, &:hover': {
+                  backgroundColor: '#0c2a85',
+                  color: 'white',
+                },
+              },
+            },
+          })}
         />
-        <Group>
-          <ActionIcon style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl" onClick={() => setOpened(true)} color="indigo" variant="filled">
-            <IconAdjustments size={30} />
-          </ActionIcon>
+
+
+        <DatePicker
+          radius="md"
+          size="lg"
+          icon={<IconCalendarWeek />}
+          placeholder="Filtrar Fecha"
+          label="Filtrar Fecha"
+          inputFormat="MM/DD/YYYY"
+          labelFormat="MM/YYYY"
+          defaultValue={new Date()}
+        />
+        <Group mt={25}>
           <ActionIcon
             style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
             color="indigo"
@@ -320,8 +286,6 @@ function Reports({ user }: ReportsProps) {
               ))}
             </tbody>
           </Table>
-
-
         </ScrollArea>
       )}
     </>

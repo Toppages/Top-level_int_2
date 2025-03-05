@@ -18,6 +18,18 @@ export const fetchUserRole = async (
   }
 };
 
+export const handleSearchChange = (
+  query: string,
+  allReports: any[],
+  setFilteredReports: React.Dispatch<React.SetStateAction<any[]>>
+) => {
+  const filtered = allReports.filter((report) =>
+    report.productName.toLowerCase().includes(query.toLowerCase()) ||
+    report.user.handle.toLowerCase().includes(query.toLowerCase())
+  );
+  setFilteredReports(filtered);
+};
+
 export const fetchReports = async (
   userHandle: string,
   userRole: string,
