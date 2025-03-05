@@ -26,7 +26,7 @@ function Dashboard({ user }: DashboardProps) {
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
     const onBalanceUpdate = (newBalance: number) => {
         console.log('Nuevo saldo:', newBalance);
-      };
+    };
     useEffect(() => {
         fetch("http://localhost:4000/user", {
             method: "GET",
@@ -161,13 +161,17 @@ function Dashboard({ user }: DashboardProps) {
                     />
                 </Card>
             </Group>
+            {userRole === "master" && userCounts && (
+                <>
+                    <Group>
+                        <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
+                        <Registrar />
+                        <AdminBR />
+                        <ManagePro />
+                    </Group>
+                </>
 
-            <Group>
-            <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
-            <Registrar />
-                <AdminBR />
-                <ManagePro />
-            </Group>
+            )}
         </>
     );
 }

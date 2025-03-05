@@ -64,13 +64,13 @@ export const fetchReports = async (
 };
 
 export const fetchTransactions = async (
-  userId: string,
+  userHandle: string,
   userRole: string,
   setAllTransactions: React.Dispatch<React.SetStateAction<any[]>>,
   setFilteredTransactions: React.Dispatch<React.SetStateAction<any[]>>,
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
-  if (!userId) return;
+  if (!userHandle) return;
 
   const token = localStorage.getItem('token');
   if (!token) {
@@ -81,9 +81,11 @@ export const fetchTransactions = async (
   try {
     let url = '';
     if (userRole === 'master') {
+      // Si el rol es 'master', obtenemos todas las transacciones
       url = 'http://localhost:4000/transactions';
     } else {
-      url = `http://localhost:4000/transactions/${userId}`;
+      // Si no es 'master', obtenemos transacciones por el handle del usuario
+      url = `http://localhost:4000/transactions/${userHandle}`;
     }
 
     const response = await axios.get(url, {
@@ -114,7 +116,6 @@ export const handlePinClick = (
   setSelectedReport(report);
   setPinsModalOpened(true);
 };
-
 
 export const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text)

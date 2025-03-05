@@ -66,7 +66,7 @@ function Reports({ user }: ReportsProps) {
   }, [allReports]);
 
   const clearFilters = () => {
-    setSelectedUserHandle(null);
+    setSelectedUserHandle('todos');
     setSelectedDate(null);
     setFilteredReports(allReports);
   };
@@ -75,9 +75,7 @@ function Reports({ user }: ReportsProps) {
     setSelectedDate(date);
   };
 
-  const handleUserChange = (userHandle: string | null) => {
-    setSelectedUserHandle(userHandle);
-  };
+
 
   useEffect(() => {
     let filtered = allReports;
@@ -154,72 +152,115 @@ function Reports({ user }: ReportsProps) {
       </Modal>
 
       <Title ta="center" weight={700} mb="sm" order={2}>Reportes de Ventas</Title>
+      {userRole !== 'cliente' && userRole !== 'vendedor' && (
+        <>
 
-      <Group
-        style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : ' 3fr 3fr 1fr',
-          gap: '10px',
-          width: '100%',
-        }}
-      >
-        <Select
-          radius="md"
-          size="lg"
-          icon={<IconUser />}
-          placeholder="Filtrar Usuario"
-          label="Filtrar Usuario"
-          transition="pop-top-left"
-          transitionDuration={80}
-          transitionTimingFunction="ease"
-          data={[{ value: 'todos', label: 'Todos' }, ...userHandles.map(handle => ({ value: handle, label: handle }))]}
-          onChange={handleUserChange}
-          defaultValue='todos'
-          styles={() => ({
-            item: {
-              '&[data-selected]': {
-                '&, &:hover': {
-                  backgroundColor: '#0c2a85',
-                  color: 'white',
+          <Group
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : ' 3fr 3fr 1fr',
+              gap: '10px',
+              width: '100%',
+            }}
+          >
+            <Select
+              radius="md"
+              size="lg"
+              icon={<IconUser />}
+              placeholder="Filtrar Usuario"
+              label="Filtrar Usuario"
+              transition="pop-top-left"
+              transitionDuration={80}
+              transitionTimingFunction="ease"
+              data={[{ value: 'todos', label: 'Todos' }, ...userHandles.map(handle => ({ value: handle, label: handle }))]}
+              value={selectedUserHandle}
+              defaultValue="todos"
+              onChange={setSelectedUserHandle}
+              styles={() => ({
+                item: {
+                  '&[data-selected]': {
+                    '&, &:hover': {
+                      backgroundColor: '#0c2a85',
+                      color: 'white',
+                    },
+                  },
                 },
-              },
-            },
-          })}
-        />
+              })}
+            />
 
-        <DatePicker
-          radius="md"
-          size="lg"
-          icon={<IconCalendarWeek />}
-          placeholder="Filtrar Fecha"
-          label="Filtrar Fecha"
-          inputFormat="DD/MM/YYYY"
-          labelFormat="MM/YYYY"
-          value={selectedDate}
-          onChange={handleDateChange}
-        />
-        <Group mt={25}>
-          <ActionIcon
-            style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
-            color="indigo"
-            variant="filled"
-            onClick={clearFilters}
-          >
-            <IconReload size={30} />
-          </ActionIcon>
-          <ActionIcon
-            style={{ background: '#0c2a85', color: 'white', }}
-            radius="md"
-            size="xl"
-            color="indigo"
-            variant="filled"
-            onClick={() => exportToExcel(filteredReports)}
-          >
-            <IconDownload size={30} />
-          </ActionIcon>
-        </Group>
-      </Group>
+            <DatePicker
+              radius="md"
+              size="lg"
+              icon={<IconCalendarWeek />}
+              placeholder="Filtrar Fecha"
+              label="Filtrar Fecha"
+              inputFormat="DD/MM/YYYY"
+              labelFormat="MM/YYYY"
+              value={selectedDate}
+              onChange={handleDateChange}
+            />
+            <Group mt={25}>
+              <ActionIcon
+                style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
+                color="indigo"
+                variant="filled"
+                onClick={clearFilters}
+              >
+                <IconReload size={30} />
+              </ActionIcon>
+              <ActionIcon
+                style={{ background: '#0c2a85', color: 'white', }}
+                radius="md"
+                size="xl"
+                color="indigo"
+                variant="filled"
+                onClick={() => exportToExcel(filteredReports)}
+              >
+                <IconDownload size={30} />
+              </ActionIcon>
+            </Group>
+          </Group>
+        </>
+      )}
+      {userRole == 'cliente' && (
+        <>
 
+          <Group
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : ' 6fr 1fr',
+              gap: '10px',
+              width: '100%',
+            }}
+          >
+            <DatePicker
+              dropdownType="modal"
+              radius="md"
+              size="lg"
+              icon={<IconCalendarWeek />}
+              placeholder="Filtrar Fecha"
+              label="Filtrar Fecha"
+              inputFormat="DD/MM/YYYY"
+              labelFormat="MM/YYYY"
+              value={selectedDate}
+              onChange={handleDateChange}
+            />
+            <Group mt={25}>
+
+              <ActionIcon
+                style={{ background: '#0c2a85', color: 'white', }}
+                radius="md"
+                size="xl"
+                color="indigo"
+                variant="filled"
+                onClick={() => exportToExcel(filteredReports)}
+              >
+                <IconDownload size={30} />
+              </ActionIcon>
+            </Group>
+          </Group>
+        </>
+      )}
       <Pagination
         total={totalPages}
         radius="md"

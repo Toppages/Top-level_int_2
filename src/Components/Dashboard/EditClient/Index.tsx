@@ -48,7 +48,7 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
             .then((data: Client[]) => {
                 const formattedClients = data.map(client => ({
                     value: client._id,
-                    label: `${client.name} (${client.email})`,  // Mostrar nombre y correo
+                    label: `${client.name} (${client.email})`,
                 }));
                 setClients(formattedClients);
             })
@@ -73,7 +73,6 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
 
         handleClose();
 
-        // Obtener los detalles completos del cliente seleccionado
         const selectedClient = clients.find(client => client.value === data.clientId);
 
         if (!selectedClient) {
@@ -81,13 +80,12 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
             return;
         }
 
-        // Enviar todos los detalles necesarios al backend
         const response = await axios.put('http://localhost:4000/user/balance', {
             userId: data.clientId,
             amount: data.saldo,
             transactionUserName: user?.handle,
-            role: user?.role, // El rol del usuario que realiza la transacción
-            clientDetails: selectedClient,  // Enviar los detalles completos del cliente
+            role: user?.role, 
+            clientDetails: selectedClient,
         });
 
         if (response.data?.saldo !== undefined) {

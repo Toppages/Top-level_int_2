@@ -6,6 +6,7 @@ import { IconCalendarWeek, IconDownload, IconReload, IconUser } from '@tabler/ic
 import { Group, ScrollArea, Table, Text, Title, ActionIcon, Pagination, Select } from '@mantine/core';
 import { fetchTransactions } from '../../utils/utils';
 
+
 const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
     const [allTransactions, setAllTransactions] = useState<any[]>([]);
     const [filteredTransactions, setFilteredTransactions] = useState<any[]>([]);
@@ -16,13 +17,14 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
     const [selectedUserHandle, setSelectedUserHandle] = useState<string | null>('todos');
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const itemsPerPage = 7;
+    const userRole = user?.role;
 
     const isMobile = useMediaQuery('(max-width: 1000px)');
 
     useEffect(() => {
         if (user) {
             fetchTransactions(
-                user._id,
+                user.handle,
                 user.role,
                 setAllTransactions,
                 setFilteredTransactions,
@@ -39,14 +41,12 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
     useEffect(() => {
         let filtered = allTransactions;
 
-        // Apply user filter
         if (selectedUserHandle && selectedUserHandle !== 'todos') {
             filtered = filtered.filter((transaction) =>
                 transaction.transactionUserName.toLowerCase().includes(selectedUserHandle.toLowerCase())
             );
         }
 
-        // Apply date filter
         if (selectedDate) {
             const dateStr = selectedDate.toISOString().split('T')[0];
             filtered = filtered.filter(transaction => {
@@ -55,7 +55,6 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
             });
         }
 
-        // Apply search term filter
         if (searchTerm) {
             filtered = filtered.filter((transaction) =>
                 transaction.transactionUserName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -93,71 +92,117 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
     return (
         <>
             <Title ta="center" weight={700} mb="sm" order={2}>Reportes de Balance</Title>
+            {userRole !== 'cliente' && userRole !== 'vendedor' && (
+                <>
 
-            <Group
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : ' 3fr 3fr 1fr',
-                    gap: '10px',
-                    width: '100%',
-                }}
-            >
-                <Select
-                    radius="md"
-                    size="lg"
-                    icon={<IconUser />}
-                    placeholder="Filtrar Usuario"
-                    label="Filtrar Usuario"
-                    transition="pop-top-left"
-                    transitionDuration={80}
-                    transitionTimingFunction="ease"
-                    data={[{ value: 'todos', label: 'Todos' }, ...userHandles.map(handle => ({ value: handle, label: handle }))]}
-                    onChange={setSelectedUserHandle}
-                    defaultValue="todos"
-                    styles={() => ({
-                        item: {
-                            '&[data-selected]': {
-                                '&, &:hover': {
-                                    backgroundColor: '#0c2a85',
-                                    color: 'white',
+                    <Group
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: isMobile ? '1fr' : ' 3fr 3fr 1fr',
+                            gap: '10px',
+                            width: '100%',
+                        }}
+                    >
+                        <Select
+                            radius="md"
+                            size="lg"
+                            icon={<IconUser />}
+                            placeholder="Filtrar Usuario"
+                            label="Filtrar Usuario"
+                            transition="pop-top-left"
+                            transitionDuration={80}
+                            transitionTimingFunction="ease"
+                            data={[{ value: 'todos', label: 'Todos' }, ...userHandles.map(handle => ({ value: handle, label: handle }))]}
+                            value={selectedUserHandle}
+                            defaultValue="todos"
+                            onChange={setSelectedUserHandle}
+                            styles={() => ({
+                                item: {
+                                    '&[data-selected]': {
+                                        '&, &:hover': {
+                                            backgroundColor: '#0c2a85',
+                                            color: 'white',
+                                        },
+                                    },
                                 },
-                            },
-                        },
-                    })}
-                />
+                            })}
+                        />
 
-                <DatePicker
-                    radius="md"
-                    size="lg"
-                    icon={<IconCalendarWeek />}
-                    placeholder="Filtrar Fecha"
-                    label="Filtrar Fecha"
-                    inputFormat="DD/MM/YYYY"
-                    labelFormat="MM/YYYY"
-                    value={selectedDate}
-                    onChange={setSelectedDate}
-                />
-                <Group mt={25}>
-                    <ActionIcon
-                        style={{ background: '#0c2a85', color: 'white' }} radius="md" size="xl"
-                        color="indigo"
-                        variant="filled"
-                        onClick={clearFilters}
+                        <DatePicker
+                            radius="md"
+                            size="lg"
+                            icon={<IconCalendarWeek />}
+                            placeholder="Filtrar Fecha"
+                            label="Filtrar Fecha"
+                            inputFormat="DD/MM/YYYY"
+                            labelFormat="MM/YYYY"
+                            value={selectedDate}
+                            onChange={setSelectedDate}
+                        />
+                        <Group mt={25}>
+                            <ActionIcon
+                                style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
+                                color="indigo"
+                                variant="filled"
+                                onClick={clearFilters}
+                            >
+                                <IconReload size={30} />
+                            </ActionIcon>
+                            <ActionIcon
+                                style={{ background: '#0c2a85', color: 'white', }}
+                                radius="md"
+                                size="xl"
+                                color="indigo"
+                                variant="filled"
+                                onClick={() => exportToExcel(filteredTransactions)}
+                            >
+                                <IconDownload size={30} />
+                            </ActionIcon>
+                        </Group>
+                    </Group>
+                </>
+            )}
+
+            {userRole == 'cliente' && (
+                <>
+
+                    <Group
+                        style={{
+                            display: 'grid',
+                            gridTemplateColumns: isMobile ? '1fr' : ' 6fr 1fr',
+                            gap: '10px',
+                            width: '100%',
+                        }}
                     >
-                        <IconReload size={30} />
-                    </ActionIcon>
-                    <ActionIcon
-                        style={{ background: '#0c2a85', color: 'white' }}
-                        radius="md"
-                        size="xl"
-                        color="indigo"
-                        variant="filled"
-                        onClick={() => exportToExcel(filteredTransactions)}
-                    >
-                        <IconDownload size={30} />
-                    </ActionIcon>
-                </Group>
-            </Group>
+
+
+                        <DatePicker
+                            radius="md"
+                            size="lg"
+                            icon={<IconCalendarWeek />}
+                            placeholder="Filtrar Fecha"
+                            label="Filtrar Fecha"
+                            inputFormat="DD/MM/YYYY"
+                            labelFormat="MM/YYYY"
+                            value={selectedDate}
+                            onChange={setSelectedDate}
+                        />
+                        <Group mt={25}>
+
+                            <ActionIcon
+                                style={{ background: '#0c2a85', color: 'white', }}
+                                radius="md"
+                                size="xl"
+                                color="indigo"
+                                variant="filled"
+                                onClick={() => exportToExcel(filteredTransactions)}
+                            >
+                                <IconDownload size={30} />
+                            </ActionIcon>
+                        </Group>
+                    </Group>
+                </>
+            )}
 
             <Pagination
                 total={totalPages}
@@ -185,24 +230,30 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                         <thead style={{ background: '#0c2a85' }}>
                             <tr>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
-                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Realizado por</Title></th>
+                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
+                                {userRole !== 'cliente' && (
+                                    <>
+                                        <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Realizado por</Title></th>
+                                        <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Beneficiado</Title></th>
+                                    </>
+                                )}
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Monto</Title></th>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Balance Anterior</Title></th>
-                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Tipo</Title></th>
-                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Beneficiado</Title></th>
-                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginatedReports.map((transaction) => (
                                 <tr key={transaction._id}>
                                     <td style={{ textAlign: 'center' }}>{transaction.transactionId}</td>
-                                    <td style={{ textAlign: 'center' }}>{transaction.transactionUserName}</td>
+                                    <td style={{ textAlign: 'center' }}>{new Date(transaction.created_at).toLocaleDateString('es-ES')}</td>
+                                    {userRole !== 'cliente' && (
+                                        <>
+                                            <td style={{ textAlign: 'center' }}>{transaction.transactionUserName}</td>
+                                            <td style={{ textAlign: 'center' }}>{transaction.userhandle}</td>
+                                        </>
+                                    )}
                                     <td style={{ textAlign: 'center' }}>{transaction.amount} USD</td>
                                     <td style={{ textAlign: 'center' }}>{transaction.previousBalance} USD</td>
-                                    <td style={{ textAlign: 'center' }}>{transaction.type}</td>
-                                    <td style={{ textAlign: 'center' }}>{transaction.userName}</td>
-                                    <td style={{ textAlign: 'center' }}>{new Date(transaction.created_at).toLocaleDateString('es-ES')}</td>
                                 </tr>
                             ))}
                         </tbody>
