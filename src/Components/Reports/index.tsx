@@ -11,14 +11,11 @@ interface ReportsProps {
 }
 
 function Reports({ user }: ReportsProps) {
-
   const exportToExcel = (data: any[]) => {
     const filteredData = data.map((report) => {
       const { user, order_id, _id, product, created_at, __v, status, ...cleanedReport } = report;
-
       const formattedDate = new Date(report.created_at);
       const formattedDateStr = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours().toString().padStart(2, '0')}:${formattedDate.getMinutes().toString().padStart(2, '0')}`;
-
       cleanedReport['Fecha'] = formattedDateStr;
 
       if (userRole === 'master') {
@@ -29,11 +26,8 @@ function Reports({ user }: ReportsProps) {
     });
 
     const wb = XLSX.utils.book_new();
-
     const ws = XLSX.utils.json_to_sheet(filteredData);
-
     XLSX.utils.book_append_sheet(wb, ws, 'Reportes');
-
     XLSX.writeFile(wb, 'reportes_ventas.xlsx');
   };
 
@@ -51,6 +45,8 @@ function Reports({ user }: ReportsProps) {
   const userHandle = user?.handle || null;
 
   const [userHandles, setUserHandles] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedUserHandle, setSelectedUserHandle] = useState<string | null>(null);
 
   useEffect(() => {
     if (userHandle) {
@@ -65,17 +61,46 @@ function Reports({ user }: ReportsProps) {
   }, [userHandle, userRole]);
 
   useEffect(() => {
-    // Obtener los handles únicos de los reportes
     const uniqueHandles = [...new Set(allReports.map((report) => report.user.handle))];
     setUserHandles(uniqueHandles);
   }, [allReports]);
 
-  const clearDateFilter = () => {
+  const clearFilters = () => {
+    setSelectedUserHandle(null);
+    setSelectedDate(null);
     setFilteredReports(allReports);
   };
 
+  const handleDateChange = (date: Date | null) => {
+    setSelectedDate(date);
+  };
+
+  const handleUserChange = (userHandle: string | null) => {
+    setSelectedUserHandle(userHandle);
+  };
+
+  useEffect(() => {
+    let filtered = allReports;
+
+    if (selectedUserHandle && selectedUserHandle !== 'todos') {
+      filtered = filtered.filter(report => report.user.handle === selectedUserHandle);
+    }
+
+    if (selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      filtered = filtered.filter(report => {
+        const reportDate = report.created_at.split('T')[0];
+        return reportDate === dateStr;
+      });
+    }
+
+    setFilteredReports(filtered);
+    setCurrentPage(1);
+  }, [selectedUserHandle, selectedDate, allReports]);
+
   const paginatedReports = filteredReports.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -87,28 +112,20 @@ function Reports({ user }: ReportsProps) {
           <>
             <Title ta="center" order={4}>{selectedReport.saleId}: {selectedReport.productName}</Title>
             <Group mt='md' position="apart" mb="md">
-
               <Title order={4}>Cantidad:</Title>
               <Title order={4}>{selectedReport.quantity}</Title>
             </Group>
-
             <Group mt='md' position="apart" mb="md">
-
               <Title order={4}>Total:</Title>
               <Title order={4}>{selectedReport.totalPrice} USD</Title>
             </Group>
-
             <Group mt='md' position="apart" mb="md">
-
               <Title order={4}>Fecha:</Title>
               <Title order={4}> {formatDate(selectedReport.created_at)}</Title>
             </Group>
-
-
             {userRole !== 'cliente' && userRole !== 'vendedor' && (
               <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
             )}
-
             <Divider my="sm" size='md' variant="dashed" />
           </>
         )}
@@ -116,9 +133,7 @@ function Reports({ user }: ReportsProps) {
           <Table striped highlightOnHover withColumnBorders>
             <thead>
               <tr>
-                <th style={{ textAlign: 'center' }}>
-                  <Title order={3}>Pines</Title>
-                </th>
+                <th style={{ textAlign: 'center' }}><Title order={3}>Pines</Title></th>
                 <th style={{ textAlign: 'center' }}></th>
               </tr>
             </thead>
@@ -157,10 +172,9 @@ function Reports({ user }: ReportsProps) {
           transition="pop-top-left"
           transitionDuration={80}
           transitionTimingFunction="ease"
-          data={[
-            { value: 'todos', label: 'Todos' },
-            ...userHandles.map(handle => ({ value: handle, label: handle })),
-          ]}
+          data={[{ value: 'todos', label: 'Todos' }, ...userHandles.map(handle => ({ value: handle, label: handle }))]}
+          onChange={handleUserChange}
+          defaultValue='todos'
           styles={() => ({
             item: {
               '&[data-selected]': {
@@ -173,23 +187,23 @@ function Reports({ user }: ReportsProps) {
           })}
         />
 
-
         <DatePicker
           radius="md"
           size="lg"
           icon={<IconCalendarWeek />}
           placeholder="Filtrar Fecha"
           label="Filtrar Fecha"
-          inputFormat="MM/DD/YYYY"
+          inputFormat="DD/MM/YYYY"
           labelFormat="MM/YYYY"
-          defaultValue={new Date()}
+          value={selectedDate}
+          onChange={handleDateChange}
         />
         <Group mt={25}>
           <ActionIcon
             style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
             color="indigo"
             variant="filled"
-            onClick={clearDateFilter}
+            onClick={clearFilters}
           >
             <IconReload size={30} />
           </ActionIcon>
@@ -204,8 +218,8 @@ function Reports({ user }: ReportsProps) {
             <IconDownload size={30} />
           </ActionIcon>
         </Group>
-
       </Group>
+
       <Pagination
         total={totalPages}
         radius="md"
@@ -231,18 +245,15 @@ function Reports({ user }: ReportsProps) {
 
       {filteredReports.length > 0 && (
         <ScrollArea style={{ height: '420px', width: '100%' }} type="never">
-
           <Table mt={15} mb={isMobile ? 100 : 5} striped highlightOnHover withBorder withColumnBorders>
             <thead style={{ background: '#0c2a85' }}>
               <tr>
                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Producto</Title></th>
                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio</Title></th>
-
                 {!isMobile && (
                   <>
                     <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Cantidad</Title></th>
-
                     <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
                   </>
                 )}
@@ -264,10 +275,8 @@ function Reports({ user }: ReportsProps) {
                   {!isMobile && (
                     <>
                       <td style={{ textAlign: 'center' }}>{report.quantity}</td>
-
                       <td style={{ textAlign: 'center' }}>{formatDate(report.created_at)}</td>
                     </>
-
                   )}
                   {!isMobile && userRole !== 'cliente' && userRole !== 'vendedor' && (
                     <td style={{ textAlign: 'center' }}>{report.user.handle}</td>
