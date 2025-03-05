@@ -1,17 +1,21 @@
 import * as XLSX from 'xlsx';
 import { useMediaQuery } from '@mantine/hooks';
-import { useState, useEffect, SetStateAction } from 'react';
-import { IconDownload, IconSearch } from '@tabler/icons-react';
-import { Group, ScrollArea, Table, Text, Title, ActionIcon, Pagination, Input } from '@mantine/core';
+import { DatePicker } from '@mantine/dates';
+import { useState, useEffect } from 'react';
+import { IconCalendarWeek, IconDownload, IconReload, IconUser } from '@tabler/icons-react';
+import { Group, ScrollArea, Table, Text, Title, ActionIcon, Pagination, Select } from '@mantine/core';
 import { fetchTransactions } from '../../utils/utils';
 
 const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
     const [allTransactions, setAllTransactions] = useState<any[]>([]);
     const [filteredTransactions, setFilteredTransactions] = useState<any[]>([]);
-    const [searchTerm, setSearchTerm] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    const [userHandles, setUserHandles] = useState<string[]>([]);
+    const [selectedUserHandle, setSelectedUserHandle] = useState<string | null>('todos');
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const itemsPerPage = 7;
 
     const isMobile = useMediaQuery('(max-width: 1000px)');
 
@@ -28,13 +32,39 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
     }, [user]);
 
     useEffect(() => {
-        const filtered = allTransactions.filter((transaction) =>
-            transaction.transactionUserName?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const uniqueHandles = [...new Set(allTransactions.map((transaction) => transaction.transactionUserName))];
+        setUserHandles(uniqueHandles);
+    }, [allTransactions]);
+
+    useEffect(() => {
+        let filtered = allTransactions;
+
+        // Apply user filter
+        if (selectedUserHandle && selectedUserHandle !== 'todos') {
+            filtered = filtered.filter((transaction) =>
+                transaction.transactionUserName.toLowerCase().includes(selectedUserHandle.toLowerCase())
+            );
+        }
+
+        // Apply date filter
+        if (selectedDate) {
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            filtered = filtered.filter(transaction => {
+                const transactionDate = transaction.created_at.split('T')[0];
+                return transactionDate === dateStr;
+            });
+        }
+
+        // Apply search term filter
+        if (searchTerm) {
+            filtered = filtered.filter((transaction) =>
+                transaction.transactionUserName?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
         setFilteredTransactions(filtered);
         setCurrentPage(1);
-    }, [searchTerm, allTransactions]);
-
+    }, [selectedUserHandle, selectedDate, searchTerm, allTransactions]);
 
     const exportToExcel = (data: any[]) => {
         const filteredData = data.map((transaction) => {
@@ -50,29 +80,84 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
         XLSX.writeFile(wb, 'balance_reports.xlsx');
     };
 
+    const clearFilters = () => {
+        setSelectedUserHandle('todos');
+        setSelectedDate(null);
+        setSearchTerm('');
+        setFilteredTransactions(allTransactions);
+    };
+
     const paginatedReports = filteredTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
 
     return (
-        <div>
+        <>
             <Title ta="center" weight={700} mb="sm" order={2}>Reportes de Balance</Title>
-            <Group style={{ display: 'grid', gridTemplateColumns: '9fr 1fr', gap: '25px', width: '100%' }}>
-                <Input
+
+            <Group
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '1fr' : ' 3fr 3fr 1fr',
+                    gap: '10px',
+                    width: '100%',
+                }}
+            >
+                <Select
                     radius="md"
                     size="lg"
-                    icon={<IconSearch />}
-                    placeholder="Buscar usuario..."
-                    value={searchTerm}
-                    onChange={(e: { target: { value: SetStateAction<string>; }; }) => setSearchTerm(e.target.value)}
+                    icon={<IconUser />}
+                    placeholder="Filtrar Usuario"
+                    label="Filtrar Usuario"
+                    transition="pop-top-left"
+                    transitionDuration={80}
+                    transitionTimingFunction="ease"
+                    data={[{ value: 'todos', label: 'Todos' }, ...userHandles.map(handle => ({ value: handle, label: handle }))]}
+                    onChange={setSelectedUserHandle}
+                    defaultValue="todos"
+                    styles={() => ({
+                        item: {
+                            '&[data-selected]': {
+                                '&, &:hover': {
+                                    backgroundColor: '#0c2a85',
+                                    color: 'white',
+                                },
+                            },
+                        },
+                    })}
                 />
-                <Group>
-                    <ActionIcon style={{ background: '#0c2a85', color: 'white' }} radius="md" size="xl" onClick={() => exportToExcel(filteredTransactions)} color="indigo" variant="filled">
+
+                <DatePicker
+                    radius="md"
+                    size="lg"
+                    icon={<IconCalendarWeek />}
+                    placeholder="Filtrar Fecha"
+                    label="Filtrar Fecha"
+                    inputFormat="DD/MM/YYYY"
+                    labelFormat="MM/YYYY"
+                    value={selectedDate}
+                    onChange={setSelectedDate}
+                />
+                <Group mt={25}>
+                    <ActionIcon
+                        style={{ background: '#0c2a85', color: 'white' }} radius="md" size="xl"
+                        color="indigo"
+                        variant="filled"
+                        onClick={clearFilters}
+                    >
+                        <IconReload size={30} />
+                    </ActionIcon>
+                    <ActionIcon
+                        style={{ background: '#0c2a85', color: 'white' }}
+                        radius="md"
+                        size="xl"
+                        color="indigo"
+                        variant="filled"
+                        onClick={() => exportToExcel(filteredTransactions)}
+                    >
                         <IconDownload size={30} />
                     </ActionIcon>
                 </Group>
             </Group>
-
-            {error && <Text color="red" mb="md">{error}</Text>}
 
             <Pagination
                 total={totalPages}
@@ -95,8 +180,8 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
             )}
 
             {filteredTransactions.length > 0 && (
-                <ScrollArea style={{ height: '380px', width: '100%' }} type="never">
-                    <Table mt={15} mb={isMobile ? 100 : 5} striped highlightOnHover withBorder withColumnBorders>
+                <ScrollArea style={{ height: '340px', width: '100%' }} type="never">
+                    <Table mt={15} striped highlightOnHover withBorder withColumnBorders>
                         <thead style={{ background: '#0c2a85' }}>
                             <tr>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
@@ -104,7 +189,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Monto</Title></th>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Balance Anterior</Title></th>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Tipo</Title></th>
-                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>beneficiado</Title></th>
+                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Beneficiado</Title></th>
                                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
                             </tr>
                         </thead>
@@ -124,7 +209,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                     </Table>
                 </ScrollArea>
             )}
-        </div>
+        </>
     );
 };
 
