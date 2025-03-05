@@ -182,12 +182,14 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
     const sendSaleToBackend = async (pins: string[]) => {
         try {
-            const totalPrice = parseFloat(selectedProduct?.price || "0") * quantity;
+            const userPrice = selectedProduct ? getPriceForUser(selectedProduct, user) : 0;
+            const totalPrice = Number(userPrice) * quantity;
+
             const saleData = {
                 quantity,
                 product: selectedProduct?.code,
                 productName: selectedProduct?.name,
-                price: selectedProduct?.price,
+                price: userPrice,
                 totalPrice: totalPrice.toFixed(2),
                 status: "captured",
                 order_id: moment().format("YYYYMMDD_HHmmss"),
@@ -220,6 +222,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             console.error("Error al enviar la venta al backend:", error);
         }
     };
+
 
     const handleFinishClick = () => {
         onClose();

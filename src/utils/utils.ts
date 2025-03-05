@@ -106,13 +106,16 @@ export const formatDate = (dateString: string) => {
 };
 
 export const handlePinClick = (
-  pins: any[],
+  report: any,
   setPines: React.Dispatch<React.SetStateAction<any[]>>,
-  setPinsModalOpened: React.Dispatch<React.SetStateAction<boolean>>
+  setPinsModalOpened: React.Dispatch<React.SetStateAction<boolean>>,
+  setSelectedReport: React.Dispatch<React.SetStateAction<any | null>>
 ) => {
-  setPines(pins);
+  setPines(report.pins);
+  setSelectedReport(report);
   setPinsModalOpened(true);
 };
+
 
 export const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text)
