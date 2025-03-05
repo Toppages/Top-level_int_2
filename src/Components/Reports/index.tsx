@@ -1,13 +1,13 @@
 import * as XLSX from 'xlsx';
 import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from '@mantine/hooks';
-import { useState, useEffect, SetStateAction } from 'react';
+import { useState, useEffect } from 'react';
 import { IconAdjustments, IconCopy, IconReload, IconEye, IconSearch, IconDownload } from '@tabler/icons-react';
 import { Button, Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Input, Pagination,Divider } from '@mantine/core';
-import { fetchUserRole, fetchReports, handleSearchChange, formatDate, handlePinClick, copyToClipboard } from '../../utils/utils';
+import { fetchUserRole, fetchReports, formatDate, handlePinClick, copyToClipboard } from '../../utils/utils';
 
 interface ReportsProps {
-  user: { _id: string; name: string; email: string; handle: string } | null;
+  user: { _id: string; name: string; email: string; handle: string; role: string;} | null;
 }
 
 function Reports({ user }: ReportsProps) {
@@ -49,30 +49,23 @@ function Reports({ user }: ReportsProps) {
   const [pines, setPines] = useState<any[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
   const itemsPerPage = 7;
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
 
   const isMobile = useMediaQuery('(max-width: 1000px)');
-  const userId = user?._id || null;
+  const userHandle = user?.handle || null; 
 
   useEffect(() => {
-    if (userId) {
+    if (userHandle) {
       fetchUserRole(setUserRole);
     }
-  }, [userId]);
-
+  }, [userHandle]);
+  
   useEffect(() => {
-    if (userId && userRole) {
-      fetchReports(userId, userRole, setAllReports, setFilteredReports, setError);
+    if (userHandle && userRole) {  
+      fetchReports(userHandle, userRole, setAllReports, setFilteredReports, setError);
     }
-  }, [userId, userRole]);
-
-  useEffect(() => {
-    if (allReports.length > 0) {
-      handleSearchChange(searchQuery, filteredReports.length > 0 ? filteredReports : allReports, setFilteredReports);
-    }
-  }, [searchQuery, allReports, filteredReports]);
+  }, [userHandle, userRole]);
 
   const handleFilterDates = () => {
     if (startDate && finishDate) {
@@ -94,9 +87,6 @@ function Reports({ user }: ReportsProps) {
     setFilteredReports(allReports);
   };
 
-  useEffect(() => {
-    handleSearchChange(searchQuery, filteredReports.length > 0 ? filteredReports : allReports, setFilteredReports);
-  }, [searchQuery, filteredReports]);
 
   const paginatedReports = filteredReports.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
@@ -224,8 +214,6 @@ function Reports({ user }: ReportsProps) {
           size="lg"
           icon={<IconSearch />}
           placeholder="Producto o Usuario"
-          value={searchQuery}
-          onChange={(e: { target: { value: SetStateAction<string> } }) => setSearchQuery(e.target.value)}
         />
         <Group>
           <ActionIcon style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl" onClick={() => setOpened(true)} color="indigo" variant="filled">

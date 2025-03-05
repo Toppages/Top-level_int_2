@@ -19,13 +19,13 @@ export const fetchUserRole = async (
 };
 
 export const fetchReports = async (
-  userId: string,
+  userHandle: string,
   userRole: string,
   setAllReports: React.Dispatch<React.SetStateAction<any[]>>,
   setFilteredReports: React.Dispatch<React.SetStateAction<any[]>>,
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
-  if (!userId) return;
+  if (!userHandle) return;
 
   const token = localStorage.getItem('token');
   if (!token) {
@@ -36,7 +36,7 @@ export const fetchReports = async (
   try {
     const url = userRole === 'master'
       ? 'http://localhost:4000/sales'
-      : `http://localhost:4000/sales/user/${userId}`;
+      : `http://localhost:4000/sales/user/${userHandle}`;
 
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -85,19 +85,6 @@ export const fetchTransactions = async (
     setError('Hubo un problema al obtener las transacciones.');
     toast.error('Hubo un problema al obtener las transacciones.');
   }
-};
-
-
-export const handleSearchChange = (
-  query: string,
-  allReports: any[],
-  setFilteredReports: React.Dispatch<React.SetStateAction<any[]>>
-) => {
-  const filtered = allReports.filter((report) =>
-    report.productName.toLowerCase().includes(query.toLowerCase()) ||
-    report.user.handle.toLowerCase().includes(query.toLowerCase())
-  );
-  setFilteredReports(filtered);
 };
 
 export const formatDate = (dateString: string) => {
