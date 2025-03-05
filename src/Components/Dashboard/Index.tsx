@@ -1,4 +1,3 @@
-// Dashboard.tsx
 import AdminBR from "./AdminBR";
 import Registrar from "./Registrar/Index";
 import EditClient from "./EditClient/Index";
@@ -161,7 +160,7 @@ function Dashboard({ user }: DashboardProps) {
                     />
                 </Card>
             </Group>
-            {userRole === "master" && userCounts && (
+            {(userRole === "master" || userRole === "admin") && (
                 <>
                     <Group>
                         <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />

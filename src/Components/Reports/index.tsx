@@ -40,7 +40,6 @@ function Reports({ user }: ReportsProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
-
   const isMobile = useMediaQuery('(max-width: 1000px)');
   const userHandle = user?.handle || null;
 
@@ -104,6 +103,7 @@ function Reports({ user }: ReportsProps) {
   };
 
   return (
+    
     <>
       <Modal radius="lg" withCloseButton={false} opened={pinsModalOpened} onClose={() => setPinsModalOpened(false)}>
         {isMobile && selectedReport && (
@@ -120,6 +120,10 @@ function Reports({ user }: ReportsProps) {
             <Group mt='md' position="apart" mb="md">
               <Title order={4}>Fecha:</Title>
               <Title order={4}> {formatDate(selectedReport.created_at)}</Title>
+            </Group>
+            <Group mt='md' position="apart" mb="md">
+              <Title order={4}>Saldo Disponible</Title>
+              <Title order={4}>{selectedReport.moneydisp} USD</Title>
             </Group>
             {userRole !== 'cliente' && userRole !== 'vendedor' && (
               <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
@@ -152,6 +156,46 @@ function Reports({ user }: ReportsProps) {
       </Modal>
 
       <Title ta="center" weight={700} mb="sm" order={2}>Reportes de Ventas</Title>
+      {userRole == 'cliente' && (
+        <>
+
+          <Group
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '4fr 1fr' : ' 6fr 1fr',
+              gap: '10px',
+              width: '100%',
+            }}
+          >
+            <DatePicker
+              dropdownType="modal"
+              radius="md"
+              size="lg"
+              icon={<IconCalendarWeek />}
+              placeholder="Filtrar Fecha"
+              label="Filtrar Fecha"
+              inputFormat="DD/MM/YYYY"
+              labelFormat="MM/YYYY"
+              value={selectedDate}
+              onChange={handleDateChange}
+            />
+            <Group mt={25}>
+
+              <ActionIcon
+                style={{ background: '#0c2a85', color: 'white', }}
+                radius="md"
+                size="xl"
+                color="indigo"
+                variant="filled"
+                onClick={() => exportToExcel(filteredReports)}
+              >
+                <IconDownload size={30} />
+              </ActionIcon>
+            </Group>
+          </Group>
+        </>
+      )}
+      
       {userRole !== 'cliente' && userRole !== 'vendedor' && (
         <>
 
@@ -199,7 +243,7 @@ function Reports({ user }: ReportsProps) {
               value={selectedDate}
               onChange={handleDateChange}
             />
-            <Group mt={25}>
+            <Group position={isMobile ? 'center' : 'apart'} mt={25}>
               <ActionIcon
                 style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
                 color="indigo"
@@ -222,45 +266,7 @@ function Reports({ user }: ReportsProps) {
           </Group>
         </>
       )}
-      {userRole == 'cliente' && (
-        <>
-
-          <Group
-            style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : ' 6fr 1fr',
-              gap: '10px',
-              width: '100%',
-            }}
-          >
-            <DatePicker
-              dropdownType="modal"
-              radius="md"
-              size="lg"
-              icon={<IconCalendarWeek />}
-              placeholder="Filtrar Fecha"
-              label="Filtrar Fecha"
-              inputFormat="DD/MM/YYYY"
-              labelFormat="MM/YYYY"
-              value={selectedDate}
-              onChange={handleDateChange}
-            />
-            <Group mt={25}>
-
-              <ActionIcon
-                style={{ background: '#0c2a85', color: 'white', }}
-                radius="md"
-                size="xl"
-                color="indigo"
-                variant="filled"
-                onClick={() => exportToExcel(filteredReports)}
-              >
-                <IconDownload size={30} />
-              </ActionIcon>
-            </Group>
-          </Group>
-        </>
-      )}
+   
       <Pagination
         total={totalPages}
         radius="md"
@@ -294,6 +300,7 @@ function Reports({ user }: ReportsProps) {
                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio</Title></th>
                 {!isMobile && (
                   <>
+                    <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Saldo Disponible</Title></th>
                     <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Cantidad</Title></th>
                     <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
                   </>
@@ -315,6 +322,7 @@ function Reports({ user }: ReportsProps) {
                   <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>
                   {!isMobile && (
                     <>
+                      <td style={{ textAlign: 'center' }}>{report.moneydisp}  USD</td>
                       <td style={{ textAlign: 'center' }}>{report.quantity}</td>
                       <td style={{ textAlign: 'center' }}>{formatDate(report.created_at)}</td>
                     </>

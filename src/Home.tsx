@@ -3,6 +3,7 @@ import TableM from './Components/TableM/Index';
 import Reports from './Components/Reports';
 import NavLinks from './Components/NavLinksList';
 import Dashboard from './Components/Dashboard/Index';
+import Inventario from './Components/Inventario';
 import BalanceReports from './Components/BalanceReports';
 import { Toaster } from 'sonner';
 import { Card, Group } from '@mantine/core';
@@ -11,7 +12,7 @@ interface HomeProps {
   navOpen: boolean;
   activeLink: number;
   setActiveLink: (index: number) => void;
-  user: { _id: string; name: string; email: string, handle: string;role:string;saldo: number; rango: string;} | null;
+  user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
 }
 
 function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
@@ -22,16 +23,18 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
 
   const isMobile = useMediaQuery('(max-width: 1000px)');
 
-const renderContent = () => {
+  const renderContent = () => {
     switch (activeLink) {
       case 0:
-        return <Dashboard user={user}/>;
+        return <Dashboard user={user} />;
       case 1:
         return <TableM user={user} />;
       case 2:
         return <Reports user={user} />;
       case 3:
-        return <BalanceReports user={user}  />; 
+        return <BalanceReports user={user} />;
+      case 4:
+        return <Inventario user={user} />;
       default:
         return <Dashboard user={user} />;
     }
@@ -45,7 +48,7 @@ const renderContent = () => {
         mx="sm"
         style={{
           display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '0.8fr 3fr', 
+          gridTemplateColumns: isMobile ? '1fr' : '0.8fr 3fr',
           gap: 15,
         }}
       >
@@ -71,7 +74,7 @@ const renderContent = () => {
             maxWidth: '100%',
           }}
         >
-            {renderContent()}
+          {renderContent()}
         </Card>
       </Group>
     </>

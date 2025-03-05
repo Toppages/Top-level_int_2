@@ -6,13 +6,14 @@ import { useEffect, useState } from "react";
 import { UserData, NavLinksProps } from "../../types/types";
 import { fetchUserData, handleLogout } from "../../utils/utils";
 import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
-import { IconGauge,IconWallet, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
+import { IconGauge,IconWallet,IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
 
 const data = [
     { icon: IconGauge, label: 'Dashboard' },
     { icon: IconUsers, label: 'Compra de pines' },
     { icon: IconReport, label: 'Reportes' },
     { icon: IconWallet, label: 'Balance' },
+    { icon: IconArchive, label: 'Inventario' },
 ];
 
 function NavLinks({ active, setActiveLink }: NavLinksProps) {

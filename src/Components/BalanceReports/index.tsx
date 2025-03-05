@@ -139,7 +139,8 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                             value={selectedDate}
                             onChange={setSelectedDate}
                         />
-                        <Group mt={25}>
+                       
+            <Group position={isMobile ? 'center' : 'apart'} mt={25}>
                             <ActionIcon
                                 style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
                                 color="indigo"
@@ -169,7 +170,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                     <Group
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: isMobile ? '1fr' : ' 6fr 1fr',
+                            gridTemplateColumns: isMobile ? '4fr 1fr' : ' 6fr 1fr',
                             gap: '10px',
                             width: '100%',
                         }}
