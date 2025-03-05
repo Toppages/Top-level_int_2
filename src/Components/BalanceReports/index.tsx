@@ -67,18 +67,35 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
 
     const exportToExcel = (data: any[]) => {
         const filteredData = data.map((transaction) => {
-            const { user, __v, ...cleanedTransaction } = transaction;
+            // Excluyendo los campos no deseados
+            const { 
+                _id, 
+                userId, 
+                created_at, 
+                transactionUserName, 
+                userName, 
+                userEmail, 
+                userRole, 
+                userRango, 
+                userhandle, 
+                __v, 
+                user, // Asegúrate de eliminar cualquier referencia al usuario completo
+                ...cleanedTransaction 
+            } = transaction;
+    
+            // Formateando la fecha
             const formattedDate = new Date(transaction.created_at);
             cleanedTransaction['Fecha'] = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours().toString().padStart(2, '0')}:${formattedDate.getMinutes().toString().padStart(2, '0')}`;
+            
             return cleanedTransaction;
         });
-
+    
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(filteredData);
         XLSX.utils.book_append_sheet(wb, ws, 'Transacciones');
         XLSX.writeFile(wb, 'balance_reports.xlsx');
     };
-
+    
     const clearFilters = () => {
         setSelectedUserHandle('todos');
         setSelectedDate(null);
