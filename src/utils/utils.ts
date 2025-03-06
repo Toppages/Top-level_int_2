@@ -117,10 +117,14 @@ export const handlePinClick = (
   setPinsModalOpened(true);
 };
 
-export const copyToClipboard = (text: string) => {
+export const copyToClipboard = (text: string, isAllPins: boolean = false) => {
   navigator.clipboard.writeText(text)
     .then(() => {
-      toast.success('Pin copiado al portapapeles');
+      if (isAllPins) {
+        toast.success('Todos los pines copiados al portapapeles');
+      } else {
+        toast.success('Pin copiado al portapapeles');
+      }
     })
     .catch(() => {
       toast.error('Error al copiar al portapapeles');
