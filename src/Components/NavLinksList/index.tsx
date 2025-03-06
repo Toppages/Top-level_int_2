@@ -9,7 +9,7 @@ import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
 import { IconGauge,IconWallet,IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
 
 const data = [
-    { icon: IconGauge, label: 'Dashboard' },
+    { icon: IconGauge, label: 'Control de ventas' },
     { icon: IconUsers, label: 'Compra de pines' },
     { icon: IconReport, label: 'Reportes' },
     { icon: IconWallet, label: 'Balance' },
@@ -47,7 +47,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
             </div>
             <div>
                 <Title ta="center" c="#0c2a85" order={3}>
-                    {userData ? `${userData.saldo}$` : 'Saldo no disponible'}
+                    {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
                 </Title>
 
                 <Divider />
@@ -75,7 +75,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 <NavLink
                     mt={15}
                     label="Cerrar Sesión"
-                    onClick={() => handleLogout(navigate)} // Llamada a la función de utilidad
+                    onClick={() => handleLogout(navigate)} 
                     color="indigo"
                     icon={<IconX size={16} stroke={1.5} />}
                     active

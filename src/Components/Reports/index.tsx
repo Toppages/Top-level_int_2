@@ -14,22 +14,18 @@ function Reports({ user }: ReportsProps) {
 
   const exportToExcel = (data: any[]) => {
     const filteredData = data.map((report) => {
-      // Excluimos las columnas no deseadas
       const { _id, product, order_id, productName, status, pins, saleId, __v, user, created_at, quantity, totalPrice, moneydisp, ...cleanedReport } = report;
 
-      // Formateamos la fecha con hora
       const formattedDate = new Date(report.created_at);
       const formattedDateStr = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours().toString().padStart(2, '0')}:${formattedDate.getMinutes().toString().padStart(2, '0')}`;
 
-      // Asignamos los datos a las columnas necesarias
       cleanedReport['Fecha'] = formattedDateStr;
-      cleanedReport['ID'] = report.saleId; // Suponiendo que 'saleId' es el identificador del reporte
-      cleanedReport['Producto'] = report.productName; // Si el nombre del producto es importante
+      cleanedReport['ID'] = report.saleId;
+      cleanedReport['Producto'] = report.productName;
       cleanedReport['Cantidad'] = report.quantity;
       cleanedReport['Precio total'] = report.totalPrice;
       cleanedReport['Saldo Actual'] = report.moneydisp;
 
-      // Agregar 'Usuario' solo si no es cliente
       if (userRole !== 'cliente') {
         cleanedReport['Usuario'] = report.user.handle;
       }
@@ -126,7 +122,7 @@ function Reports({ user }: ReportsProps) {
     const allPinKeys = pines.map(pin => pin.key).join('\n');
     copyToClipboard(allPinKeys, true);
   };
-  
+
   return (
 
     <>
@@ -162,9 +158,9 @@ function Reports({ user }: ReportsProps) {
               <tr>
                 <th style={{ textAlign: 'center' }}><Title order={3}>Pines</Title></th>
                 <th style={{ textAlign: 'center' }}>
-                <ActionIcon radius="md" size="lg" color="blue" variant="filled" onClick={copyAllPins}>
-  <IconCopy size={23} />
-</ActionIcon>
+                  <ActionIcon radius="md" size="lg" color="blue" variant="filled" onClick={copyAllPins}>
+                    <IconCopy size={23} />
+                  </ActionIcon>
 
                 </th>
               </tr>
@@ -174,9 +170,9 @@ function Reports({ user }: ReportsProps) {
                 <tr key={index}>
                   <td style={{ textAlign: 'center' }}>{pin.key}</td>
                   <td style={{ display: 'flex', justifyContent: 'center' }} >
-                  <ActionIcon radius="md" size="lg" color="green" variant="filled" onClick={() => copyToClipboard(pin.key)}>
-  <IconCopy size={23} />
-</ActionIcon>
+                    <ActionIcon radius="md" size="lg" color="green" variant="filled" onClick={() => copyToClipboard(pin.key)}>
+                      <IconCopy size={23} />
+                    </ActionIcon>
 
                   </td>
                 </tr>
