@@ -1,10 +1,10 @@
 import * as XLSX from 'xlsx';
-import { useMediaQuery } from '@mantine/hooks';
 import { DatePicker } from '@mantine/dates';
+import { useMediaQuery } from '@mantine/hooks';
+import { fetchTransactions } from '../../utils/utils';
 import { useState, useEffect } from 'react';
 import { IconCalendarWeek, IconDownload, IconReload, IconUser } from '@tabler/icons-react';
-import { Group, ScrollArea, Table, Text, Title, ActionIcon, Pagination, Select } from '@mantine/core';
-import { fetchTransactions } from '../../utils/utils';
+import { Group, Table, Text, Title, ActionIcon, Pagination, Select } from '@mantine/core';
 
 
 const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
@@ -67,7 +67,6 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
 
     const exportToExcel = (data: any[]) => {
         const filteredData = data.map((transaction) => {
-            // Excluyendo los campos no deseados
             const { 
                 _id, 
                 userId, 
@@ -79,11 +78,10 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                 userRango, 
                 userhandle, 
                 __v, 
-                user, // Asegúrate de eliminar cualquier referencia al usuario completo
+                user, 
                 ...cleanedTransaction 
             } = transaction;
     
-            // Formateando la fecha
             const formattedDate = new Date(transaction.created_at);
             cleanedTransaction['Fecha'] = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours().toString().padStart(2, '0')}:${formattedDate.getMinutes().toString().padStart(2, '0')}`;
             
@@ -243,7 +241,6 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
             )}
 
             {filteredTransactions.length > 0 && (
-                <ScrollArea style={{ height: '340px', width: '100%' }} type="never">
                     <Table mt={15} striped highlightOnHover withBorder withColumnBorders>
                         <thead style={{ background: '#0c2a85' }}>
                             <tr>
@@ -276,7 +273,6 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                             ))}
                         </tbody>
                     </Table>
-                </ScrollArea>
             )}
         </>
     );

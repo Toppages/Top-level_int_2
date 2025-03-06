@@ -291,8 +291,7 @@ function Reports({ user }: ReportsProps) {
       )}
 
       {filteredReports.length > 0 && (
-        <ScrollArea style={{ height: '420px', width: '100%' }} type="never">
-          <Table mt={15} mb={isMobile ? 100 : 5} striped highlightOnHover withBorder withColumnBorders>
+          <Table mt={15} mb={isMobile ? 100 : 10} striped highlightOnHover withBorder withColumnBorders>
             <thead style={{ background: '#0c2a85' }}>
               <tr>
                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
@@ -344,7 +343,6 @@ function Reports({ user }: ReportsProps) {
               ))}
             </tbody>
           </Table>
-        </ScrollArea>
       )}
     </>
   );
