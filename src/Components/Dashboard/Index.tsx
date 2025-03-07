@@ -150,49 +150,86 @@ function Dashboard({ user }: DashboardProps) {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
-
+            
                 const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
                 const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-
-                let weeksInMonth: Record<number, { count: number, totalPrice: number }> = {};
+            
+                let weeksInMonth: Record<string, { count: number, totalPrice: number }> = {};
                 let totalMonthPrice = 0;
-
-                let weekNumber = 1;
+            
                 let startOfWeek = new Date(firstDayOfMonth);
-
-                while (startOfWeek <= lastDayOfMonth) {
+            
+                if (startOfWeek.getDay() === 6) {
                     let endOfWeek = new Date(startOfWeek);
-                    endOfWeek.setDate(startOfWeek.getDate() + (6 - startOfWeek.getDay())); 
-                    if (endOfWeek > lastDayOfMonth) endOfWeek = new Date(lastDayOfMonth); 
-
-                    weeksInMonth[weekNumber] = { count: 0, totalPrice: 0 };
-
+                    endOfWeek.setDate(startOfWeek.getDate() + 1);
+            
+                    const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
+                    weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
+            
                     filteredSales.forEach((sale: any) => {
                         const saleDate = new Date(sale.created_at);
                         if (saleDate >= startOfWeek && saleDate <= endOfWeek) {
-                            weeksInMonth[weekNumber].count++;
-                            weeksInMonth[weekNumber].totalPrice += sale.totalPrice;
+                            weeksInMonth[weekLabel].count++;
+                            weeksInMonth[weekLabel].totalPrice += sale.totalPrice;
                             totalMonthPrice += sale.totalPrice;
                         }
                     });
-
+            
                     startOfWeek.setDate(endOfWeek.getDate() + 1); 
-                    weekNumber++;
                 }
-
+            
+                if (startOfWeek.getDay() === 0) {
+                    let endOfWeek = new Date(startOfWeek);
+            
+                    const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
+                    weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
+            
+                    filteredSales.forEach((sale: any) => {
+                        const saleDate = new Date(sale.created_at);
+                        if (saleDate.getTime() === startOfWeek.getTime()) {
+                            weeksInMonth[weekLabel].count++;
+                            weeksInMonth[weekLabel].totalPrice += sale.totalPrice;
+                            totalMonthPrice += sale.totalPrice;
+                        }
+                    });
+            
+                    startOfWeek.setDate(startOfWeek.getDate() + 1);
+                }
+            
+                while (startOfWeek <= lastDayOfMonth) {
+                    let endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(startOfWeek.getDate() + 6); 
+                    if (endOfWeek > lastDayOfMonth) endOfWeek = new Date(lastDayOfMonth); 
+            
+                    const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
+                    weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
+            
+                    filteredSales.forEach((sale: any) => {
+                        const saleDate = new Date(sale.created_at);
+                        if (saleDate >= startOfWeek && saleDate <= endOfWeek) {
+                            weeksInMonth[weekLabel].count++;
+                            weeksInMonth[weekLabel].totalPrice += sale.totalPrice;
+                            totalMonthPrice += sale.totalPrice;
+                        }
+                    });
+            
+                    startOfWeek.setDate(endOfWeek.getDate() + 1); 
+                }
+            
                 const productTotals = getTotalPriceByProductName(filteredSales);
                 setProductTotals(productTotals);
-
+            
                 setSales(Object.entries(weeksInMonth).map(([week, { count, totalPrice }]) => ({
-                    week: `Semana ${week}`,
+                    week,
                     count,
                     totalPrice,
                 })));
-
+            
                 setTotalSales(Object.values(weeksInMonth).reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalMonthPrice);
                 return;
             }
+            
 
             else if (selectedRange === "año") {
                 const now = new Date();
