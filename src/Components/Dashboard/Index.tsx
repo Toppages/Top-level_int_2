@@ -50,19 +50,12 @@ function Dashboard({ user }: DashboardProps) {
                 .catch((err) => console.error("Error al obtener el usuario:", err));
         }
     }, [user, selectedRange, selectedDate]);
+    
     useEffect(() => {
-        if (selectedRange === "rangoDia" && selectedrDate && selectedrDate[0] && selectedrDate[1]) {
-            const startDate = new Date(selectedrDate[0]);
-            const endDate = new Date(selectedrDate[1]);
+        fetchSales(user?.handle || "", userRole || "");
+    }, [selectedRange, selectedrDate]);
+    
 
-            const filteredSales = sales.filter((sale: any) => {
-                const saleDate = new Date(sale.created_at);
-                return saleDate >= startDate && saleDate <= endDate;
-            });
-
-            setSales(filteredSales);
-        }
-    }, [selectedrDate, selectedRange]);
     const getSalesByDayOfWeek = (sales: any[]) => {
         const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", { count: number, totalPrice: number }> = {
             "Lunes": { count: 0, totalPrice: 0 },
@@ -274,14 +267,20 @@ function Dashboard({ user }: DashboardProps) {
                 setTotalSales(monthsInYear.reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalYearPrice);
                 return;
-            } else if (selectedRange === "rangoDia" && selectedrDate && selectedrDate[0] && selectedrDate[1]) {
+            }else if (selectedRange === "rangoDia" && selectedrDate && selectedrDate[0] && selectedrDate[1]) {
                 const startDate = new Date(selectedrDate[0]);
                 const endDate = new Date(selectedrDate[1]);
+                
+                // Establecemos la hora de inicio y fin para incluir todo el día
+                startDate.setHours(0, 0, 0, 0);  // Inicio del día
+                endDate.setHours(23, 59, 59, 999);  // Fin del día
+            
                 filteredSales = filteredSales.filter((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     return saleDate >= startDate && saleDate <= endDate;
                 });
             }
+            
 
             const productTotals = getTotalPriceByProductName(filteredSales);
             setProductTotals(productTotals);
@@ -309,14 +308,135 @@ function Dashboard({ user }: DashboardProps) {
 
     const productNames = Object.keys(salesByProduct).map(extractDiamantes);
     const salesData = Object.values(salesByProduct) as (number | null)[];
+    const SalesBarChart = ({ sales, selectedRange }: any) => {
+        let data = [];
+        let xAxis = [];
+
+        if (selectedRange === "año") {
+            data = sales.map((item: any) => item.count);
+            xAxis = sales.map((item: any) => item.month);
+        } else if (selectedRange === "semana") {
+            data = sales.map((item: any) => item.count);
+            xAxis = sales.map((item: any) => item.day);
+        } else if (selectedRange === "mes") {
+            data = sales.map((item: any) => item.count);
+            xAxis = sales.map((item: any) => item.week);
+        } else {
+            data = salesData;
+            xAxis = productNames;
+        }
+
+        return (
+            <BarChart
+                width={500}
+                height={300}
+                series={[{ data, id: 'salesId', color: '#0c2a85' }]}
+                xAxis={[{ data: xAxis, scaleType: 'band' }]}
+            />
+        );
+    };
+
+    const SalesBreakdown = ({ sales, selectedRange }: any) => {
+        let breakdown = [];
+
+        if (selectedRange === "semana") {
+            breakdown = sales.map((dayData: any) => (
+                <div key={dayData.day}>
+                    <List size="lg" withPadding>
+                        <List.Item>
+                            <Text mt={5} weight={700} mb="sm">
+                                <strong>{dayData.day}:</strong> {dayData.totalPrice.toFixed(2)} USD
+                            </Text>
+                        </List.Item>
+                    </List>
+                </div>
+            ));
+        } else if (selectedRange === "mes") {
+            breakdown = sales.map((weekData: any) => (
+                <div key={weekData.week}>
+                    <strong>{weekData.week}:</strong> {weekData.totalPrice.toFixed(2)} USD
+                </div>
+            ));
+        } else if (selectedRange === "año") {
+            breakdown = sales.map((monthData: any) => (
+                <div key={monthData.month}>
+                    <strong>{monthData.month}:</strong> {monthData.totalPrice.toFixed(2)} USD
+                </div>
+            ));
+        } else if (selectedRange === "rangoDia") {
+            breakdown = sales.map((sale: any) => (
+                <div key={sale.id}>
+                    <List size="lg" withPadding>
+                        <List.Item>
+                            <Text mt={5} weight={700} mb="sm">
+                                <strong>{sale.created_at ? new Date(sale.created_at).toLocaleDateString() : "Fecha no disponible"}:</strong> {sale.totalPrice.toFixed(2)} USD
+                            </Text>
+                        </List.Item>
+                    </List>
+                </div>
+            ));
+        }
+
+        return <div>{breakdown}</div>;
+    };
+
+    const ProductList = ({ productTotals }: any) => {
+        return (
+            <div>
+                {Object.entries(productTotals).map(([productName, totalPrice]) => (
+                    <div key={productName}>
+                        <List size="lg" withPadding>
+                            <List.Item>
+                                <Text mt={5} weight={700} mb="sm">
+                                    {productName} {(totalPrice as number).toFixed(2)} USD
+                                </Text>
+                            </List.Item>
+                        </List>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
+    const RangeSelect = ({ selectedRange, setSelectedRange }: any) => {
+        return (
+            <Select
+                label="Selecciona el rango de fecha"
+                radius="md"
+                icon={<IconCalendarWeek />}
+                size="lg"
+                transition="pop-top-left"
+                transitionDuration={80}
+                transitionTimingFunction="ease"
+                value={selectedRange}
+                onChange={(value) => setSelectedRange(value || "general")}
+                data={[
+                    { value: "general", label: "General (todas los Retiro)" },
+                    { value: "hoy", label: "Día de hoy" },
+                    { value: "semana", label: "Esta semana" },
+                    { value: "mes", label: "Este mes" },
+                    { value: "año", label: "Este año" },
+                    { value: "custom", label: "Elegir día" },
+                    { value: "rangoDia", label: "Rango del día" },
+                ]}
+                styles={() => ({
+                    item: {
+                        '&[data-selected]': {
+                            '&, &:hover': {
+                                backgroundColor: '#0c2a85',
+                                color: 'white',
+                            },
+                        },
+                    },
+                })}
+            />
+        );
+    };
 
     return (
         <>
             <ScrollArea style={{ height: windowHeight - 70 }} type="never">
-
-                {userRole === "master" && user && (
-                    <UserCountsDisplay token={localStorage.getItem("token")} />
-                )}
+                {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
 
                 <Tabs defaultValue="Retiro">
                     <Tabs.List>
@@ -326,66 +446,19 @@ function Dashboard({ user }: DashboardProps) {
 
                     <Tabs.Panel value="Retiro" pt="xs">
                         <div>
+                            <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
 
-                            <Select
-                                label="Selecciona el rango de fecha"
-                                radius="md"
-                                icon={<IconCalendarWeek />}
-                                size="lg"
-                                transition="pop-top-left"
-                                transitionDuration={80}
-                                transitionTimingFunction="ease"
-                                value={selectedRange}
-                                onChange={(value) => setSelectedRange(value || "general")}
-                                data={[
-                                    { value: "general", label: "General (todas los Retiro)" },
-                                    { value: "hoy", label: "Día de hoy" },
-                                    { value: "semana", label: "Esta semana" },
-                                    { value: "mes", label: "Este mes" },
-                                    { value: "año", label: "Este año" },
-                                    { value: "custom", label: "Elegir día" },
-                                    { value: "rangoDia", label: "Rango del día" },
-                                ]}
-                                styles={() => ({
-                                    item: {
-                                        '&[data-selected]': {
-                                            '&, &:hover': {
-                                                backgroundColor: '#0c2a85',
-                                                color: 'white',
-                                            },
-                                        },
-                                    },
-                                })}
-                            />
-
-                            {selectedRange === "custom" && (
-                                <DatePicker
-                                    label="Selecciona un día"
-                                    value={selectedDate}
-                                    onChange={handleDateChange}
-                                />
-                            )}
-                            {selectedRange === "rangoDia" && (
-                                <DateRangePicker
-                                    label="Selecciona el rango del día"
-                                    placeholder="Pick dates range"
-                                    value={selectedrDate}
-                                    onChange={(date) => {
-                                        setSelecterdDate(date);
-                                        console.log('Rango de fechas seleccionado:', date); 
-                                    }}
-                                />
-                            )}
+                            {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
+                            {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
 
                             {sales.length > 0 ? (
                                 <div>
-
-
                                     <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
                                         TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                     </Title>
 
                                     <Title mt={5} weight={700} mb="sm" order={4}>Monto total de retiros {totalPrice} USD</Title>
+
                                     <Card
                                         mt={15}
                                         mb={45}
@@ -395,124 +468,26 @@ function Dashboard({ user }: DashboardProps) {
                                             boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                                             transition: "all 0.3s ease",
                                             transform: "scale(1)",
-
                                         }}
                                         radius="md"
                                     >
-
-                                        {selectedRange === "año" ? (
-                                            <BarChart
-                                                width={900}
-                                                height={300}
-                                                series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
-                                                xAxis={[{ data: sales.map((item: any) => item.month), scaleType: 'band' }]}
-                                            />
-                                        ) : selectedRange === "semana" ? (
-                                            <BarChart
-                                                width={500}
-                                                height={300}
-                                                series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
-                                                xAxis={[{ data: sales.map((item: any) => item.day), scaleType: 'band' }]}
-                                            />
-                                        ) : selectedRange === "mes" ? (
-                                            <BarChart
-                                                width={500}
-                                                height={300}
-                                                series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
-                                                xAxis={[{ data: sales.map((item: any) => item.week), scaleType: 'band' }]}
-                                            />
-                                        ) : (
-                                            <BarChart
-                                                width={500}
-                                                height={300}
-                                                series={[{ data: salesData, id: 'salesId', color: '#0c2a85' }]}
-                                                xAxis={[{ data: productNames, scaleType: 'band' }]}
-                                            />
-                                        )}
+                                        <SalesBarChart sales={sales} selectedRange={selectedRange} />
                                     </Card>
+
                                     <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
-                                    {Object.entries(productTotals).map(([productName, totalPrice]) => (
-                                        <div key={productName}>
-                                            <List size="lg" withPadding>
-                                                <List.Item>
-                                                    <Text mt={5} weight={700} mb="sm">
+                                    <ProductList productTotals={productTotals} />
 
-                                                        {productName} {totalPrice.toFixed(2)} USD
-                                                    </Text>
-                                                </List.Item>
-                                            </List>
-
-                                        </div>
-                                    ))}
-                                    {selectedRange === "semana" && (
-                                        <div>
-                                            <Title mt={5} weight={700} mb="sm" order={4}>Desglose por dia</Title>
-                                            {sales.map((dayData: any) => (
-                                                <>
-
-                                                    <div key={dayData.day}>
-
-                                                        <List size="lg" withPadding>
-                                                            <List.Item>
-                                                                <Text mt={5} weight={700} mb="sm">
-
-                                                                    <strong>{dayData.day}:</strong> {dayData.totalPrice.toFixed(2)} USD
-                                                                </Text>
-                                                            </List.Item>
-                                                        </List>
-                                                    </div>
-                                                </>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {selectedRange === "mes" && (
-                                        <div>
-                                            {sales.map((weekData: any) => (
-                                                <div key={weekData.week}>
-                                                    <strong>{weekData.week}:</strong>  {weekData.totalPrice.toFixed(2)} USD
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {selectedRange === "año" && (
-                                        <div>
-                                            {sales.map((monthData: any) => (
-                                                <div key={monthData.month}>
-                                                    <strong>{monthData.month}:</strong>{monthData.totalPrice.toFixed(2)} USD
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {selectedRange === "rangoDia" && (
-                                        <div>
-                                            <Title mt={5} weight={700} mb="sm" order={4}>Ventas en el rango seleccionado</Title>
-                                            {sales.map((sale: any) => (
-                                                <div key={sale.id}>
-                                                    <List size="lg" withPadding>
-                                                        <List.Item>
-                                                            <Text mt={5} weight={700} mb="sm">
-                                                                <strong>{sale.created_at ? new Date(sale.created_at).toLocaleDateString() : "Fecha no disponible"}:</strong> {sale.totalPrice.toFixed(2)} USD
-                                                            </Text>
-                                                        </List.Item>
-                                                    </List>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
+                                    <SalesBreakdown sales={sales} selectedRange={selectedRange} />
                                 </div>
                             ) : (
                                 <p>{error ? error : 'No hay Retiros disponibles.'}</p>
                             )}
-
                         </div>
                     </Tabs.Panel>
 
                     <Tabs.Panel value="Pines" pt="xs">
-                       <Pines user={user}/>
+                        <Pines user={user} />
                     </Tabs.Panel>
-
                 </Tabs>
 
                 {(userRole === "master" || userRole === "admin") && (
