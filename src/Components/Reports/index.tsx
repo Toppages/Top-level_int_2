@@ -183,7 +183,7 @@ function Reports({ user }: ReportsProps) {
 
       </Modal>
 
-      <Title ta="center" weight={700} mb="sm" order={2}>Reportes de Ventas</Title>
+      <Title ta="center" weight={700} mb="sm" order={2}>Reportes de Retiros</Title>
       {userRole == 'cliente' && (
         <>
 

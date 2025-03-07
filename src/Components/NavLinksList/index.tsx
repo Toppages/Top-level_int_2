@@ -9,9 +9,9 @@ import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
 import { IconGauge,IconWallet,IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
 
 const data = [
-    { icon: IconGauge, label: 'Control de ventas' },
+    { icon: IconGauge, label: 'Control de Retiro' },
     { icon: IconUsers, label: 'Compra de pines' },
-    { icon: IconReport, label: 'Reportes' },
+    { icon: IconReport, label: 'Reportes de Retiro' },
     { icon: IconWallet, label: 'Balance' },
     { icon: IconArchive, label: 'Inventario' },
 ];
