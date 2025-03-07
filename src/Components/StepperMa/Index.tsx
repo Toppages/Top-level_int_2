@@ -183,10 +183,10 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     const sendSaleToBackend = async (pins: string[]) => {
         try {
             const userPrice = selectedProduct ? getPriceForUser(selectedProduct, user) : 0;
-            const originalPrice = selectedProduct ? selectedProduct.price : userPrice; 
+            const originalPrice = selectedProduct ? selectedProduct.price : userPrice;
             const totalPrice = Number(userPrice) * quantity;
-            const totalOriginalPrice = Number(originalPrice) * quantity; 
-    
+            const totalOriginalPrice = Number(originalPrice) * quantity;
+
             const saleData = {
                 quantity,
                 product: selectedProduct?.code,
@@ -206,15 +206,15 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                 } : null,
                 pins: pins.map(pin => ({ serial: "", key: pin }))
             };
-    
+
             console.log("Enviando venta:", saleData);
-    
+
             const response = await axios.post('http://localhost:4000/sales', saleData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             if (response.status === 201) {
                 console.log("Venta registrada con éxito en el backend");
                 setCapturedPins(pins);
@@ -225,21 +225,25 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             console.error("Error al enviar la venta al backend:", error);
         }
     };
-    
+
 
     const handleFinishClick = () => {
         onClose();
         setActiveStep(0);
         setCapturedPins([]);
+        window.location.reload();
     };
 
     const tableTextStyle = {
         fontSize: isMobile ? '14px' : '14px',
         whiteSpace: 'normal',
     };
-
+    const handleModalClose = () => {
+        onClose();
+        window.location.reload();  // Recarga la página cuando se cierra el modal
+    };
     return (
-        <Modal opened={opened} onClose={onClose} withCloseButton={false} size="xl">
+        <Modal opened={opened} onClose={handleModalClose} withCloseButton={false} size="xl">
             <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} allowNextStepsSelect={false} breakpoint="sm">
                 <Stepper.Step label="Productos" description="Selecciona un producto">
                     <div>
@@ -335,7 +339,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                 step={1}
                                 disabled={isAuthorizing}
                             />
-                            <Group position="apart">
+                            <Group position="apart" style={{ marginTop: '15px' }}>
                                 <Title order={5}>
                                     Precio: {Number(getPriceForUser(selectedProduct, user))} USD
                                 </Title>
@@ -344,6 +348,13 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                     Total: {(Number(getPriceForUser(selectedProduct, user)) * quantity).toFixed(2)} USD
                                 </Title>
                             </Group>
+
+                            {/* <Group position="apart" style={{ marginTop: '10px' }}>
+                                <Text align="right" size="sm" color="dimmed">
+                                    Saldo disponible: {user.saldo.toFixed(2)} USD
+                                </Text>
+                            </Group> */}
+
                             <Group position="center" mt="xl">
                                 <Button
                                     onClick={handleAuthorize}
@@ -356,6 +367,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                         </>
                     )}
                 </Stepper.Step>
+
 
 
 

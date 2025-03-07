@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import StepperMa from '../StepperMa/Index';
 import { Product } from '../../types/types';
 import { IconSearch, IconEye } from '@tabler/icons-react';
-import { fetchProductsFromAPI, handleSearchChange } from '../../utils/utils'; 
+import { fetchProductsFromAPI, handleSearchChange } from '../../utils/utils';
 import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
 
 interface TableMProps {
-  user: { _id: string; name: string; email: string; handle: string;role:string;saldo: number; rango: string;} | null;
+  user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
 }
 
 const TableM: React.FC<TableMProps> = ({ user }) => {
@@ -18,9 +18,20 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-
   useEffect(() => {
     fetchProductsFromAPI(setFetchedProducts, setLoading);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowHeight(window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const openModalForGroup = (group: string) => {
@@ -32,8 +43,6 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
   const productsInSelectedGroup = selectedProductGroup
     ? fetchedProducts.filter((product) => product.product_group === selectedProductGroup)
     : [];
-
-
 
   const filteredGroups = Array.from(new Set(fetchedProducts.map((product) => product.product_group)))
     .sort((a, b) => (a === "Free Fire Latam" ? -1 : b === "Free Fire Latam" ? 1 : 0))
@@ -57,10 +66,13 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
           <Table striped highlightOnHover>
             <thead style={{ background: '#0c2a85' }}>
               <tr>
-                <th style={{ textAlign: 'center',color:'white' }}>Juegos Disponibles</th>
+                <th style={{ textAlign: 'center', color: 'white' }}>Juegos Disponibles</th>
                 <th>
                   <Input
                     radius="md"
+                    style={{
+                      display: 'none',
+                    }}
                     size="md"
                     icon={<IconSearch />}
                     placeholder="Buscar Juego"
@@ -71,7 +83,6 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
                       handleSearchChange(query, fetchedProducts, setFetchedProducts);
                     }}
                   />
-
                 </th>
               </tr>
             </thead>

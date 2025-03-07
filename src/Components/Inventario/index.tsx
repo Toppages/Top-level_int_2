@@ -17,20 +17,24 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
     const [error, setError] = useState<string | null>(null);
     const [pins, setPins] = useState<Pin[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 9;
-    const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+    const itemsPerPage = 7;
+    const [selectedProducts, setSelectedProducts] = useState<string[]>([
+        'Free Fire 100 Diamantes + 10 Bono',
+    ]);
+    const defaultProducts = [
+        'Free Fire 100 Diamantes + 10 Bono',
+        'Free Fire - 310 Diamantes + 31 Bono',
+        'Free Fire 520 Diamantes + 52 Bono',
+        'Free Fire - 1060 Diamantes + 106 Bono',
+        'Free Fire - 2.180 Diamantes + 218 Bono',
+        'Free Fire - 5.600 Diamantes + 560 Bono',
+    ];
 
     useEffect(() => {
         if (user?.handle) {
             fetchUnusedPins();
         }
     }, [user]);
-
-    useEffect(() => {
-        if (pins.length > 0 && !selectedProduct) {
-            setSelectedProduct(pins[0].productName);
-        }
-    }, [pins, selectedProduct]);
 
     const fetchUnusedPins = async () => {
         try {
@@ -74,14 +78,14 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
         toast.success('Todos los pines copiados al portapapeles');
     };
 
-    const uniqueProductNames = [...new Set(pins.map(pin => pin.productName))];
-
     const handleProductCheckboxChange = (productName: string) => {
-        setSelectedProduct(prevSelected => (prevSelected === productName ? null : productName));
+        setSelectedProducts(prevSelected =>
+            prevSelected.includes(productName) ? [] : [productName]
+        );
     };
 
-    const filteredPins = selectedProduct
-        ? pins.filter(pin => pin.productName === selectedProduct)
+    const filteredPins = selectedProducts.length
+        ? pins.filter(pin => selectedProducts.includes(pin.productName))
         : pins;
 
     const paginatedPins = filteredPins.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -100,7 +104,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Pines');
 
-        const fileName = selectedProduct ? `reportees_de_pines_${selectedProduct}.xlsx` : 'reportees_de_pines.xlsx';
+        const fileName = selectedProducts.length ? `reportees_de_pines_${selectedProducts.join('_')}.xlsx` : 'reportees_de_pines.xlsx';
         XLSX.writeFile(wb, fileName);
 
         toast.success('Descarga exitosa');
@@ -111,14 +115,15 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
             <Title ta="center" weight={700} mb="sm" order={2}>Pines No Usados</Title>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
-                {uniqueProductNames.map(name => (
+                {defaultProducts.map(name => (
                     <Checkbox
                         key={name}
                         label={name}
                         color="rgba(12, 42, 133, 1)"
-                        checked={selectedProduct === name}
+                        checked={selectedProducts.includes(name)}
                         onChange={() => handleProductCheckboxChange(name)}
                     />
+
                 ))}
             </div>
             <Group position='apart'>
@@ -137,29 +142,32 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                         },
                     })}
                 />
-                <Group>
 
-                <ActionIcon
-                    style={{ background: '#0c2a85', color: 'white' }}
-                    radius="md"
-                    size="xl"
-                    color="indigo"
-                    variant="filled"
-                    onClick={handleCopyAll}
-                >
-                    <IconCopy size={30} />
-                </ActionIcon>
-                <ActionIcon
-                    style={{ background: '#0c2a85', color: 'white' }}
-                    radius="md"
-                    size="xl"
-                    color="indigo"
-                    variant="filled"
-                    onClick={handleDownload}
-                >
-                    <IconDownload size={30} />
-                </ActionIcon>
-                </Group>
+                {filteredPins.length > 0 && (
+                    <Group>
+                        <ActionIcon
+                            style={{ background: '#0c2a85', color: 'white' }}
+                            radius="md"
+                            size="xl"
+                            color="indigo"
+                            variant="filled"
+                            onClick={handleCopyAll}
+                        >
+                            <IconCopy size={30} />
+                        </ActionIcon>
+                        <ActionIcon
+                            style={{ background: '#0c2a85', color: 'white' }}
+                            radius="md"
+                            size="xl"
+                            color="indigo"
+                            variant="filled"
+                            onClick={handleDownload}
+                        >
+                            <IconDownload size={30} />
+                        </ActionIcon>
+                    </Group>
+                )}
+
             </Group>
 
             {filteredPins.length === 0 && !error && (
@@ -170,7 +178,9 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                 <Table mt={15} striped highlightOnHover withBorder withColumnBorders>
                     <thead style={{ background: '#0c2a85' }}>
                         <tr>
-                            <th style={{ textAlign: 'center', color: 'white' }}>Productos</th>
+                            <th style={{ textAlign: 'center', color: 'white' }}>
+                            Productos ({filteredPins.length})
+                            </th>
                             <th style={{ textAlign: 'center', color: 'white' }}>Copiar</th>
                             <th style={{ textAlign: 'center', color: 'white' }}>Marcar usado</th>
                         </tr>
@@ -188,7 +198,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                                         <IconCopy size={18} />
                                     </ActionIcon>
                                 </td>
-                                <td align='center' >
+                                <td align='center'>
                                     <ActionIcon
                                         style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
                                         onClick={() => handleCheckboxClick(pin.key)}
