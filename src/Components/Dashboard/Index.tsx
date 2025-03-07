@@ -8,7 +8,7 @@ import UserCountsDisplay from "./UserCountsDisplay/Index";
 import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from "@mantine/hooks";
 import { IconCalendarWeek, IconMessageCircle, IconPhoto } from "@tabler/icons-react";
-import { Group, ScrollArea, Select, Tabs, Title } from "@mantine/core";
+import { Group, ScrollArea, Select, Tabs, Title, Card } from "@mantine/core";
 import { BarChart } from '@mui/x-charts/BarChart';
 
 interface DashboardProps {
@@ -165,7 +165,39 @@ function Dashboard({ user }: DashboardProps) {
                 setTotalSales(Object.values(combinedWeeks).reduce((acc, count) => acc + count, 0));
 
                 return;
+            } else if (selectedRange === "año") {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+
+                const monthsInYear: Record<number, number> = {
+                    1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0
+                };
+
+                const monthNames = [
+                    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                ];
+
+                filteredSales.forEach((sale: any) => {
+                    const saleDate = new Date(sale.created_at);
+                    if (saleDate.getFullYear() === currentYear) {
+                        const monthNumber = saleDate.getMonth() + 1;
+                        monthsInYear[monthNumber] = (monthsInYear[monthNumber] || 0) + 1;
+                    }
+                });
+
+                const monthSalesData = Object.entries(monthsInYear).map(([month, count]) => ({
+                    month: monthNames[parseInt(month) - 1],
+                    count,
+                }));
+
+                setSales(monthSalesData);
+                setTotalSales(Object.values(monthsInYear).reduce((acc, count) => acc + count, 0));
+
+                return;
             }
+
+
 
             setSales(filteredSales);
         } catch (err) {
@@ -246,40 +278,66 @@ function Dashboard({ user }: DashboardProps) {
                                 />
                             )}
 
+
+
                             {sales.length > 0 ? (
                                 <div>
                                     <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                        Total de Ventas: {selectedRange === "semana" || selectedRange === "mes" ? totalSales : sales.length}
+                                        Total de Ventas: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                     </Title>
 
                                     <Title mt={5} weight={700} mb="sm" order={4}>Ventas por Producto</Title>
 
-                                    {selectedRange === "semana" ? (
-                                        <BarChart
-                                            width={500}
-                                            height={300}
-                                            series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
-                                            xAxis={[{ data: sales.map((item: any) => item.day), scaleType: 'band' }]}
-                                        />
-                                    ) : selectedRange === "mes" ? (
-                                        <BarChart
-                                            width={500}
-                                            height={300}
-                                            series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
-                                            xAxis={[{ data: sales.map((item: any) => item.week), scaleType: 'band' }]}
-                                        />
-                                    ) : (
-                                        <BarChart
-                                            width={500}
-                                            height={300}
-                                            series={[{ data: salesData, id: 'salesId', color: '#0c2a85' }]}
-                                            xAxis={[{ data: productNames, scaleType: 'band' }]}
-                                        />
-                                    )}
+                                    <Card
+                                        mt={15}
+                                        mb={45}
+                                        mr={15}
+                                        ml={15}
+                                        style={{
+                                            boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                            transition: "all 0.3s ease",
+                                            transform: "scale(1)",
+
+                                        }}
+                                        radius="md"
+                                    >
+
+                                        {selectedRange === "año" ? (
+                                            <BarChart
+                                                width={900}
+                                                height={300}
+                                                series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
+                                                xAxis={[{ data: sales.map((item: any) => item.month), scaleType: 'band' }]}
+                                            />
+                                        ) : selectedRange === "semana" ? (
+                                            <BarChart
+                                                width={500}
+                                                height={300}
+                                                series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
+                                                xAxis={[{ data: sales.map((item: any) => item.day), scaleType: 'band' }]}
+                                            />
+                                        ) : selectedRange === "mes" ? (
+                                            <BarChart
+                                                width={500}
+                                                height={300}
+                                                series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
+                                                xAxis={[{ data: sales.map((item: any) => item.week), scaleType: 'band' }]}
+                                            />
+                                        ) : (
+                                            <BarChart
+                                                width={500}
+                                                height={300}
+                                                series={[{ data: salesData, id: 'salesId', color: '#0c2a85' }]}
+                                                xAxis={[{ data: productNames, scaleType: 'band' }]}
+                                            />
+                                        )}
+                                    </Card>
+
                                 </div>
                             ) : (
                                 <p>{error ? error : 'No hay ventas disponibles.'}</p>
                             )}
+
 
 
 

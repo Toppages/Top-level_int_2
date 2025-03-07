@@ -136,7 +136,9 @@ export const fetchProductsFromAPI = async (setFetchedProducts: React.Dispatch<Re
   try {
     const response = await axios.get('http://localhost:4000/products');
     if (response.status === 200) {
-      setFetchedProducts(response.data);
+      // Filtrar los productos donde product_group sea "Free Fire Latam"
+      const filteredProducts = response.data.filter((product: Product) => product.product_group === "Free Fire Latam");
+      setFetchedProducts(filteredProducts);
     }
   } catch (error) {
     toast.error('Hubo un problema al obtener los productos');
@@ -144,6 +146,7 @@ export const fetchProductsFromAPI = async (setFetchedProducts: React.Dispatch<Re
     setLoading(false);
   }
 };
+
 
 export const fetchUserData = async (
   setUserData: React.Dispatch<React.SetStateAction<any | null>>,
