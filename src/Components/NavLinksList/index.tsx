@@ -10,7 +10,7 @@ import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFill
 
 const data = [
     { icon: IconGauge, label: 'CONTROL DE RETIROS' },
-    { icon: IconUsers, label: 'COMPRA DE PINES' },
+    { icon: IconUsers,  label: 'COMPRA DE PINES' },
     { icon: IconReport, label: 'REPORTES DE RETIROS' },
     { icon: IconWallet, label: 'BALANCE' },
     { icon: IconArchive, label: 'INVENTARIO' },
