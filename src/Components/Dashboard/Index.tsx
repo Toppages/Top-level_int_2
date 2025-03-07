@@ -24,8 +24,9 @@ function Dashboard({ user }: DashboardProps) {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [totalSales, setTotalSales] = useState(0);
     const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+    const [productTotals, setProductTotals] = useState<Record<string, number>>({});
 
-    const [totalPrice, setTotalPrice] = useState<number>(0); 
+    const [totalPrice, setTotalPrice] = useState<number>(0);
     const onBalanceUpdate = (newBalance: number) => {
         console.log('Nuevo saldo:', newBalance);
     };
@@ -44,6 +45,29 @@ function Dashboard({ user }: DashboardProps) {
                 .catch((err) => console.error("Error al obtener el usuario:", err));
         }
     }, [user, selectedRange, selectedDate]);
+    const getSalesByDayOfWeek = (sales: any[]) => {
+        const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", { count: number, totalPrice: number }> = {
+            "Lunes": { count: 0, totalPrice: 0 },
+            "Martes": { count: 0, totalPrice: 0 },
+            "Miércoles": { count: 0, totalPrice: 0 },
+            "Jueves": { count: 0, totalPrice: 0 },
+            "Viernes": { count: 0, totalPrice: 0 },
+            "Sábado": { count: 0, totalPrice: 0 },
+            "Domingo": { count: 0, totalPrice: 0 },
+        };
+
+        sales.forEach((sale: any) => {
+            const saleDate = new Date(sale.created_at);
+            const dayNames: Array<keyof typeof weekSales> = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+            const dayName = dayNames[saleDate.getDay()];
+
+            // Sumar 1 al contador de ventas y sumar el precio total de la venta por día
+            weekSales[dayName].count++;
+            weekSales[dayName].totalPrice += sale.totalPrice;
+        });
+
+        return weekSales;
+    };
 
     const fetchSales = async (userHandle: string, userRole: string) => {
         const token = localStorage.getItem('token');
@@ -51,33 +75,32 @@ function Dashboard({ user }: DashboardProps) {
             setError('No se encontró el token. Inicia sesión nuevamente.');
             return;
         }
-    
+
         try {
             const url = userRole === 'master'
                 ? 'http://localhost:4000/sales'
                 : `http://localhost:4000/sales/user/${userHandle}`;
-    
+
             const response = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-    
+
             let filteredSales = response.data;
-    
+
             if (!Array.isArray(filteredSales)) {
                 setError('La respuesta del servidor no es válida.');
                 return;
             }
-    
+
             const formatDate = (dateString: string) => {
                 if (!dateString) return null;
                 const date = new Date(dateString);
                 if (isNaN(date.getTime())) return null;
                 return date.toLocaleDateString('en-CA');
             };
-    
+
             const today = new Date().toLocaleDateString('en-CA');
-    
-            // Filtrado por fecha
+
             if (selectedRange === "hoy") {
                 filteredSales = filteredSales.filter((sale: any) => {
                     const saleDate = sale.created_at ? formatDate(sale.created_at) : null;
@@ -102,44 +125,28 @@ function Dashboard({ user }: DashboardProps) {
                     const saleDate = new Date(sale.created_at);
                     return saleDate && saleDate >= monday && saleDate <= sunday;
                 });
-    
-                const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", number> = {
-                    "Lunes": 0,
-                    "Martes": 0,
-                    "Miércoles": 0,
-                    "Jueves": 0,
-                    "Viernes": 0,
-                    "Sábado": 0,
-                    "Domingo": 0,
-                };
-    
-                let totalWeekPrice = 0;
-                filteredSales.forEach((sale: any) => {
-                    const saleDate = new Date(sale.created_at);
-                    const dayNames: Array<keyof typeof weekSales> = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-                    const dayName = dayNames[saleDate.getDay()];
-                    weekSales[dayName]++;
-                    totalWeekPrice += sale.totalPrice;  // Total precio por semana
-                });
-    
-                const totalSales = Object.values(weekSales).reduce((acc, count) => acc + count, 0);
-                const weekSalesData = Object.entries(weekSales).map(([day, count]) => ({
-                    day,
-                    count,
-                }));
-    
-                setSales(weekSalesData);
+
+                // Usamos la nueva función para obtener los totales por día de la semana
+                const weekSales = getSalesByDayOfWeek(filteredSales);
+
+                // Calcular el total de ventas (por cantidad de ventas) y el monto total por semana
+                const totalSales = Object.values(weekSales).reduce((acc, { count }) => acc + count, 0);
+                const totalWeekPrice = Object.values(weekSales).reduce((acc, { totalPrice }) => acc + totalPrice, 0);
+
+                // Establecer los datos de ventas y montos
+                setSales(Object.entries(weekSales).map(([day, { count, totalPrice }]) => ({ day, count, totalPrice })));
                 setTotalSales(totalSales);
-                setTotalPrice(totalWeekPrice);
+                setTotalPrice(totalWeekPrice); // Total por semana
+
                 return;
             } else if (selectedRange === "mes") {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
-    
+
                 const weeksInMonth: Record<number, number> = {};
                 let totalMonthPrice = 0;
-    
+
                 filteredSales.forEach((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
@@ -148,7 +155,7 @@ function Dashboard({ user }: DashboardProps) {
                         totalMonthPrice += sale.totalPrice;  // Total precio por mes
                     }
                 });
-    
+
                 const allWeeks: Record<number, number> = {
                     1: 0,
                     2: 0,
@@ -156,14 +163,14 @@ function Dashboard({ user }: DashboardProps) {
                     4: 0,
                     5: 0,
                 };
-    
+
                 const combinedWeeks = { ...allWeeks, ...weeksInMonth };
-    
+
                 const weekSalesData = Object.entries(combinedWeeks).map(([week, count]) => ({
                     week: `Semana ${week}`,
                     count,
                 }));
-    
+
                 setSales(weekSalesData);
                 setTotalSales(Object.values(combinedWeeks).reduce((acc, count) => acc + count, 0));
                 setTotalPrice(totalMonthPrice);
@@ -171,13 +178,13 @@ function Dashboard({ user }: DashboardProps) {
             } else if (selectedRange === "año") {
                 const now = new Date();
                 const currentYear = now.getFullYear();
-    
+
                 const monthsInYear: Record<number, number> = {
                     1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0
                 };
-    
+
                 let totalYearPrice = 0;
-    
+
                 filteredSales.forEach((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     if (saleDate.getFullYear() === currentYear) {
@@ -186,24 +193,37 @@ function Dashboard({ user }: DashboardProps) {
                         totalYearPrice += sale.totalPrice;  // Total precio por año
                     }
                 });
-    
+
                 const monthNames = [
                     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
                 ];
-    
+
                 const monthSalesData = Object.entries(monthsInYear).map(([month, count]) => ({
                     month: monthNames[parseInt(month) - 1],
                     count,
                 }));
-    
+
                 setSales(monthSalesData);
                 setTotalSales(Object.values(monthsInYear).reduce((acc, count) => acc + count, 0));
                 setTotalPrice(totalYearPrice);
                 return;
             }
-    
-            // Calcular el total de las ventas
+
+            const getTotalPriceByProductName = (sales: any[]) => {
+                return sales.reduce((acc: Record<string, number>, sale: any) => {
+                    const productName = sale.productName;
+                    if (acc[productName]) {
+                        acc[productName] += sale.totalPrice;
+                    } else {
+                        acc[productName] = sale.totalPrice;
+                    }
+                    return acc;
+                }, {});
+            };
+            const productTotals = getTotalPriceByProductName(filteredSales);
+            setProductTotals(productTotals);  // Aquí se asigna el valor a productTotals
+
             const totalPrice = filteredSales.reduce((acc: number, sale: any) => acc + sale.totalPrice, 0);
             setTotalPrice(totalPrice);
             setSales(filteredSales);
@@ -211,7 +231,7 @@ function Dashboard({ user }: DashboardProps) {
             setError('Hubo un problema al obtener las ventas.');
         }
     };
-    
+
 
     const handleDateChange = (date: Date | null) => {
         setSelectedDate(date);
@@ -293,7 +313,21 @@ function Dashboard({ user }: DashboardProps) {
                                         Total de Ventas: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                     </Title>
 
-                                    <Title mt={5} weight={700} mb="sm" order={4}>Ventas por Producto {totalPrice}</Title>
+                                    <Title mt={5} weight={700} mb="sm" order={4}>Total de ventas {totalPrice} USD</Title>
+                                    {Object.entries(productTotals).map(([productName, totalPrice]) => (
+                                        <div key={productName}>
+                                            <strong>{productName}</strong>: {totalPrice.toFixed(2)} USD
+                                        </div>
+                                    ))}
+                                    {selectedRange === "semana" && (
+                                        <div>
+                                            {sales.map((dayData: any) => (
+                                                <div key={dayData.day}>
+                                                    <strong>{dayData.day}:</strong> {dayData.totalPrice.toFixed(2)} USD
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     <Card
                                         mt={15}
