@@ -8,7 +8,7 @@ import UserCountsDisplay from "./UserCountsDisplay/Index";
 import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from "@mantine/hooks";
 import { IconCalendarWeek, IconMessageCircle, IconPhoto } from "@tabler/icons-react";
-import { Group, ScrollArea, Select, Tabs, Title, Card } from "@mantine/core";
+import { Group, ScrollArea, Select, Tabs, Text, Title, List, Card } from "@mantine/core";
 import { BarChart } from '@mui/x-charts/BarChart';
 
 interface DashboardProps {
@@ -150,22 +150,22 @@ function Dashboard({ user }: DashboardProps) {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
-            
+
                 const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
                 const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-            
+
                 let weeksInMonth: Record<string, { count: number, totalPrice: number }> = {};
                 let totalMonthPrice = 0;
-            
+
                 let startOfWeek = new Date(firstDayOfMonth);
-            
+
                 if (startOfWeek.getDay() === 6) {
                     let endOfWeek = new Date(startOfWeek);
                     endOfWeek.setDate(startOfWeek.getDate() + 1);
-            
+
                     const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
                     weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
-            
+
                     filteredSales.forEach((sale: any) => {
                         const saleDate = new Date(sale.created_at);
                         if (saleDate >= startOfWeek && saleDate <= endOfWeek) {
@@ -174,16 +174,16 @@ function Dashboard({ user }: DashboardProps) {
                             totalMonthPrice += sale.totalPrice;
                         }
                     });
-            
-                    startOfWeek.setDate(endOfWeek.getDate() + 1); 
+
+                    startOfWeek.setDate(endOfWeek.getDate() + 1);
                 }
-            
+
                 if (startOfWeek.getDay() === 0) {
                     let endOfWeek = new Date(startOfWeek);
-            
+
                     const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
                     weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
-            
+
                     filteredSales.forEach((sale: any) => {
                         const saleDate = new Date(sale.created_at);
                         if (saleDate.getTime() === startOfWeek.getTime()) {
@@ -192,18 +192,18 @@ function Dashboard({ user }: DashboardProps) {
                             totalMonthPrice += sale.totalPrice;
                         }
                     });
-            
+
                     startOfWeek.setDate(startOfWeek.getDate() + 1);
                 }
-            
+
                 while (startOfWeek <= lastDayOfMonth) {
                     let endOfWeek = new Date(startOfWeek);
-                    endOfWeek.setDate(startOfWeek.getDate() + 6); 
-                    if (endOfWeek > lastDayOfMonth) endOfWeek = new Date(lastDayOfMonth); 
-            
+                    endOfWeek.setDate(startOfWeek.getDate() + 6);
+                    if (endOfWeek > lastDayOfMonth) endOfWeek = new Date(lastDayOfMonth);
+
                     const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
                     weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
-            
+
                     filteredSales.forEach((sale: any) => {
                         const saleDate = new Date(sale.created_at);
                         if (saleDate >= startOfWeek && saleDate <= endOfWeek) {
@@ -212,24 +212,24 @@ function Dashboard({ user }: DashboardProps) {
                             totalMonthPrice += sale.totalPrice;
                         }
                     });
-            
-                    startOfWeek.setDate(endOfWeek.getDate() + 1); 
+
+                    startOfWeek.setDate(endOfWeek.getDate() + 1);
                 }
-            
+
                 const productTotals = getTotalPriceByProductName(filteredSales);
                 setProductTotals(productTotals);
-            
+
                 setSales(Object.entries(weeksInMonth).map(([week, { count, totalPrice }]) => ({
                     week,
                     count,
                     totalPrice,
                 })));
-            
+
                 setTotalSales(Object.values(weeksInMonth).reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalMonthPrice);
                 return;
             }
-            
+
 
             else if (selectedRange === "año") {
                 const now = new Date();
@@ -269,7 +269,6 @@ function Dashboard({ user }: DashboardProps) {
             setError('Hubo un problema al obtener los Retiro.');
         }
     };
-
 
     const handleDateChange = (date: Date | null) => {
         setSelectedDate(date);
@@ -345,44 +344,13 @@ function Dashboard({ user }: DashboardProps) {
 
                             {sales.length > 0 ? (
                                 <div>
+
+
                                     <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
                                         Total de Retiro: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                     </Title>
 
                                     <Title mt={5} weight={700} mb="sm" order={4}>Monto total de retiros {totalPrice} USD</Title>
-                                    {Object.entries(productTotals).map(([productName, totalPrice]) => (
-                                        <div key={productName}>
-                                            <strong>{productName}</strong>: {totalPrice.toFixed(2)} USD
-                                        </div>
-                                    ))}
-                                    {selectedRange === "semana" && (
-                                        <div>
-                                            {sales.map((dayData: any) => (
-                                                <div key={dayData.day}>
-                                                    <strong>{dayData.day}:</strong> {dayData.totalPrice.toFixed(2)} USD
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {selectedRange === "mes" && (
-                                        <div>
-                                            {sales.map((weekData: any) => (
-                                                <div key={weekData.week}>
-                                                    <strong>{weekData.week}:</strong>  {weekData.totalPrice.toFixed(2)} USD
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {selectedRange === "año" && (
-                                        <div>
-                                            {sales.map((monthData: any) => (
-                                                <div key={monthData.month}>
-                                                    <strong>{monthData.month}:</strong>{monthData.totalPrice.toFixed(2)} USD
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
                                     <Card
                                         mt={15}
                                         mb={45}
@@ -427,6 +395,61 @@ function Dashboard({ user }: DashboardProps) {
                                             />
                                         )}
                                     </Card>
+                                    <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
+                                    {Object.entries(productTotals).map(([productName, totalPrice]) => (
+                                        <div key={productName}>
+                                            <List size="lg" withPadding>
+                                                <List.Item> 
+                                                    <Text mt={5} weight={700} mb="sm">
+
+                                                    {productName} {totalPrice.toFixed(2)} USD
+                                                </Text>
+                                                </List.Item>
+                                            </List>
+
+                                        </div>
+                                    ))}
+                                    {selectedRange === "semana" && (
+                                        <div>
+                                            <Title mt={5} weight={700} mb="sm" order={4}>Desglose por dia</Title>
+                                            {sales.map((dayData: any) => (
+                                                <>
+                                                
+                                                <div key={dayData.day}>
+                                                    
+                                                     <List size="lg" withPadding>
+                                                <List.Item> 
+                                                    <Text mt={5} weight={700} mb="sm">
+
+                                                    <strong>{dayData.day}:</strong> {dayData.totalPrice.toFixed(2)} USD
+                                                </Text>
+                                                </List.Item>
+                                            </List>
+                                                </div>
+                                                </>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {selectedRange === "mes" && (
+                                        <div>
+                                            {sales.map((weekData: any) => (
+                                                <div key={weekData.week}>
+                                                    <strong>{weekData.week}:</strong>  {weekData.totalPrice.toFixed(2)} USD
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {selectedRange === "año" && (
+                                        <div>
+                                            {sales.map((monthData: any) => (
+                                                <div key={monthData.month}>
+                                                    <strong>{monthData.month}:</strong>{monthData.totalPrice.toFixed(2)} USD
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+
 
                                 </div>
                             ) : (
