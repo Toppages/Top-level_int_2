@@ -8,9 +8,9 @@ import UserCountsDisplay from "./UserCountsDisplay/Index";
 import { BarChart } from '@mui/x-charts/BarChart';
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useState } from "react";
-import { IconCalendarWeek, IconTicket, IconCoins } from "@tabler/icons-react";
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
 import { Group, ScrollArea, Select, Tabs, Text, Title, List, Card } from "@mantine/core";
+import { IconCalendarWeek, IconTicket, IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
 interface DashboardProps {
     user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
 }
@@ -446,15 +446,30 @@ function Dashboard({ user }: DashboardProps) {
     return (
         <>
             <div style={{ width: '100%', overflowX: 'hidden' }}>
-                {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
 
 
                 <Tabs defaultValue="Retiro">
                     <Tabs.List>
                         <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
                         <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
-                    </Tabs.List>
+                        {(userRole === "master" || userRole === "admin") && (
 
+
+                            <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
+                        )}
+                    </Tabs.List>
+                    <Tabs.Panel value="control" pt="xs">
+                        {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
+
+                        {(userRole === "master" || userRole === "admin") && (
+                            <Group>
+                                <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
+                                <Registrar />
+                                <AdminBR />
+                                <ManagePro />
+                            </Group>
+                        )}
+                    </Tabs.Panel>
                     <Tabs.Panel value="Retiro" pt="xs">
                         <div>
                             <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
@@ -501,16 +516,10 @@ function Dashboard({ user }: DashboardProps) {
                     <Tabs.Panel value="Pines" pt="xs">
                         <Pines user={user} />
                     </Tabs.Panel>
+
+
                 </Tabs>
 
-                {(userRole === "master" || userRole === "admin") && (
-                    <Group>
-                        <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
-                        <Registrar />
-                        <AdminBR />
-                        <ManagePro />
-                    </Group>
-                )}
             </div>
         </>
     );

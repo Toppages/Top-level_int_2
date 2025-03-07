@@ -19,7 +19,7 @@ const data = [
 const getSaldoColor = (rango: string) => {
     switch (rango) {
         case 'ultrap':
-            return '#FFD700'; 
+            return '#0c2a85'; 
         case 'oro':
             return '#FFD700'; 
         case 'plata':
