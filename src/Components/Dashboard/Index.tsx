@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
+import Pines from "./Pines";
 import axios from "axios";
 import AdminBR from "./AdminBR";
 import ManagePro from "./ManagePro";
 import Registrar from "./Registrar/Index";
 import EditClient from "./EditClient/Index";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
-import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
-import { useMediaQuery } from "@mantine/hooks";
-import { IconCalendarWeek, IconMessageCircle, IconPhoto } from "@tabler/icons-react";
-import { Group, ScrollArea, Select, Tabs, Text, Title, List, Card } from "@mantine/core";
 import { BarChart } from '@mui/x-charts/BarChart';
-import Pines from "./Pines";
+import { useMediaQuery } from "@mantine/hooks";
+import { useEffect, useState } from "react";
+import { IconCalendarWeek, IconTicket, IconCoins } from "@tabler/icons-react";
+import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
+import { Group, ScrollArea, Select, Tabs, Text, Title, List, Card } from "@mantine/core";
 interface DashboardProps {
     user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
 }
@@ -35,7 +35,13 @@ function Dashboard({ user }: DashboardProps) {
     const onBalanceUpdate = (newBalance: number) => {
         console.log('Nuevo saldo:', newBalance);
     };
+    const maxHeight = isSmallScreen ? windowHeight * 0.9 : windowHeight - 70;
 
+    useEffect(() => {
+        const handleResize = () => setWindowHeight(window.innerHeight);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     useEffect(() => {
         if (user) {
             fetch("http://localhost:4000/user", {
@@ -50,11 +56,11 @@ function Dashboard({ user }: DashboardProps) {
                 .catch((err) => console.error("Error al obtener el usuario:", err));
         }
     }, [user, selectedRange, selectedDate]);
-    
+
     useEffect(() => {
         fetchSales(user?.handle || "", userRole || "");
     }, [selectedRange, selectedrDate]);
-    
+
 
     const getSalesByDayOfWeek = (sales: any[]) => {
         const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", { count: number, totalPrice: number }> = {
@@ -267,20 +273,18 @@ function Dashboard({ user }: DashboardProps) {
                 setTotalSales(monthsInYear.reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalYearPrice);
                 return;
-            }else if (selectedRange === "rangoDia" && selectedrDate && selectedrDate[0] && selectedrDate[1]) {
+            } else if (selectedRange === "rangoDia" && selectedrDate && selectedrDate[0] && selectedrDate[1]) {
                 const startDate = new Date(selectedrDate[0]);
                 const endDate = new Date(selectedrDate[1]);
-                
-                // Establecemos la hora de inicio y fin para incluir todo el día
-                startDate.setHours(0, 0, 0, 0);  // Inicio del día
-                endDate.setHours(23, 59, 59, 999);  // Fin del día
-            
+                startDate.setHours(0, 0, 0, 0);
+                endDate.setHours(23, 59, 59, 999);
+
                 filteredSales = filteredSales.filter((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     return saleDate >= startDate && saleDate <= endDate;
                 });
             }
-            
+
 
             const productTotals = getTotalPriceByProductName(filteredSales);
             setProductTotals(productTotals);
@@ -433,15 +437,22 @@ function Dashboard({ user }: DashboardProps) {
         );
     };
 
+    useEffect(() => {
+        const handleResize = () => setWindowHeight(window.innerHeight);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     return (
         <>
-            <ScrollArea style={{ height: windowHeight - 70 }} type="never">
+            <div style={{ width: '100%', overflowX: 'hidden' }}>
                 {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
+
 
                 <Tabs defaultValue="Retiro">
                     <Tabs.List>
-                        <Tabs.Tab value="Retiro" icon={<IconPhoto size={14} />}>Retiro</Tabs.Tab>
-                        <Tabs.Tab value="Pines" icon={<IconMessageCircle size={14} />}>Pines</Tabs.Tab>
+                        <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
+                        <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
                     </Tabs.List>
 
                     <Tabs.Panel value="Retiro" pt="xs">
@@ -449,39 +460,41 @@ function Dashboard({ user }: DashboardProps) {
                             <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
 
                             {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
-                            {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
+                            <ScrollArea style={{ height: maxHeight - 130 }} type="never">
+                                {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
 
-                            {sales.length > 0 ? (
-                                <div>
-                                    <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                        TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
-                                    </Title>
+                                {sales.length > 0 ? (
+                                    <div>
 
-                                    <Title mt={5} weight={700} mb="sm" order={4}>Monto total de retiros {totalPrice} USD</Title>
+                                        <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
+                                            TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
+                                        </Title>
 
-                                    <Card
-                                        mt={15}
-                                        mb={45}
-                                        mr={15}
-                                        ml={15}
-                                        style={{
-                                            boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                                            transition: "all 0.3s ease",
-                                            transform: "scale(1)",
-                                        }}
-                                        radius="md"
-                                    >
-                                        <SalesBarChart sales={sales} selectedRange={selectedRange} />
-                                    </Card>
+                                        <Title mt={5} weight={700} mb="sm" order={4}>Monto total de retiros {totalPrice} USD</Title>
+                                        <Card
+                                            mt={15}
+                                            mb={45}
+                                            mr={15}
+                                            ml={15}
+                                            style={{
+                                                boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                                transition: "all 0.3s ease",
+                                                transform: "scale(1)",
+                                            }}
+                                            radius="md"
+                                        >
+                                            <SalesBarChart sales={sales} selectedRange={selectedRange} />
+                                        </Card>
 
-                                    <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
-                                    <ProductList productTotals={productTotals} />
+                                        <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
+                                        <ProductList productTotals={productTotals} />
 
-                                    <SalesBreakdown sales={sales} selectedRange={selectedRange} />
-                                </div>
-                            ) : (
-                                <p>{error ? error : 'No hay Retiros disponibles.'}</p>
-                            )}
+                                        <SalesBreakdown sales={sales} selectedRange={selectedRange} />
+                                    </div>
+                                ) : (
+                                    <p>{error ? error : 'No hay Retiros disponibles.'}</p>
+                                )}
+                            </ScrollArea>
                         </div>
                     </Tabs.Panel>
 
@@ -498,7 +511,7 @@ function Dashboard({ user }: DashboardProps) {
                         <ManagePro />
                     </Group>
                 )}
-            </ScrollArea>
+            </div>
         </>
     );
 }

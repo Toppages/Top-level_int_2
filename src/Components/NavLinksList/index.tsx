@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { UserData, NavLinksProps } from "../../types/types";
 import { fetchUserData, handleLogout } from "../../utils/utils";
 import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
-import { IconGauge,IconWallet,IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
+import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
 
 const data = [
     { icon: IconGauge, label: 'CONTROL DE RETIROS' },
@@ -15,6 +15,21 @@ const data = [
     { icon: IconWallet, label: 'BALANCE' },
     { icon: IconArchive, label: 'INVENTARIO' },
 ];
+
+const getSaldoColor = (rango: string) => {
+    switch (rango) {
+        case 'ultrap':
+            return '#FFD700'; 
+        case 'oro':
+            return '#FFD700'; 
+        case 'plata':
+            return '#C0C0C0'; 
+        case 'bronce':
+            return '#cd7f32'; 
+        default:
+            return '#000000'; 
+    }
+};
 
 function NavLinks({ active, setActiveLink }: NavLinksProps) {
     const [userData, setUserData] = useState<UserData | null>(null);
@@ -46,7 +61,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 ))}
             </div>
             <div>
-                <Title ta="center" c="#0c2a85" order={3}>
+                <Title ta="center" c={userData ? getSaldoColor(userData.rango) : '#000000'} order={3}>
                     {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
                 </Title>
 
