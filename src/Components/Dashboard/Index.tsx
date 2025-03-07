@@ -45,6 +45,7 @@ function Dashboard({ user }: DashboardProps) {
                 .catch((err) => console.error("Error al obtener el usuario:", err));
         }
     }, [user, selectedRange, selectedDate]);
+
     const getSalesByDayOfWeek = (sales: any[]) => {
         const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", { count: number, totalPrice: number }> = {
             "Lunes": { count: 0, totalPrice: 0 },
@@ -61,7 +62,6 @@ function Dashboard({ user }: DashboardProps) {
             const dayNames: Array<keyof typeof weekSales> = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
             const dayName = dayNames[saleDate.getDay()];
 
-            // Sumar 1 al contador de ventas y sumar el precio total de la venta por día
             weekSales[dayName].count++;
             weekSales[dayName].totalPrice += sale.totalPrice;
         });
@@ -126,56 +126,55 @@ function Dashboard({ user }: DashboardProps) {
                     return saleDate && saleDate >= monday && saleDate <= sunday;
                 });
 
-                // Usamos la nueva función para obtener los totales por día de la semana
                 const weekSales = getSalesByDayOfWeek(filteredSales);
 
-                // Calcular el total de ventas (por cantidad de ventas) y el monto total por semana
                 const totalSales = Object.values(weekSales).reduce((acc, { count }) => acc + count, 0);
                 const totalWeekPrice = Object.values(weekSales).reduce((acc, { totalPrice }) => acc + totalPrice, 0);
 
-                // Establecer los datos de ventas y montos
                 setSales(Object.entries(weekSales).map(([day, { count, totalPrice }]) => ({ day, count, totalPrice })));
                 setTotalSales(totalSales);
-                setTotalPrice(totalWeekPrice); // Total por semana
+                setTotalPrice(totalWeekPrice); 
 
                 return;
             } else if (selectedRange === "mes") {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
-
-                const weeksInMonth: Record<number, number> = {};
+            
+                const weeksInMonth: Record<number, { count: number, totalPrice: number }> = {
+                    1: { count: 0, totalPrice: 0 },
+                    2: { count: 0, totalPrice: 0 },
+                    3: { count: 0, totalPrice: 0 },
+                    4: { count: 0, totalPrice: 0 },
+                    5: { count: 0, totalPrice: 0 },
+                };
+            
                 let totalMonthPrice = 0;
-
+            
                 filteredSales.forEach((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
                         const weekNumber = Math.ceil((saleDate.getDate() - 1) / 7) + 1;
-                        weeksInMonth[weekNumber] = (weeksInMonth[weekNumber] || 0) + 1;
+                        weeksInMonth[weekNumber].count++;
+                        weeksInMonth[weekNumber].totalPrice += sale.totalPrice;  // Sumar precio total de la venta por semana
                         totalMonthPrice += sale.totalPrice;  // Total precio por mes
                     }
                 });
-
-                const allWeeks: Record<number, number> = {
-                    1: 0,
-                    2: 0,
-                    3: 0,
-                    4: 0,
-                    5: 0,
-                };
-
-                const combinedWeeks = { ...allWeeks, ...weeksInMonth };
-
-                const weekSalesData = Object.entries(combinedWeeks).map(([week, count]) => ({
+            
+                const combinedWeeks = { ...weeksInMonth };
+            
+                const weekSalesData = Object.entries(combinedWeeks).map(([week, { count, totalPrice }]) => ({
                     week: `Semana ${week}`,
                     count,
+                    totalPrice,
                 }));
-
+            
                 setSales(weekSalesData);
-                setTotalSales(Object.values(combinedWeeks).reduce((acc, count) => acc + count, 0));
+                setTotalSales(Object.values(combinedWeeks).reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalMonthPrice);
+            
                 return;
-            } else if (selectedRange === "año") {
+            }             else if (selectedRange === "año") {
                 const now = new Date();
                 const currentYear = now.getFullYear();
 
@@ -222,7 +221,7 @@ function Dashboard({ user }: DashboardProps) {
                 }, {});
             };
             const productTotals = getTotalPriceByProductName(filteredSales);
-            setProductTotals(productTotals);  // Aquí se asigna el valor a productTotals
+            setProductTotals(productTotals);
 
             const totalPrice = filteredSales.reduce((acc: number, sale: any) => acc + sale.totalPrice, 0);
             setTotalPrice(totalPrice);
@@ -305,8 +304,6 @@ function Dashboard({ user }: DashboardProps) {
                                 />
                             )}
 
-
-
                             {sales.length > 0 ? (
                                 <div>
                                     <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
@@ -328,6 +325,15 @@ function Dashboard({ user }: DashboardProps) {
                                             ))}
                                         </div>
                                     )}
+                                    {selectedRange === "mes" && (
+            <div>
+                {sales.map((weekData: any) => (
+                    <div key={weekData.week}>
+                        <strong>{weekData.week}:</strong> {weekData.count} ventas, {weekData.totalPrice.toFixed(2)} USD
+                    </div>
+                ))}
+            </div>
+        )}
 
                                     <Card
                                         mt={15}
@@ -378,9 +384,6 @@ function Dashboard({ user }: DashboardProps) {
                             ) : (
                                 <p>{error ? error : 'No hay ventas disponibles.'}</p>
                             )}
-
-
-
 
                         </div>
                     </Tabs.Panel>
