@@ -93,17 +93,19 @@ function Dashboard({ user }: DashboardProps) {
                 const monday = new Date(now);
                 monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
                 monday.setHours(0, 0, 0, 0);
-
                 const sunday = new Date(monday);
                 sunday.setDate(monday.getDate() + 6);
                 sunday.setHours(23, 59, 59, 999);
-
                 filteredSales = filteredSales.filter((sale: any) => {
-                    const saleDate = sale.created_at ? new Date(sale.created_at) : null;
-                    return saleDate && saleDate >= monday && saleDate <= sunday;
-                });
 
+                    const saleDate = sale.created_at ? new Date(sale.created_at) : null;
+
+                    return saleDate && saleDate >= monday && saleDate <= sunday;
+
+                });
                 const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", number> = {
+
+
                     "Lunes": 0,
                     "Martes": 0,
                     "Miércoles": 0,
@@ -117,19 +119,51 @@ function Dashboard({ user }: DashboardProps) {
                     const saleDate = new Date(sale.created_at);
                     const dayNames: Array<keyof typeof weekSales> = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
                     const dayName = dayNames[saleDate.getDay()];
-
-                    weekSales[dayName]++; 
+                    weekSales[dayName]++;
                 });
-
                 const totalSales = Object.values(weekSales).reduce((acc, count) => acc + count, 0);
-
                 const weekSalesData = Object.entries(weekSales).map(([day, count]) => ({
                     day,
                     count,
                 }));
-
                 setSales(weekSalesData);
                 setTotalSales(totalSales);
+
+                return;
+
+            } else if (selectedRange === "mes") {
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+
+                const weeksInMonth: Record<number, number> = {};
+
+                filteredSales.forEach((sale: any) => {
+                    const saleDate = new Date(sale.created_at);
+                    if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
+                        const weekNumber = Math.ceil((saleDate.getDate() - 1) / 7) + 1;
+                        weeksInMonth[weekNumber] = (weeksInMonth[weekNumber] || 0) + 1;
+                    }
+                });
+
+                const allWeeks: Record<number, number> = {
+                    1: 0,
+                    2: 0,
+                    3: 0,
+                    4: 0,
+                    5: 0,
+                };
+
+                const combinedWeeks = { ...allWeeks, ...weeksInMonth };
+
+                const weekSalesData = Object.entries(combinedWeeks).map(([week, count]) => ({
+                    week: `Semana ${week}`,
+                    count,
+                }));
+
+                setSales(weekSalesData);
+                setTotalSales(Object.values(combinedWeeks).reduce((acc, count) => acc + count, 0));
+
                 return;
             }
 
@@ -138,6 +172,8 @@ function Dashboard({ user }: DashboardProps) {
             setError('Hubo un problema al obtener las ventas.');
         }
     };
+
+
     const handleDateChange = (date: Date | null) => {
         setSelectedDate(date);
     };
@@ -213,7 +249,7 @@ function Dashboard({ user }: DashboardProps) {
                             {sales.length > 0 ? (
                                 <div>
                                     <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                        Total de Ventas: {selectedRange === "semana" ? totalSales : sales.length}
+                                        Total de Ventas: {selectedRange === "semana" || selectedRange === "mes" ? totalSales : sales.length}
                                     </Title>
 
                                     <Title mt={5} weight={700} mb="sm" order={4}>Ventas por Producto</Title>
@@ -224,6 +260,13 @@ function Dashboard({ user }: DashboardProps) {
                                             height={300}
                                             series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
                                             xAxis={[{ data: sales.map((item: any) => item.day), scaleType: 'band' }]}
+                                        />
+                                    ) : selectedRange === "mes" ? (
+                                        <BarChart
+                                            width={500}
+                                            height={300}
+                                            series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
+                                            xAxis={[{ data: sales.map((item: any) => item.week), scaleType: 'band' }]}
                                         />
                                     ) : (
                                         <BarChart
@@ -237,6 +280,8 @@ function Dashboard({ user }: DashboardProps) {
                             ) : (
                                 <p>{error ? error : 'No hay ventas disponibles.'}</p>
                             )}
+
+
 
                         </div>
                     </Tabs.Panel>
