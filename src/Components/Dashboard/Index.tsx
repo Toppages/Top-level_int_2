@@ -133,64 +133,66 @@ function Dashboard({ user }: DashboardProps) {
 
                 setSales(Object.entries(weekSales).map(([day, { count, totalPrice }]) => ({ day, count, totalPrice })));
                 setTotalSales(totalSales);
-                setTotalPrice(totalWeekPrice); 
+                setTotalPrice(totalWeekPrice);
 
                 return;
             } else if (selectedRange === "mes") {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
-            
+
                 const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-                const firstDayWeekday = firstDayOfMonth.getDay();  
-            
+                const firstDayWeekday = firstDayOfMonth.getDay();
+
                 const weeksInMonth: Record<number, { count: number, totalPrice: number }> = {};
-            
+
                 let totalMonthPrice = 0;
-            
+
                 filteredSales.forEach((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
                         const dayOfMonth = saleDate.getDate();
                         const weekNumber = Math.floor((dayOfMonth + firstDayWeekday - 1) / 7) + 1;
-            
+
                         if (!weeksInMonth[weekNumber]) {
                             weeksInMonth[weekNumber] = { count: 0, totalPrice: 0 };
                         }
-            
+
                         weeksInMonth[weekNumber].count++;
                         weeksInMonth[weekNumber].totalPrice += sale.totalPrice;
                         totalMonthPrice += sale.totalPrice;
                     }
                 });
-            
-                const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();  
+
+                const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
                 const totalWeeks = Math.ceil((totalDaysInMonth + firstDayWeekday) / 7);
-            
+
                 for (let i = 1; i <= totalWeeks; i++) {
                     if (!weeksInMonth[i]) {
-                        weeksInMonth[i] = { count: 0, totalPrice: 0 }; 
+                        weeksInMonth[i] = { count: 0, totalPrice: 0 };
                     }
                 }
-            
+
                 const weekSalesData = Object.entries(weeksInMonth).map(([week, { count, totalPrice }]) => ({
                     week: `Semana ${week}`,
                     count,
                     totalPrice,
                 }));
-            
+
                 setSales(weekSalesData);
                 setTotalSales(Object.values(weeksInMonth).reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalMonthPrice);
-            
+
                 return;
             }
-             else if (selectedRange === "año") {
+            else if (selectedRange === "año") {
                 const now = new Date();
                 const currentYear = now.getFullYear();
 
-                const monthsInYear: Record<number, number> = {
-                    1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0
+                const monthsInYear: Record<number, { count: number, totalPrice: number }> = {
+                    1: { count: 0, totalPrice: 0 }, 2: { count: 0, totalPrice: 0 }, 3: { count: 0, totalPrice: 0 }, 4: { count: 0, totalPrice: 0 },
+                    5: { count: 0, totalPrice: 0 }, 6: { count: 0, totalPrice: 0 }, 7: { count: 0, totalPrice: 0 }, 8: { count: 0, totalPrice: 0 },
+                    9: { count: 0, totalPrice: 0 }, 10: { count: 0, totalPrice: 0 }, 11: { count: 0, totalPrice: 0 }, 12: { count: 0, totalPrice: 0 }
                 };
 
                 let totalYearPrice = 0;
@@ -199,8 +201,9 @@ function Dashboard({ user }: DashboardProps) {
                     const saleDate = new Date(sale.created_at);
                     if (saleDate.getFullYear() === currentYear) {
                         const monthNumber = saleDate.getMonth() + 1;
-                        monthsInYear[monthNumber] = (monthsInYear[monthNumber] || 0) + 1;
-                        totalYearPrice += sale.totalPrice; 
+                        monthsInYear[monthNumber].count++;
+                        monthsInYear[monthNumber].totalPrice += sale.totalPrice;
+                        totalYearPrice += sale.totalPrice;
                     }
                 });
 
@@ -209,16 +212,18 @@ function Dashboard({ user }: DashboardProps) {
                     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
                 ];
 
-                const monthSalesData = Object.entries(monthsInYear).map(([month, count]) => ({
+                const monthSalesData = Object.entries(monthsInYear).map(([month, { count, totalPrice }]) => ({
                     month: monthNames[parseInt(month) - 1],
                     count,
+                    totalPrice,
                 }));
 
                 setSales(monthSalesData);
-                setTotalSales(Object.values(monthsInYear).reduce((acc, count) => acc + count, 0));
+                setTotalSales(Object.values(monthsInYear).reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalYearPrice);
                 return;
             }
+
 
             const getTotalPriceByProductName = (sales: any[]) => {
                 return sales.reduce((acc: Record<string, number>, sale: any) => {
@@ -337,14 +342,23 @@ function Dashboard({ user }: DashboardProps) {
                                         </div>
                                     )}
                                     {selectedRange === "mes" && (
-            <div>
-                {sales.map((weekData: any) => (
-                    <div key={weekData.week}>
-                        <strong>{weekData.week}:</strong>  {weekData.totalPrice.toFixed(2)} USD
-                    </div>
-                ))}
-            </div>
-        )}
+                                        <div>
+                                            {sales.map((weekData: any) => (
+                                                <div key={weekData.week}>
+                                                    <strong>{weekData.week}:</strong>  {weekData.totalPrice.toFixed(2)} USD
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {selectedRange === "año" && (
+                                        <div>
+                                            {sales.map((monthData: any) => (
+                                                <div key={monthData.month}>
+                                                    <strong>{monthData.month}:</strong>{monthData.totalPrice.toFixed(2)} USD
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     <Card
                                         mt={15}
