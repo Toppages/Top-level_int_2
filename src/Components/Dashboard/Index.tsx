@@ -25,6 +25,7 @@ function Dashboard({ user }: DashboardProps) {
     const [totalSales, setTotalSales] = useState(0);
     const [windowHeight, setWindowHeight] = useState(window.innerHeight);
 
+    const [totalPrice, setTotalPrice] = useState<number>(0); 
     const onBalanceUpdate = (newBalance: number) => {
         console.log('Nuevo saldo:', newBalance);
     };
@@ -50,32 +51,33 @@ function Dashboard({ user }: DashboardProps) {
             setError('No se encontró el token. Inicia sesión nuevamente.');
             return;
         }
-
+    
         try {
             const url = userRole === 'master'
                 ? 'http://localhost:4000/sales'
                 : `http://localhost:4000/sales/user/${userHandle}`;
-
+    
             const response = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-
+    
             let filteredSales = response.data;
-
+    
             if (!Array.isArray(filteredSales)) {
                 setError('La respuesta del servidor no es válida.');
                 return;
             }
-
+    
             const formatDate = (dateString: string) => {
                 if (!dateString) return null;
                 const date = new Date(dateString);
                 if (isNaN(date.getTime())) return null;
                 return date.toLocaleDateString('en-CA');
             };
-
+    
             const today = new Date().toLocaleDateString('en-CA');
-
+    
+            // Filtrado por fecha
             if (selectedRange === "hoy") {
                 filteredSales = filteredSales.filter((sale: any) => {
                     const saleDate = sale.created_at ? formatDate(sale.created_at) : null;
@@ -97,15 +99,11 @@ function Dashboard({ user }: DashboardProps) {
                 sunday.setDate(monday.getDate() + 6);
                 sunday.setHours(23, 59, 59, 999);
                 filteredSales = filteredSales.filter((sale: any) => {
-
-                    const saleDate = sale.created_at ? new Date(sale.created_at) : null;
-
+                    const saleDate = new Date(sale.created_at);
                     return saleDate && saleDate >= monday && saleDate <= sunday;
-
                 });
+    
                 const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", number> = {
-
-
                     "Lunes": 0,
                     "Martes": 0,
                     "Miércoles": 0,
@@ -114,38 +112,43 @@ function Dashboard({ user }: DashboardProps) {
                     "Sábado": 0,
                     "Domingo": 0,
                 };
-
+    
+                let totalWeekPrice = 0;
                 filteredSales.forEach((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     const dayNames: Array<keyof typeof weekSales> = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
                     const dayName = dayNames[saleDate.getDay()];
                     weekSales[dayName]++;
+                    totalWeekPrice += sale.totalPrice;  // Total precio por semana
                 });
+    
                 const totalSales = Object.values(weekSales).reduce((acc, count) => acc + count, 0);
                 const weekSalesData = Object.entries(weekSales).map(([day, count]) => ({
                     day,
                     count,
                 }));
+    
                 setSales(weekSalesData);
                 setTotalSales(totalSales);
-
+                setTotalPrice(totalWeekPrice);
                 return;
-
             } else if (selectedRange === "mes") {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
-
+    
                 const weeksInMonth: Record<number, number> = {};
-
+                let totalMonthPrice = 0;
+    
                 filteredSales.forEach((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     if (saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear) {
                         const weekNumber = Math.ceil((saleDate.getDate() - 1) / 7) + 1;
                         weeksInMonth[weekNumber] = (weeksInMonth[weekNumber] || 0) + 1;
+                        totalMonthPrice += sale.totalPrice;  // Total precio por mes
                     }
                 });
-
+    
                 const allWeeks: Record<number, number> = {
                     1: 0,
                     2: 0,
@@ -153,58 +156,62 @@ function Dashboard({ user }: DashboardProps) {
                     4: 0,
                     5: 0,
                 };
-
+    
                 const combinedWeeks = { ...allWeeks, ...weeksInMonth };
-
+    
                 const weekSalesData = Object.entries(combinedWeeks).map(([week, count]) => ({
                     week: `Semana ${week}`,
                     count,
                 }));
-
+    
                 setSales(weekSalesData);
                 setTotalSales(Object.values(combinedWeeks).reduce((acc, count) => acc + count, 0));
-
+                setTotalPrice(totalMonthPrice);
                 return;
             } else if (selectedRange === "año") {
                 const now = new Date();
                 const currentYear = now.getFullYear();
-
+    
                 const monthsInYear: Record<number, number> = {
                     1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0
                 };
-
-                const monthNames = [
-                    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-                    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-                ];
-
+    
+                let totalYearPrice = 0;
+    
                 filteredSales.forEach((sale: any) => {
                     const saleDate = new Date(sale.created_at);
                     if (saleDate.getFullYear() === currentYear) {
                         const monthNumber = saleDate.getMonth() + 1;
                         monthsInYear[monthNumber] = (monthsInYear[monthNumber] || 0) + 1;
+                        totalYearPrice += sale.totalPrice;  // Total precio por año
                     }
                 });
-
+    
+                const monthNames = [
+                    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+                ];
+    
                 const monthSalesData = Object.entries(monthsInYear).map(([month, count]) => ({
                     month: monthNames[parseInt(month) - 1],
                     count,
                 }));
-
+    
                 setSales(monthSalesData);
                 setTotalSales(Object.values(monthsInYear).reduce((acc, count) => acc + count, 0));
-
+                setTotalPrice(totalYearPrice);
                 return;
             }
-
-
-
+    
+            // Calcular el total de las ventas
+            const totalPrice = filteredSales.reduce((acc: number, sale: any) => acc + sale.totalPrice, 0);
+            setTotalPrice(totalPrice);
             setSales(filteredSales);
         } catch (err) {
             setError('Hubo un problema al obtener las ventas.');
         }
     };
-
+    
 
     const handleDateChange = (date: Date | null) => {
         setSelectedDate(date);
@@ -286,7 +293,7 @@ function Dashboard({ user }: DashboardProps) {
                                         Total de Ventas: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                     </Title>
 
-                                    <Title mt={5} weight={700} mb="sm" order={4}>Ventas por Producto</Title>
+                                    <Title mt={5} weight={700} mb="sm" order={4}>Ventas por Producto {totalPrice}</Title>
 
                                     <Card
                                         mt={15}
