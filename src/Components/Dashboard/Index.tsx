@@ -18,11 +18,11 @@ interface DashboardProps {
 function Dashboard({ user }: DashboardProps) {
     const [userRole, setUserRole] = useState<string | null>(null);
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
-    const [selectedRange, setSelectedRange] = useState<string>("general"); 
+    const [selectedRange, setSelectedRange] = useState<string>("general");
     const [sales, setSales] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-
+    const [totalSales, setTotalSales] = useState(0);
     const [windowHeight, setWindowHeight] = useState(window.innerHeight);
 
     const onBalanceUpdate = (newBalance: number) => {
@@ -50,63 +50,94 @@ function Dashboard({ user }: DashboardProps) {
             setError('No se encontró el token. Inicia sesión nuevamente.');
             return;
         }
-    
+
         try {
             const url = userRole === 'master'
                 ? 'http://localhost:4000/sales'
                 : `http://localhost:4000/sales/user/${userHandle}`;
-    
-            console.log("Obteniendo ventas desde:", url);
-    
+
             const response = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-    
+
             let filteredSales = response.data;
-    
-            console.log("Ventas obtenidas:", filteredSales);
-    
+
             if (!Array.isArray(filteredSales)) {
                 setError('La respuesta del servidor no es válida.');
                 return;
             }
-    
-            // Función para extraer solo la fecha en formato YYYY-MM-DD
+
             const formatDate = (dateString: string) => {
                 if (!dateString) return null;
                 const date = new Date(dateString);
                 if (isNaN(date.getTime())) return null;
-                return date.toLocaleDateString('en-CA'); // Ajustado a la zona horaria local
+                return date.toLocaleDateString('en-CA');
             };
-    
-            const today = new Date().toLocaleDateString('en-CA'); // Ahora la fecha es correcta
-            console.log("Fecha de hoy corregida:", today);
-    
+
+            const today = new Date().toLocaleDateString('en-CA');
+
             if (selectedRange === "hoy") {
                 filteredSales = filteredSales.filter((sale: any) => {
                     const saleDate = sale.created_at ? formatDate(sale.created_at) : null;
-                    console.log(`Venta ID: ${sale._id} - Fecha: ${saleDate}`);
                     return saleDate === today;
                 });
             } else if (selectedRange === "custom" && selectedDate) {
                 const selectedDay = selectedDate.toLocaleDateString('en-CA');
-                console.log("Fecha seleccionada:", selectedDay);
-    
                 filteredSales = filteredSales.filter((sale: any) => {
                     const saleDate = sale.created_at ? formatDate(sale.created_at) : null;
-                    console.log(`Venta ID: ${sale._id} - Fecha: ${saleDate}`);
                     return saleDate === selectedDay;
                 });
+            } else if (selectedRange === "semana") {
+                const now = new Date();
+                const dayOfWeek = now.getDay();
+                const monday = new Date(now);
+                monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+                monday.setHours(0, 0, 0, 0);
+
+                const sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);
+                sunday.setHours(23, 59, 59, 999);
+
+                filteredSales = filteredSales.filter((sale: any) => {
+                    const saleDate = sale.created_at ? new Date(sale.created_at) : null;
+                    return saleDate && saleDate >= monday && saleDate <= sunday;
+                });
+
+                const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", number> = {
+                    "Lunes": 0,
+                    "Martes": 0,
+                    "Miércoles": 0,
+                    "Jueves": 0,
+                    "Viernes": 0,
+                    "Sábado": 0,
+                    "Domingo": 0,
+                };
+
+                filteredSales.forEach((sale: any) => {
+                    const saleDate = new Date(sale.created_at);
+                    const dayNames: Array<keyof typeof weekSales> = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+                    const dayName = dayNames[saleDate.getDay()];
+
+                    weekSales[dayName]++; 
+                });
+
+                const totalSales = Object.values(weekSales).reduce((acc, count) => acc + count, 0);
+
+                const weekSalesData = Object.entries(weekSales).map(([day, count]) => ({
+                    day,
+                    count,
+                }));
+
+                setSales(weekSalesData);
+                setTotalSales(totalSales);
+                return;
             }
-    
-            console.log("Ventas filtradas:", filteredSales);
+
             setSales(filteredSales);
         } catch (err) {
             setError('Hubo un problema al obtener las ventas.');
-            console.error("Error al obtener ventas:", err);
         }
     };
-       
     const handleDateChange = (date: Date | null) => {
         setSelectedDate(date);
     };
@@ -181,18 +212,26 @@ function Dashboard({ user }: DashboardProps) {
 
                             {sales.length > 0 ? (
                                 <div>
-                                    <Title mt={5} ta="center" weight={700} mb="sm" order={2}>Total de Ventas: {sales.length}</Title>
+                                    <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
+                                        Total de Ventas: {selectedRange === "semana" ? totalSales : sales.length}
+                                    </Title>
+
                                     <Title mt={5} weight={700} mb="sm" order={4}>Ventas por Producto</Title>
 
-                                    {productNames.length > 0 ? (
+                                    {selectedRange === "semana" ? (
                                         <BarChart
                                             width={500}
                                             height={300}
-                                            series={[{ data: salesData, id: 'salesId' }]}
-                                            xAxis={[{ data: productNames, scaleType: 'band' }]}
+                                            series={[{ data: sales.map((item: any) => item.count), id: 'salesId', color: '#0c2a85' }]}
+                                            xAxis={[{ data: sales.map((item: any) => item.day), scaleType: 'band' }]}
                                         />
                                     ) : (
-                                        <p>No hay datos de ventas disponibles.</p>
+                                        <BarChart
+                                            width={500}
+                                            height={300}
+                                            series={[{ data: salesData, id: 'salesId', color: '#0c2a85' }]}
+                                            xAxis={[{ data: productNames, scaleType: 'band' }]}
+                                        />
                                     )}
                                 </div>
                             ) : (
