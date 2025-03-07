@@ -29,7 +29,6 @@ export const handleSearchChange = (
   );
   setFilteredReports(filtered);
 };
-
 export const fetchReports = async (
   userHandle: string,
   userRole: string,
@@ -38,26 +37,26 @@ export const fetchReports = async (
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
   if (!userHandle) return;
-
+  
   const token = localStorage.getItem('token');
   if (!token) {
     setError('No se encontró el token. Inicia sesión nuevamente.');
     return;
   }
-
+  
   try {
     const url = userRole === 'master'
-      ? 'http://localhost:4000/sales'
-      : `http://localhost:4000/sales/user/${userHandle}`;
-
+    ? 'http://localhost:4000/sales'
+    : `http://localhost:4000/sales/user/${userHandle}`;
+    
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
+    
     setAllReports(response.data);
     setFilteredReports(response.data);
     toast.success('Reportes cargados exitosamente');
-
+    
   } catch (err) {
     toast.error('Hubo un problema al obtener los reportes.');
   }
@@ -71,13 +70,13 @@ export const fetchTransactions = async (
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
   if (!userHandle) return;
-
+  
   const token = localStorage.getItem('token');
   if (!token) {
     setError('No se encontró el token. Inicia sesión nuevamente.');
     return;
   }
-
+  
   try {
     let url = '';
     if (userRole === 'master') {
@@ -87,11 +86,11 @@ export const fetchTransactions = async (
       // Si no es 'master', obtenemos transacciones por el handle del usuario
       url = `http://localhost:4000/transactions/${userHandle}`;
     }
-
+    
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
+    
     setAllTransactions(response.data);
     setFilteredTransactions(response.data);
     toast.success('Transacciones cargadas exitosamente');
@@ -119,16 +118,16 @@ export const handlePinClick = (
 
 export const copyToClipboard = (text: string, isAllPins: boolean = false) => {
   navigator.clipboard.writeText(text)
-    .then(() => {
-      if (isAllPins) {
-        toast.success('Todos los pines copiados al portapapeles');
-      } else {
-        toast.success('Pin copiado al portapapeles');
-      }
-    })
-    .catch(() => {
-      toast.error('Error al copiar al portapapeles');
-    });
+  .then(() => {
+    if (isAllPins) {
+      toast.success('Todos los pines copiados al portapapeles');
+    } else {
+      toast.success('Pin copiado al portapapeles');
+    }
+  })
+  .catch(() => {
+    toast.error('Error al copiar al portapapeles');
+  });
 };
 
 export const fetchProductsFromAPI = async (setFetchedProducts: React.Dispatch<React.SetStateAction<Product[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
@@ -171,12 +170,12 @@ export const handleLogout = (navigate: Function) => {
 };
 
 export const updateProductAPI = async (product: Product) => {
-
+  
   if (!product._id) {
     toast.error('El ID del producto no fue proporcionado');
     throw new Error('ID del producto no proporcionado');
   }
-
+  
   try {
     const response = await fetch(`http://localhost:4000/products/${product._id}`, {
       method: 'PUT',
@@ -190,9 +189,9 @@ export const updateProductAPI = async (product: Product) => {
         available: product.available,
       }),
     });
-
+    
     const data = await response.json();
-
+    
     if (response.ok) {
       toast.success('Producto actualizado exitosamente');
       return data;
@@ -204,4 +203,27 @@ export const updateProductAPI = async (product: Product) => {
     toast.error('Hubo un problema al actualizar el producto');
     throw error;
   }
+};
+
+export const getSalesByDayOfWeek = (sales: any[]) => {
+  const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", { count: number, totalPrice: number }> = {
+      "Lunes": { count: 0, totalPrice: 0 },
+      "Martes": { count: 0, totalPrice: 0 },
+      "Miércoles": { count: 0, totalPrice: 0 },
+      "Jueves": { count: 0, totalPrice: 0 },
+      "Viernes": { count: 0, totalPrice: 0 },
+      "Sábado": { count: 0, totalPrice: 0 },
+      "Domingo": { count: 0, totalPrice: 0 },
+  };
+
+  sales.forEach((sale: any) => {
+      const saleDate = new Date(sale.created_at);
+      const dayNames: Array<keyof typeof weekSales> = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+      const dayName = dayNames[saleDate.getDay()];
+
+      weekSales[dayName].count++;
+      weekSales[dayName].totalPrice += sale.totalPrice;
+  });
+
+  return weekSales;
 };

@@ -9,11 +9,11 @@ import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
 import { IconGauge,IconWallet,IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
 
 const data = [
-    { icon: IconGauge, label: 'Control de Retiro' },
-    { icon: IconUsers, label: 'Compra de pines' },
-    { icon: IconReport, label: 'Reportes de Retiro' },
-    { icon: IconWallet, label: 'Balance' },
-    { icon: IconArchive, label: 'Inventario' },
+    { icon: IconGauge, label: 'CONTROL DE RETIROS' },
+    { icon: IconUsers, label: 'COMPRA DE PINES' },
+    { icon: IconReport, label: 'REPORTES DE RETIROS' },
+    { icon: IconWallet, label: 'BALANCE' },
+    { icon: IconArchive, label: 'INVENTARIO' },
 ];
 
 function NavLinks({ active, setActiveLink }: NavLinksProps) {

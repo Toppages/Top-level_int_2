@@ -5,12 +5,12 @@ import ManagePro from "./ManagePro";
 import Registrar from "./Registrar/Index";
 import EditClient from "./EditClient/Index";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
-import { DatePicker } from '@mantine/dates';
+import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
 import { useMediaQuery } from "@mantine/hooks";
 import { IconCalendarWeek, IconMessageCircle, IconPhoto } from "@tabler/icons-react";
 import { Group, ScrollArea, Select, Tabs, Text, Title, List, Card } from "@mantine/core";
 import { BarChart } from '@mui/x-charts/BarChart';
-
+import Pines from "./Pines";
 interface DashboardProps {
     user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
 }
@@ -25,7 +25,12 @@ function Dashboard({ user }: DashboardProps) {
     const [totalSales, setTotalSales] = useState(0);
     const [windowHeight, setWindowHeight] = useState(window.innerHeight);
     const [productTotals, setProductTotals] = useState<Record<string, number>>({});
-
+    const today = new Date();
+    const fiveDaysLater = new Date(today);
+    const [selectedrDate, setSelecterdDate] = useState<DateRangePickerValue>([
+        today,
+        fiveDaysLater,
+    ]);
     const [totalPrice, setTotalPrice] = useState<number>(0);
     const onBalanceUpdate = (newBalance: number) => {
         console.log('Nuevo saldo:', newBalance);
@@ -45,7 +50,19 @@ function Dashboard({ user }: DashboardProps) {
                 .catch((err) => console.error("Error al obtener el usuario:", err));
         }
     }, [user, selectedRange, selectedDate]);
+    useEffect(() => {
+        if (selectedRange === "rangoDia" && selectedrDate && selectedrDate[0] && selectedrDate[1]) {
+            const startDate = new Date(selectedrDate[0]);
+            const endDate = new Date(selectedrDate[1]);
 
+            const filteredSales = sales.filter((sale: any) => {
+                const saleDate = new Date(sale.created_at);
+                return saleDate >= startDate && saleDate <= endDate;
+            });
+
+            setSales(filteredSales);
+        }
+    }, [selectedrDate, selectedRange]);
     const getSalesByDayOfWeek = (sales: any[]) => {
         const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", { count: number, totalPrice: number }> = {
             "Lunes": { count: 0, totalPrice: 0 },
@@ -230,7 +247,6 @@ function Dashboard({ user }: DashboardProps) {
                 return;
             }
 
-
             else if (selectedRange === "año") {
                 const now = new Date();
                 const currentYear = now.getFullYear();
@@ -258,6 +274,13 @@ function Dashboard({ user }: DashboardProps) {
                 setTotalSales(monthsInYear.reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalYearPrice);
                 return;
+            } else if (selectedRange === "rangoDia" && selectedrDate && selectedrDate[0] && selectedrDate[1]) {
+                const startDate = new Date(selectedrDate[0]);
+                const endDate = new Date(selectedrDate[1]);
+                filteredSales = filteredSales.filter((sale: any) => {
+                    const saleDate = new Date(sale.created_at);
+                    return saleDate >= startDate && saleDate <= endDate;
+                });
             }
 
             const productTotals = getTotalPriceByProductName(filteredSales);
@@ -269,9 +292,9 @@ function Dashboard({ user }: DashboardProps) {
             setError('Hubo un problema al obtener los Retiro.');
         }
     };
-
     const handleDateChange = (date: Date | null) => {
         setSelectedDate(date);
+
     };
 
     const salesByProduct = sales.reduce((acc, sale) => {
@@ -321,6 +344,7 @@ function Dashboard({ user }: DashboardProps) {
                                     { value: "mes", label: "Este mes" },
                                     { value: "año", label: "Este año" },
                                     { value: "custom", label: "Elegir día" },
+                                    { value: "rangoDia", label: "Rango del día" },
                                 ]}
                                 styles={() => ({
                                     item: {
@@ -341,13 +365,24 @@ function Dashboard({ user }: DashboardProps) {
                                     onChange={handleDateChange}
                                 />
                             )}
+                            {selectedRange === "rangoDia" && (
+                                <DateRangePicker
+                                    label="Selecciona el rango del día"
+                                    placeholder="Pick dates range"
+                                    value={selectedrDate}
+                                    onChange={(date) => {
+                                        setSelecterdDate(date);
+                                        console.log('Rango de fechas seleccionado:', date); 
+                                    }}
+                                />
+                            )}
 
                             {sales.length > 0 ? (
                                 <div>
 
 
                                     <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                        Total de Retiro: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
+                                        TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                     </Title>
 
                                     <Title mt={5} weight={700} mb="sm" order={4}>Monto total de retiros {totalPrice} USD</Title>
@@ -399,11 +434,11 @@ function Dashboard({ user }: DashboardProps) {
                                     {Object.entries(productTotals).map(([productName, totalPrice]) => (
                                         <div key={productName}>
                                             <List size="lg" withPadding>
-                                                <List.Item> 
+                                                <List.Item>
                                                     <Text mt={5} weight={700} mb="sm">
 
-                                                    {productName} {totalPrice.toFixed(2)} USD
-                                                </Text>
+                                                        {productName} {totalPrice.toFixed(2)} USD
+                                                    </Text>
                                                 </List.Item>
                                             </List>
 
@@ -414,18 +449,18 @@ function Dashboard({ user }: DashboardProps) {
                                             <Title mt={5} weight={700} mb="sm" order={4}>Desglose por dia</Title>
                                             {sales.map((dayData: any) => (
                                                 <>
-                                                
-                                                <div key={dayData.day}>
-                                                    
-                                                     <List size="lg" withPadding>
-                                                <List.Item> 
-                                                    <Text mt={5} weight={700} mb="sm">
 
-                                                    <strong>{dayData.day}:</strong> {dayData.totalPrice.toFixed(2)} USD
-                                                </Text>
-                                                </List.Item>
-                                            </List>
-                                                </div>
+                                                    <div key={dayData.day}>
+
+                                                        <List size="lg" withPadding>
+                                                            <List.Item>
+                                                                <Text mt={5} weight={700} mb="sm">
+
+                                                                    <strong>{dayData.day}:</strong> {dayData.totalPrice.toFixed(2)} USD
+                                                                </Text>
+                                                            </List.Item>
+                                                        </List>
+                                                    </div>
                                                 </>
                                             ))}
                                         </div>
@@ -449,7 +484,22 @@ function Dashboard({ user }: DashboardProps) {
                                         </div>
                                     )}
 
-
+                                    {selectedRange === "rangoDia" && (
+                                        <div>
+                                            <Title mt={5} weight={700} mb="sm" order={4}>Ventas en el rango seleccionado</Title>
+                                            {sales.map((sale: any) => (
+                                                <div key={sale.id}>
+                                                    <List size="lg" withPadding>
+                                                        <List.Item>
+                                                            <Text mt={5} weight={700} mb="sm">
+                                                                <strong>{sale.created_at ? new Date(sale.created_at).toLocaleDateString() : "Fecha no disponible"}:</strong> {sale.totalPrice.toFixed(2)} USD
+                                                            </Text>
+                                                        </List.Item>
+                                                    </List>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                 </div>
                             ) : (
@@ -460,7 +510,7 @@ function Dashboard({ user }: DashboardProps) {
                     </Tabs.Panel>
 
                     <Tabs.Panel value="Pines" pt="xs">
-                        Pines pronto
+                       <Pines user={user}/>
                     </Tabs.Panel>
 
                 </Tabs>
