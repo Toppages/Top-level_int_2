@@ -80,17 +80,17 @@ function Registrar() {
             email: "",
             role: "cliente",
             saldo: 0,
-            rango: "diamante", // Valor por defecto para el rango de clientes
+            rango: "diamante",
         },
     });
 
     const onSubmit = async (data: UserFormData) => {
         try {
-            // Asignar el rango dependiendo del rol
+
             if (['admin', 'vendedor', 'master'].includes(data.role)) {
                 data.rango = "ultrap";
             } else if (data.role === 'cliente' && !data.rango) {
-                data.rango = "diamante"; // Si es cliente y no se proporciona rango, asignar "diamante"
+                data.rango = "diamante"; 
             }
 
             const response = await axios.post(`${import.meta.env.VITE_API_Url}/auth/register`, {
@@ -100,7 +100,7 @@ function Registrar() {
                 password: data.password,
                 role: data.role,
                 saldo: data.saldo,
-                rango: data.rango, // Enviar el rango al backend
+                rango: data.rango,
             });
 
             toast.success('Registro exitoso: ' + response.data.message || 'Usuario registrado correctamente');
@@ -177,12 +177,12 @@ function Registrar() {
                                 { value: "master", label: "Master" },
                             ]}
                             onChange={(value) => {
-                                const selectedRole = value as "admin" | "vendedor" | "cliente" | "master"; // Asegurar el tipo explícitamente
-                                setValue("role", selectedRole); // Asignar el valor seleccionado
+                                const selectedRole = value as "admin" | "vendedor" | "cliente" | "master";
+                                setValue("role", selectedRole); 
                                 if (['admin', 'vendedor', 'master'].includes(selectedRole)) {
-                                    setValue("rango", "ultrap"); // Asignar rango 'ultrap' si el rol es admin, vendedor o master
+                                    setValue("rango", "ultrap"); 
                                 } else {
-                                    setValue("rango", "diamante"); // Asignar un rango por defecto 'diamante' para cliente
+                                    setValue("rango", "diamante");
                                 }
                             }}
                             error={errors.role?.message}
@@ -200,8 +200,8 @@ function Registrar() {
                                 ]}
                                 error={errors.rango?.message}
                                 onChange={(value) => {
-                                    const selectedRango = value as "ultrap" | "diamante" | "oro" | "bronce"; // Asegurar el tipo explícitamente
-                                    setValue("rango", selectedRango); // Asignar el valor seleccionado
+                                    const selectedRango = value as "ultrap" | "diamante" | "oro" | "bronce"; 
+                                    setValue("rango", selectedRango);
                                 }}
                             />
                         )}
