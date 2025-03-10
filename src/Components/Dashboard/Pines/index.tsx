@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { PieChart } from '@mui/x-charts/PieChart';
-import { Group, List, Title, Text } from '@mantine/core';
+import { PieChart as Piec, Pie, Cell, Tooltip } from 'recharts';
+import { Group, Title, Text, Badge, Card, Progress, ScrollArea } from '@mantine/core';
 
 interface Pin {
     serial: string;
@@ -42,13 +42,14 @@ interface ReportSummary {
     totalKeys: number;
     usedKeys: number;
     unusedKeys: number;
-    productNames: string[];
-    productCount: { [key: string]: number };
+    productSummary: { [key: string]: { total: number; unused: number } };
 }
 
 interface PinesProps {
     user: { handle: string; role: string } | null;
 }
+
+const COLORS = ['#ff0000', '#0c2a85'];
 
 export const fetchReports = async (
     userHandle: string,
@@ -75,35 +76,39 @@ export const fetchReports = async (
 
         const reports: Report[] = response.data;
 
-        // Cálculos de estadísticas
-        const totalKeys = reports.reduce((acc, report) => acc + report.pins.length, 0);
-        const usedKeys = reports.reduce((acc, report) => acc + report.pins.filter(pin => pin.usado).length, 0);
-        const unusedKeys = totalKeys - usedKeys;
+        let totalKeys = 0;
+        let usedKeys = 0;
+        const productSummary: { [key: string]: { total: number; unused: number } } = {};
 
-        // Contar cuántos productos de cada tipo hay
-        const productCount: { [key: string]: number } = {};
         reports.forEach(report => {
             report.pins.forEach(pin => {
-                productCount[pin.productName] = (productCount[pin.productName] || 0) + 1;
+                totalKeys++;
+                if (pin.usado) {
+                    usedKeys++;
+                }
+                if (!productSummary[pin.productName]) {
+                    productSummary[pin.productName] = { total: 0, unused: 0 };
+                }
+                productSummary[pin.productName].total++;
+                if (!pin.usado) {
+                    productSummary[pin.productName].unused++;
+                }
             });
         });
-
-        const productNames = Object.keys(productCount);
 
         const summary: ReportSummary = {
             totalKeys,
             usedKeys,
-            unusedKeys,
-            productNames,
-            productCount,
+            unusedKeys: totalKeys - usedKeys,
+            productSummary,
         };
 
         setReportSummary(summary);
-
     } catch (err) {
         setError('Error al cargar los reportes.');
     }
 };
+
 
 const Pines: React.FC<PinesProps> = ({ user }) => {
     const [error, setError] = useState<string | null>(null);
@@ -112,10 +117,20 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
     useEffect(() => {
         if (user) {
             const { handle, role } = user;
-            fetchReports(handle, role, setError, setReportSummary); 
+            fetchReports(handle, role, setError, setReportSummary);
         }
     }, [user]);
 
+    const datax = reportSummary
+        ? [
+            { name: 'Pines usados', value: reportSummary.usedKeys },
+            { name: 'Pines sin usar', value: reportSummary.unusedKeys }
+        ]
+        : [];
+    const getDiamondsText = (productName: string): string => {
+        const match = productName.match(/\d+\sDiamantes/);
+        return match ? match[0] : '';
+    };
     return (
         <div>
             {error && <p>{error}</p>}
@@ -124,33 +139,80 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                     <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
                         TOTAL DE PINES: {reportSummary.totalKeys}
                     </Title>
+                    <Group position="apart">
+                        <div>
+                            <Piec width={400} height={400}>
+                                <Pie
+                                    data={datax}
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={80}
+                                    label
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {datax.map((_, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
 
-                    <Group position="center">
-                        <PieChart
-                            series={[{
-                                data: [
-                                    { id: 0, value: reportSummary.usedKeys, label: 'Pines usados', color: '#ff0000' },
-                                    { id: 1, value: reportSummary.unusedKeys, label: 'Pines sin usar', color: '#0c2a85' },
-                                ],
-                            }]}
-                            width={400}
-                            height={200}
-                        />
+                                </Pie>
+                                <Tooltip />
+                            </Piec>
+
+                            <Badge mr={5} variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Pines no usados</Badge>
+                            <Badge variant="gradient" gradient={{ from: '#ff0000', to: '#ff0000' }}>Pines usados</Badge>
+                        </div>
+
+                        <div>
+                            <Card
+                                mt={15}
+                                mb={45}
+                                mr={10}
+                                ml={10}
+                                style={{
+                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                    transition: "all 0.3s ease",
+                                    transform: "scale(1)",
+                                }}
+                                radius="md"
+                            >
+                                <Title mt={5} ta='center' weight={700} mb="sm" order={2}>
+                                    PINES POR PRODUCTO
+                                </Title>
+                                <ScrollArea type="never">
+                                    {Object.entries(reportSummary.productSummary).map(([productName, data]) => (
+                                        <>
+
+                                            <Card
+                                                mt={15}
+                                                mb={45}
+                                                mr={10}
+                                                ml={10}
+                                                style={{
+                                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                                    transition: "all 0.3s ease",
+                                                    transform: "scale(1)",
+                                                }}
+                                                radius="md"
+                                            >
+                                                <Group position='apart'>
+
+                                                    <Text mt={5} weight={700} mb="sm">
+                                                        {getDiamondsText(productName)}:
+                                                    </Text>
+                                                    <Text mt={5} weight={700} mb="sm">
+                                                        {data.unused}/{data.total}
+                                                    </Text>
+                                                </Group>
+                                                <Progress color='#0c2a85' value={(data.unused / data.total) * 100} label={`${((data.unused / data.total) * 100).toFixed(0)}%`} size="xl" radius="xl" />
+                                            </Card>
+                                        </>
+
+                                    ))}
+                                </ScrollArea>
+                            </Card>
+                        </div>
                     </Group>
-
-                    <Title mt={5} weight={700} mb="sm" order={2}>
-                        PINES POR PRODUCTO
-                    </Title>
-
-                    {reportSummary.productNames.map((productName) => (
-                        <List size="lg" withPadding key={productName}>
-                            <List.Item>
-                                <Text mt={5} weight={700} mb="sm">
-                                    {productName}: {reportSummary.productCount[productName]}
-                                </Text>
-                            </List.Item>
-                        </List>
-                    ))}
                 </div>
             )}
         </div>
