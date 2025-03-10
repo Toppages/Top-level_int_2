@@ -6,7 +6,12 @@ import Registrar from "./Registrar/Index";
 import EditClient from "./EditClient/Index";
 import AllRetiros from "./AllRetiros";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
-import { BarChart } from '@mui/x-charts/BarChart';
+
+import {
+    BarChart as Newcha, Bar,
+    TooltipProps, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    Label
+} from 'recharts';
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
@@ -317,49 +322,83 @@ function Dashboard({ user }: DashboardProps) {
 
     const productNames = Object.keys(salesByProduct).map(extractDiamantes);
     const salesData = Object.values(salesByProduct) as (number | null)[];
-    const [width, setWidth] = useState(window.innerWidth);
+
+    const CustomTooltip = ({ active, payload, label, productNames }: TooltipProps<number, string> & { productNames: string[] }) => {
+        if (active && payload && payload.length) {
+            return (
+                <Card
+                    radius="md"
+                    style={{ backgroundColor: "rgba(255, 255, 255, 0.7)", padding: "10px" }}
+                >
+                    <p style={{ fontSize: "0.875rem", fontWeight: "500" }}>{label}</p>
+                    <p style={{ fontSize: "1.125rem", fontWeight: "600", color: "var(--primary-color)" }}>
+                        {productNames.join(", ")}
+                    </p>
+                </Card>
+            );
+        }
+
+        return null;
+    };
 
     const SalesBarChart = ({ sales, selectedRange }: any) => {
         const chartRef = useRef<HTMLDivElement | null>(null);
         const [chartWidth, setChartWidth] = useState<number>(0);
-    
+
         useEffect(() => {
             if (chartRef.current) {
                 const width = chartRef.current.getBoundingClientRect().width;
                 setChartWidth(width);
             }
-        }, [chartRef.current]); // Recalcular el ancho si el contenedor cambia
-    
-        let data = [];
-        let xAxis = [];
-    
+        }, [chartRef.current]);
+
+        const productNames = Object.keys(salesByProduct).map(extractDiamantes);
+        let formattedData = [];
+
         if (selectedRange === "año") {
-            data = sales.map((item: any) => item.count);
-            xAxis = sales.map((item: any) => item.month);
+            formattedData = sales.map((item: any) => ({
+                name: item.month,
+                uv: item.count
+            }));
         } else if (selectedRange === "semana") {
-            data = sales.map((item: any) => item.count);
-            xAxis = sales.map((item: any) => item.day);
+            formattedData = sales.map((item: any) => ({
+                name: item.day,
+                uv: item.count
+            }));
         } else if (selectedRange === "mes") {
-            data = sales.map((item: any) => item.count);
-            xAxis = sales.map((item: any) => item.week);
+            formattedData = sales.map((item: any) => ({
+                name: item.week,
+                uv: item.count
+            }));
         } else {
-            data = salesData;
-            xAxis = productNames;
+            formattedData = salesData.map((count: any, index: number) => ({
+                name: productNames[index],
+                uv: count
+            }));
         }
-    
+
         return (
-            <div ref={chartRef} style={{ width: '100%' }}>
+            <div ref={chartRef}>
                 {chartWidth > 0 && (
-                    <BarChart
-                        width={chartWidth} // Usamos el ancho calculado en píxeles
-                        height={300}
-                        series={[{ data, id: 'salesId', color: '#0c2a85' }]}
-                        xAxis={[{ data: xAxis, scaleType: 'band' }]}
-                    />
+                    <ResponsiveContainer width="100%" height={300}>
+                        <Newcha data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                            <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} />
+                            <YAxis
+                                tick={{ fontSize: 12 }}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(value) => `${value} USD`}
+                            />
+                            <Tooltip content={<CustomTooltip productNames={productNames} />} />
+                            <Bar dataKey="uv" radius={[4, 4, 0, 0]} fill="#0c2a85" />
+                        </Newcha>
+                    </ResponsiveContainer>
                 )}
             </div>
         );
     };
+
 
     const SalesBreakdown = ({ sales, selectedRange }: any) => {
         let breakdown = [];
@@ -432,11 +471,11 @@ function Dashboard({ user }: DashboardProps) {
 
                                 <Text mt={5} weight={700} mb="sm">
 
-                                    {productName} 
+                                    {productName}
                                 </Text>
                                 <Text c='green' mt={5} weight={700} mb="sm">
 
-                                  {(totalPrice as number).toFixed(2)} USD
+                                    {(totalPrice as number).toFixed(2)} USD
                                 </Text>
                             </Group>
                         </Card>
@@ -506,6 +545,7 @@ function Dashboard({ user }: DashboardProps) {
                     </Tabs.List>
 
                     <Tabs.Panel value="control" pt="xs">
+
                         {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
 
                         {(userRole === "master" || userRole === "admin") && (
@@ -530,16 +570,11 @@ function Dashboard({ user }: DashboardProps) {
                                 {sales.length > 0 ? (
                                     <div>
 
-                                        <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                            TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
-                                        </Title>
-
-                                        <Title mt={5} weight={700} mb="sm" order={4}>Monto total de retiros {totalPrice} USD</Title>
                                         <Card
                                             mt={15}
                                             mb={45}
-                                            mr={15}
-                                            ml={15}
+                                            mr={10}
+                                            ml={10}
                                             style={{
                                                 boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                                                 transition: "all 0.3s ease",
@@ -547,11 +582,15 @@ function Dashboard({ user }: DashboardProps) {
                                             }}
                                             radius="md"
                                         >
-                                               <ScrollArea style={{ width:width }} type="never">
+                                            <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
+                                                TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
+                                            </Title>
+                                            <Title mt={5} weight={700} mb='md' order={4}>Monto total de retiros {totalPrice} USD</Title>
 
                                             <SalesBarChart sales={sales} selectedRange={selectedRange} />
-                                               </ScrollArea>
+
                                         </Card>
+
                                         <Card shadow="sm" p="lg" radius="md" withBorder>
                                             <Badge variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Gastos por Producto </Badge>
                                             <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
@@ -559,6 +598,7 @@ function Dashboard({ user }: DashboardProps) {
                                         </Card>
 
                                         <SalesBreakdown sales={sales} selectedRange={selectedRange} />
+
                                     </div>
                                 ) : (
                                     <p>{error ? error : 'No hay Retiros disponibles.'}</p>
@@ -569,6 +609,7 @@ function Dashboard({ user }: DashboardProps) {
 
                     <Tabs.Panel value="Pines" pt="xs">
                         <Pines user={user} />
+
                     </Tabs.Panel>
 
 
