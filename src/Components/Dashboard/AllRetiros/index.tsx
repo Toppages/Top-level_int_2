@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Modal, Button, Group, Select, Title, List, Text, Card, ScrollArea } from '@mantine/core';
+import { useState, useEffect,useRef } from 'react';
+import { Modal, Button, Group, Select, Title, Text, Card, ScrollArea } from '@mantine/core';
 import axios from 'axios';
-import { BarChart } from '@mui/x-charts/BarChart';
+import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
 import { IconCalendarWeek } from '@tabler/icons-react';
 
@@ -9,7 +9,6 @@ function AllRetiros() {
     const [opened, setOpened] = useState(false);
     const [users, setUsers] = useState<{ value: string; label: string; group: string }[]>([]);
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
-    const [userRole, setUserRole] = useState<string | null>(null);
     const [sales, setSales] = useState<any[]>([]);
     const [selectedRange, setSelectedRange] = useState<string>("general");
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -52,7 +51,7 @@ function AllRetiros() {
         setError(null);
 
         if (selectedUser) {
-            fetchSales(selectedUser, userRole || "");
+            fetchSales(selectedUser || "");
         }
     }, [selectedUser, selectedRange, selectedDate, selectedrDate]);
 
@@ -84,7 +83,7 @@ function AllRetiros() {
         return weekSales;
     };
 
-    const fetchSales = async (userHandle: string, userRole: string) => {
+    const fetchSales = async (userHandle: string) => {
         const getTotalPriceByProductName = (sales: any[]) => {
             return sales.reduce((acc: Record<string, number>, sale: any) => {
                 const productName = sale.productName;
@@ -108,7 +107,7 @@ function AllRetiros() {
             }
             if (filteredSales.length === 0) {
                 setSales([]);
-                setError('No se encontraron ventas para este usuario');  // Establecemos el mensaje de error.
+                setError('No se encontraron ventas para este usuario'); 
                 return;
             }
             const formatDate = (dateString: string) => {
@@ -296,13 +295,20 @@ function AllRetiros() {
             <div>
                 {Object.entries(productTotals).map(([productName, totalPrice]) => (
                     <div key={productName}>
-                        <List size="lg" withPadding>
-                            <List.Item>
+                        <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
+                            <Group position="apart">
+
                                 <Text mt={5} weight={700} mb="sm">
-                                    {productName} {(totalPrice as number).toFixed(2)} USD
+
+                                    {productName}
                                 </Text>
-                            </List.Item>
-                        </List>
+                                <Text c='green' mt={5} weight={700} mb="sm">
+
+                                    {(totalPrice as number).toFixed(2)} USD
+                                </Text>
+                            </Group>
+                        </Card>
+
                     </div>
                 ))}
             </div>
@@ -349,38 +355,88 @@ function AllRetiros() {
 
         if (selectedRange === "semana") {
             breakdown = sales.map((dayData: any) => (
-                <div key={dayData.day}>
-                    <List size="lg" withPadding>
-                        <List.Item>
-                            <Text mt={5} weight={700} mb="sm">
-                                <strong>{dayData.day}:</strong> {dayData.totalPrice.toFixed(2)} USD
-                            </Text>
-                        </List.Item>
-                    </List>
-                </div>
+                <>
+
+                    <div key={dayData.day}>
+                        <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
+                            <Group position="apart">
+
+                                <Text mt={5} weight={700} mb="sm">
+                                    <strong>{dayData.day}:</strong>
+                                </Text>
+                                <Text c='green' mt={5} weight={700} mb="sm">
+
+                                    {dayData.totalPrice.toFixed(2)} USD
+                                </Text>
+                            </Group>
+                        </Card>
+
+
+                    </div>
+                </>
             ));
         } else if (selectedRange === "mes") {
-            breakdown = sales.map((weekData: any) => (
-                <div key={weekData.week}>
-                    <strong>{weekData.week}:</strong> {weekData.totalPrice.toFixed(2)} USD
-                </div>
-            ));
+            return (
+                <>
+                    <Title mt={5} ta="center" weight={700} mb="sm" order={3}>
+                        Montos por semana
+                    </Title>
+                    {sales.map((weekData: any) => (
+                        <div key={weekData.week}>
+                            <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
+                                <Group position="apart">
+
+                                    <Text mt={5} weight={700} mb="sm">
+                                        Semana del <strong>{weekData.week}:</strong>
+                                    </Text>
+                                    <Text c='green' mt={5} weight={700} mb="sm">
+
+                                        {weekData.totalPrice.toFixed(2)} USD
+                                    </Text>
+                                </Group>
+                            </Card>
+
+                        </div>
+                    ))}
+                </>
+            );
         } else if (selectedRange === "año") {
-            breakdown = sales.map((monthData: any) => (
-                <div key={monthData.month}>
-                    <strong>{monthData.month}:</strong> {monthData.totalPrice.toFixed(2)} USD
-                </div>
-            ));
+            return (
+                <>
+                    <Title mt={5} ta="center" weight={700} mb="sm" order={3}>
+                        Montos por mes
+                    </Title>
+                    {sales.map((monthData: any) => (
+                        <Card key={monthData.month} mb={15} shadow="sm" p="lg" radius="md" withBorder>
+                            <Group position="apart">
+                                <Text mt={5} weight={700} mb="sm">
+                                    <strong>{monthData.month}:</strong>
+                                </Text>
+                                <Text c="green" mt={5} weight={700} mb="sm">
+                                    {monthData.totalPrice.toFixed(2)} USD
+                                </Text>
+                            </Group>
+                        </Card>
+                    ))}
+                </>
+            );
         } else if (selectedRange === "rangoDia") {
             breakdown = sales.map((sale: any) => (
                 <div key={sale.id}>
-                    <List size="lg" withPadding>
-                        <List.Item>
+                    <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
+
+                        <Group position="apart">
+
                             <Text mt={5} weight={700} mb="sm">
                                 <strong>{sale.created_at ? new Date(sale.created_at).toLocaleDateString() : "Fecha no disponible"}:</strong> {sale.totalPrice.toFixed(2)} USD
                             </Text>
-                        </List.Item>
-                    </List>
+                            <Text c='green' mt={5} weight={700} mb="sm">
+
+                                {sale.totalPrice.toFixed(2)} USD
+                            </Text>
+                        </Group>
+                    </Card>
+
                 </div>
             ));
         }
@@ -402,30 +458,59 @@ function AllRetiros() {
     const salesData = Object.values(salesByProduct) as (number | null)[];
 
     const SalesBarChart = ({ sales, selectedRange }: any) => {
-        let data = [];
-        let xAxis = [];
+        const chartRef = useRef<HTMLDivElement | null>(null);
+        const [chartWidth, setChartWidth] = useState<number>(0);
+
+        useEffect(() => {
+            if (chartRef.current) {
+                const width = chartRef.current.getBoundingClientRect().width;
+                setChartWidth(width);
+            }
+        }, [chartRef.current]);
+
+        let formattedData = [];
 
         if (selectedRange === "año") {
-            data = sales.map((item: any) => item.count);
-            xAxis = sales.map((item: any) => item.month);
+            formattedData = sales.map((item: any) => ({
+                name: item.month,
+                uv: item.count
+            }));
         } else if (selectedRange === "semana") {
-            data = sales.map((item: any) => item.count);
-            xAxis = sales.map((item: any) => item.day);
+            formattedData = sales.map((item: any) => ({
+                name: item.day,
+                uv: item.count
+            }));
         } else if (selectedRange === "mes") {
-            data = sales.map((item: any) => item.count);
-            xAxis = sales.map((item: any) => item.week);
+            formattedData = sales.map((item: any) => ({
+                name: item.week,
+                uv: item.count
+            }));
         } else {
-            data = salesData;
-            xAxis = productNames;
+            formattedData = salesData.map((count: any, index: number) => ({
+                name: productNames[index],
+                uv: count
+            }));
         }
 
         return (
-            <BarChart
-                width={900}
-                height={300}
-                series={[{ data, id: 'salesId', color: '#0c2a85' }]}
-                xAxis={[{ data: xAxis, scaleType: 'band' }]}
-            />
+            <div ref={chartRef}>
+                {chartWidth > 0 && (
+                    <ResponsiveContainer width="100%" height={300}>
+                        <Newcha data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                            <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} />
+                            <YAxis
+                                tick={{ fontSize: 12 }}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(value) => `${value} USD`}
+                            />
+                            <Tooltip />
+                            <Bar dataKey="uv" radius={[4, 4, 0, 0]} fill="#0c2a85" />
+                        </Newcha>
+                    </ResponsiveContainer>
+                )}
+            </div>
         );
     };
     return (

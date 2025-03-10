@@ -141,7 +141,7 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                     </Title>
                     <Group position="apart">
                         <div>
-                            <Piec width={400} height={400}>
+                            <Piec width={400} height={200}>
                                 <Pie
                                     data={datax}
                                     cx="50%"
@@ -179,7 +179,7 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                                 <Title mt={5} ta='center' weight={700} mb="sm" order={2}>
                                     PINES POR PRODUCTO
                                 </Title>
-                                <ScrollArea type="never">
+                                <ScrollArea style={{ height: 250 }} type="never">
                                     {Object.entries(reportSummary.productSummary).map(([productName, data]) => (
                                         <>
 

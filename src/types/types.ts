@@ -17,7 +17,7 @@ export interface UserData {
     handle: string;
     name: string;
     email: string;
-    role: "admin" | "vendedor" | "cliente";
+    role: "admin" | "vendedor" | "cliente" | "master";
     saldo: number;
     rango: string;
 }

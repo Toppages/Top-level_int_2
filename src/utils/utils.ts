@@ -162,6 +162,21 @@ export const fetchUserData = async (
     }
   }
 };
+export const fetchTotalSaldos = async (
+  setTotalSaldos: React.Dispatch<React.SetStateAction<number | null>>,
+) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const response = await axios.get('http://localhost:4000/total-saldos', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTotalSaldos(response.data.totalSaldo); 
+    } catch (error) {
+      toast.error('Error al obtener la suma de saldos');
+    }
+  }
+};
 
 export const handleLogout = (navigate: Function) => {
   localStorage.removeItem('token');

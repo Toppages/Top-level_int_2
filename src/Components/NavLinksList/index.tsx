@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { UserData, NavLinksProps } from "../../types/types";
-import { fetchUserData, handleLogout } from "../../utils/utils";
-import { Stack, Image, Divider, Title, NavLink } from "@mantine/core";
+import { fetchTotalSaldos, fetchUserData, handleLogout } from "../../utils/utils";
+import { Stack, Image, Divider, Title, NavLink, Group } from "@mantine/core";
 import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
 
 const data = [
     { icon: IconGauge, label: 'CONTROL DE RETIROS' },
-    { icon: IconUsers,  label: 'COMPRA DE PINES' },
+    { icon: IconUsers, label: 'COMPRA DE PINES' },
     { icon: IconReport, label: 'REPORTES DE RETIROS' },
     { icon: IconWallet, label: 'BALANCE' },
     { icon: IconArchive, label: 'INVENTARIO' },
@@ -25,20 +25,22 @@ const getSaldoColor = (rango: string) => {
         case 'plata':
             return '#C0C0C0'; 
         case 'bronce':
-            return '#cd7f32'; 
+            return '#cd7f32';
         default:
-            return '#000000'; 
+            return '#000000';
     }
 };
 
 function NavLinks({ active, setActiveLink }: NavLinksProps) {
     const [userData, setUserData] = useState<UserData | null>(null);
+    const [totalSaldos, setTotalSaldos] = useState<number | null>(null);
 
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width: 1000px)");
 
     useEffect(() => {
-        fetchUserData(setUserData); 
+        fetchUserData(setUserData);
+        fetchTotalSaldos(setTotalSaldos);
         const intervalId = setInterval(() => fetchUserData(setUserData), 5000);
         return () => clearInterval(intervalId);
     }, []);
@@ -61,9 +63,29 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 ))}
             </div>
             <div>
-                <Title ta="center" c={userData ? getSaldoColor(userData.rango) : '#000000'} order={3}>
-                    {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
-                </Title>
+                {userData && userData.role === 'master' && (
+                    <>
+                        <Title ta="center" c='#0c2a85' order={6}>
+                            Saldo Correracional: {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
+                        </Title>
+                        <Title ta="center" c={totalSaldos && userData ? '#0c2a85' : '#000000'} order={6}>
+                            Saldo De trabajo: {totalSaldos && userData ? `${userData.saldo - totalSaldos} USD` : 'Suma de saldos no disponible'}
+                        </Title>
+                    </>
+                )}
+
+                {!userData || userData.role !== 'master' && (
+                    <>
+                    <Group ml={5} mr={5} position='apart'>
+                    <Title ta="center" c='#0c2a85' order={5}>
+                        Saldo:
+                    </Title>
+                    <Title ta="center" c={userData ? getSaldoColor(userData.rango) : '#000000'} order={6}>
+                       {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
+                    </Title>
+                    </Group>
+                    </>
+                )}
 
                 <Divider />
                 <NavLink
@@ -90,7 +112,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 <NavLink
                     mt={15}
                     label="Cerrar Sesión"
-                    onClick={() => handleLogout(navigate)} 
+                    onClick={() => handleLogout(navigate)}
                     color="indigo"
                     icon={<IconX size={16} stroke={1.5} />}
                     active
