@@ -89,7 +89,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
 
                 <Divider />
                 <NavLink
-                    mt={15}
+                    mt={5}
                     label={userData ? userData.email : 'User@gmail.com'}
                     color="indigo"
                     icon={<IconUserFilled size={16} stroke={1.5} />}
@@ -110,7 +110,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                     }}
                 />
                 <NavLink
-                    mt={15}
+                    mt={5}
                     label="Cerrar Sesión"
                     onClick={() => handleLogout(navigate)}
                     color="indigo"

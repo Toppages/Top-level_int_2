@@ -20,7 +20,7 @@ interface EditClientProps {
     onBalanceUpdate: (newBalance: number) => void;
 }
 
-const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
+const EditAdmins = ({ user, onBalanceUpdate }: EditClientProps) => {
     const [opened, setOpened] = useState(false);
     const [clients, setClients] = useState<{ value: string, label: string }[]>([]);
     const { handleSubmit, reset, setValue, watch } = useForm<AdminBalanceFormData>({
@@ -31,7 +31,7 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
     const clientId = watch("clientId", "");
 
     useEffect(() => {
-        axios.get<Client[]>('http://localhost:4000/users/clients')
+        axios.get<Client[]>('http://localhost:4000/users/admins')
             .then(({ data }) => {
                 setClients(data.map(client => ({
                     value: client._id,
@@ -48,7 +48,7 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
 
     const onSubmit = async (data: AdminBalanceFormData) => {
         if (!data.clientId) {
-            toast.error("Por favor, selecciona un cliente.");
+            toast.error("Por favor, selecciona un Administrador.");
             return;
         }
 
@@ -85,8 +85,8 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Stack>
                         <Select
-                            label="Selecciona un cliente"
-                            placeholder="Elige un cliente"
+                            label="Selecciona un Administrador"
+                            placeholder="Elige un Administrador"
                             data={clients}
                             onChange={(value) => setValue("clientId", value)}
                             value={clientId}
@@ -108,10 +108,10 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
                 </form>
             </Modal>
             <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
-                Añadir Saldo Cliente
+                Añadir Saldo a los administradores
             </Button>
         </>
     );
 };
 
-export default EditClient;
+export default EditAdmins;

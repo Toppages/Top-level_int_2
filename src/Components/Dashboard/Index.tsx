@@ -3,6 +3,7 @@ import axios from "axios";
 import AdminBR from "./AdminBR";
 import ManagePro from "./ManagePro";
 import Registrar from "./Registrar/Index";
+import EditAdmins from "./EditAdmins/Index";
 import EditClient from "./EditClient/Index";
 import AllRetiros from "./AllRetiros";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
@@ -564,6 +565,7 @@ function Dashboard({ user }: DashboardProps) {
                                 <AdminBR />
                                 <ManagePro />
                                 <AllRetiros />
+                                <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
                             </Group>
                         )}
                     </Tabs.Panel>

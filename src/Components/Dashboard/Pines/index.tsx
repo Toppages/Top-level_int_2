@@ -179,13 +179,13 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                                 <Title mt={5} ta='center' weight={700} mb="sm" order={2}>
                                     PINES POR PRODUCTO
                                 </Title>
-                                <ScrollArea style={{ height: 250 }} type="never">
+                                <ScrollArea style={{ height: 230 }} type="never">
                                     {Object.entries(reportSummary.productSummary).map(([productName, data]) => (
                                         <>
 
                                             <Card
-                                                mt={15}
-                                                mb={45}
+                                                mt={10}
+                                                mb={10}
                                                 mr={10}
                                                 ml={10}
                                                 style={{
