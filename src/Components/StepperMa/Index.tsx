@@ -17,7 +17,7 @@ import CryptoJS from 'crypto-js';
 import moment from 'moment';
 import { useMediaQuery } from '@mantine/hooks';
 import { Product } from '../../types/types';
-import { fetchUserData } from "../../utils/utils"; 
+import { fetchUserData } from "../../utils/utils";
 
 
 interface StepperMaProps {
@@ -35,20 +35,20 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
     const [capturedPins, setCapturedPins] = useState<string[]>([]);
     const isMobile = useMediaQuery('(max-width: 1000px)');
-    const [userData, setUserData] = useState(user);  
+    const [userData, setUserData] = useState(user);
     const [copied, setCopied] = useState(false);
 
     const copyPin = (pin: string) => {
         navigator.clipboard.writeText(pin);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000); 
+        setTimeout(() => setCopied(false), 2000);
     };
 
     const copyAllPins = () => {
-        const pinsText = capturedPins.join('\n'); 
+        const pinsText = capturedPins.join('\n');
         navigator.clipboard.writeText(pinsText);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000); 
+        setTimeout(() => setCopied(false), 2000);
     };
     const [, setCaptureId] = useState<string | null>(null);
     useEffect(() => {
@@ -59,8 +59,8 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
     useEffect(() => {
         fetchUserData(setUserData);
-        const intervalId = setInterval(() => fetchUserData(setUserData), 5000);  
-        return () => clearInterval(intervalId);  
+        const intervalId = setInterval(() => fetchUserData(setUserData), 5000);
+        return () => clearInterval(intervalId);
     }, []);
     const getPriceForUser = (product: Product, user: { rango: string } | null) => {
         const userRango = user ? user.rango : 'default';
@@ -262,7 +262,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     };
     const handleModalClose = () => {
         onClose();
-        window.location.reload(); 
+        window.location.reload();
     };
     return (
         <Modal opened={opened} onClose={handleModalClose} withCloseButton={false} size="xl">
@@ -380,10 +380,15 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                             <Group position="center" mt="xl">
                                 <Button
                                     onClick={handleAuthorize}
-                                    style={{ background: '#0c2a85' }}
+                                    style={{
+                                        background: (userData?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 'gray' : '#0c2a85',
+                                        cursor: (userData?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 'not-allowed' : 'pointer',
+                                        opacity: (userData?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 0.6 : 1,
+                                    }}
                                     loading={isAuthorizing}
                                     disabled={(userData?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity)}
                                 >
+
                                     {isAuthorizing ? 'Generando...' : 'Generar'}
                                 </Button>
                             </Group>
@@ -393,55 +398,55 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                 </Stepper.Step>
 
                 <Stepper.Step label="Finalización" description="Detalles de la compra">
-            <div>
-                <Title order={3} align="center">Detalles de los PINs Capturados</Title>
-                <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
-                {capturedPins.length > 0 ? (
-                    <>
-                        <Table striped highlightOnHover>
-                            <thead>
-                                <tr>
-                                    <th>Pins</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {capturedPins.map((pin, index) => (
-                                    <tr key={index}>
-                                        <td>{pin}</td>
-                                        <td>
-                                            <ActionIcon
-                                                style={{ background: '#0c2a85', color: 'white' }}
-                                                radius="md"
-                                                size="xl"
-                                                color="indigo"
-                                                variant="filled"
-                                                onClick={() => copyPin(pin)}
-                                            >
-                                                <IconCopy size={30} />
-                                            </ActionIcon>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                        {copied && <Text align="center" color="green" size="sm">¡PIN copiado al portapapeles!</Text>}
-                    </>
-                ) : (
-                    <Text>No se han capturado PINs aún.</Text>
-                )}
-                <Group position="center" mt="xl">
-                    <Button onClick={copyAllPins} style={{ background: '#0c2a85' }}>
-                        Copiar todos los PINs
-                    </Button>
-                </Group>
-            </div>
-            <Group position="center" mt="xl">
-                <Button onClick={handleFinishClick} style={{ background: '#0c2a85' }}>
-                    Finalizar
-                </Button>
-            </Group>
-        </Stepper.Step>
+                    <div>
+                        <Title order={3} align="center">Detalles de los PINs Capturados</Title>
+                        <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
+                        {capturedPins.length > 0 ? (
+                            <>
+                                <Table striped highlightOnHover>
+                                    <thead>
+                                        <tr>
+                                            <th>Pins</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {capturedPins.map((pin, index) => (
+                                            <tr key={index}>
+                                                <td>{pin}</td>
+                                                <td>
+                                                    <ActionIcon
+                                                        style={{ background: '#0c2a85', color: 'white' }}
+                                                        radius="md"
+                                                        size="xl"
+                                                        color="indigo"
+                                                        variant="filled"
+                                                        onClick={() => copyPin(pin)}
+                                                    >
+                                                        <IconCopy size={30} />
+                                                    </ActionIcon>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                                {copied && <Text align="center" color="green" size="sm">¡PIN copiado al portapapeles!</Text>}
+                            </>
+                        ) : (
+                            <Text>No se han capturado PINs aún.</Text>
+                        )}
+                        <Group position="center" mt="xl">
+                            <Button onClick={copyAllPins} style={{ background: '#0c2a85' }}>
+                                Copiar todos los PINs
+                            </Button>
+                        </Group>
+                    </div>
+                    <Group position="center" mt="xl">
+                        <Button onClick={handleFinishClick} style={{ background: '#0c2a85' }}>
+                            Finalizar
+                        </Button>
+                    </Group>
+                </Stepper.Step>
             </Stepper>
         </Modal>
     );

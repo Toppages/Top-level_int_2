@@ -101,7 +101,15 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
                         />
                     </Stack>
                     <Group position="center" mt="md">
-                        <Button style={{ background: '#0c2a85' }}  type="submit" disabled={!clientId || saldo <= 0}>
+                    <Button
+                            style={{
+                                background: !clientId || saldo <= 0 ? 'gray' : '#0c2a85',
+                                cursor: !clientId || saldo <= 0 ? 'not-allowed' : 'pointer',
+                                opacity: !clientId || saldo <= 0 ? 0.6 : 1,
+                            }}
+                            type="submit"
+                            disabled={!clientId || saldo <= 0}
+                        >
                             Sumar Saldo
                         </Button>
                     </Group>

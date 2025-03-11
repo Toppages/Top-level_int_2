@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import {
@@ -26,7 +26,14 @@ interface UserFormData {
     email: string;
     role: "admin" | "vendedor" | "cliente" | "master";
     saldo: number;
-    rango?: "ultrap" | "diamante" | "oro" | "bronce"; // Se añade `rango` opcional
+    rango?: "ultrap" | "plata" | "oro" | "bronce";
+}
+
+interface Client {
+    handle: string;
+    _id: string;
+    name: string;
+    email: string;
 }
 
 function PasswordRequirement({ meets, label }: { meets: boolean; label: string }) {
@@ -63,6 +70,20 @@ function getStrength(password: string) {
 function Registrar() {
     const [opened, setOpened] = useState(false);
     const [popoverOpened, setPopoverOpened] = useState(false);
+    const [admins, setadmins] = useState<{ value: string, label: string }[]>([]);
+    const [selectedAdmin, setSelectedAdmin] = useState<string | null>(null);
+
+    useEffect(() => {
+        axios.get<Client[]>('http://localhost:4000/users/admins')
+            .then(({ data }) => {
+                setadmins(data.map(client => ({
+                    value: client.handle,  
+                    label: `${client.name} (${client.email})`,
+                })));
+            })
+            .catch(error => console.error('Error fetching admins:', error));
+    }, []);
+    
 
     const {
         register,
@@ -80,19 +101,18 @@ function Registrar() {
             email: "",
             role: "cliente",
             saldo: 0,
-            rango: "diamante",
+            rango: "bronce",
         },
     });
 
     const onSubmit = async (data: UserFormData) => {
         try {
-
-            if (['admin', 'vendedor', 'master'].includes(data.role)) {
+            if (["admin", "vendedor", "master"].includes(data.role)) {
                 data.rango = "ultrap";
-            } else if (data.role === 'cliente' && !data.rango) {
-                data.rango = "diamante"; 
+            } else if (data.role === "cliente" && !data.rango) {
+                data.rango = "bronce";
             }
-
+    
             const response = await axios.post(`${import.meta.env.VITE_API_Url}/auth/register`, {
                 handle: data.handle,
                 name: data.name,
@@ -101,17 +121,18 @@ function Registrar() {
                 role: data.role,
                 saldo: data.saldo,
                 rango: data.rango,
+                admin: ["vendedor", "cliente"].includes(data.role) ? selectedAdmin : undefined, // Debe ser el handle
             });
-
-            toast.success('Registro exitoso: ' + response.data.message || 'Usuario registrado correctamente');
-
+    
+            toast.success("Registro exitoso: " + (response.data.message || "Usuario registrado correctamente"));
+    
             setOpened(false);
             reset();
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
-                toast.error('Error al registrar: ' + (error.response?.data?.message || error.message));
+                toast.error("Error al registrar: " + (error.response?.data?.message || error.message));
             } else {
-                toast.error('Error desconocido: ' + (error instanceof Error ? error.message : 'No se pudo determinar el error.'));
+                toast.error("Error desconocido: " + (error instanceof Error ? error.message : "No se pudo determinar el error."));
             }
         }
     };
@@ -166,46 +187,65 @@ function Registrar() {
                             error={errors.email?.message}
                         />
 
-                        <Select
-                            label="Rol"
-                            radius='md'
-                            {...register("role", { required: "El rol es obligatorio" })}
-                            data={[
-                                { value: "admin", label: "Administrador" },
-                                { value: "vendedor", label: "Vendedor" },
-                                { value: "cliente", label: "Cliente" },
-                                { value: "master", label: "Master" },
-                            ]}
-                            onChange={(value) => {
-                                const selectedRole = value as "admin" | "vendedor" | "cliente" | "master";
-                                setValue("role", selectedRole); 
-                                if (['admin', 'vendedor', 'master'].includes(selectedRole)) {
-                                    setValue("rango", "ultrap"); 
-                                } else {
-                                    setValue("rango", "diamante");
-                                }
-                            }}
-                            error={errors.role?.message}
-                        />
+<Select
+    label="Rol"
+    radius="md"
+    {...register("role", { required: "El rol es obligatorio" })}
+    data={[
+        { value: "admin", label: "Administrador" },
+        { value: "vendedor", label: "Vendedor" },
+        { value: "cliente", label: "Cliente" },
+        { value: "master", label: "Master" },
+    ]}
+    onChange={(value) => {
+        const selectedRole = value as "admin" | "vendedor" | "cliente" | "master";
+        setValue("role", selectedRole);
+        if (["admin", "vendedor", "master"].includes(selectedRole)) {
+            setValue("rango", "ultrap");
+        } else {
+            setValue("rango", "bronce");
+        }
+    }}
+    error={errors.role?.message}
+/>
 
                         {watch('role') === 'cliente' && (
+                            <>
                             <Select
                                 label="Rango"
                                 radius='md'
                                 {...register("rango", { required: "El rango es obligatorio para el rol cliente" })}
                                 data={[
-                                    { value: "diamante", label: "Diamante" },
                                     { value: "oro", label: "Oro" },
+                                    { value: "plata", label: "Plata" },
                                     { value: "bronce", label: "Bronce" },
                                 ]}
                                 error={errors.rango?.message}
                                 onChange={(value) => {
-                                    const selectedRango = value as "ultrap" | "diamante" | "oro" | "bronce"; 
+                                    const selectedRango = value as "ultrap" | "plata" | "oro" | "bronce"; 
                                     setValue("rango", selectedRango);
                                 }}
                             />
+                            </>
+                            
                         )}
+                      {["vendedor", "cliente"].includes(watch("role")) && (
+                       <Select
+                       label="Selecciona un Admin"
+                       placeholder="Elige un Admin"
+                       data={admins}
+                       onChange={(value) => {
+                           if (value) {
+                               setSelectedAdmin(value);
+                               console.log("Admin seleccionado:", value);
+                           } else {
+                               console.log("No se seleccionó ningún admin.");
+                           }
+                       }}
+                   />
+                   
 
+)}
 
                         <NumberInput
                             radius='md'
