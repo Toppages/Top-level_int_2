@@ -11,7 +11,7 @@ import UserCountsDisplay from "./UserCountsDisplay/Index";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
-import { Group, ScrollArea, Select, Tabs, Text, Title, Card, Badge } from "@mantine/core";
+import { Group, ScrollArea, Select, Tabs, Text, Title, Card, Badge, Loader } from "@mantine/core";
 import { IconCalendarWeek, IconTicket, IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
 
@@ -57,15 +57,16 @@ function Dashboard({ user }: DashboardProps) {
                 .then((res) => res.json())
                 .then((data) => {
                     setUserRole(data.role);
-                    fetchSales(data.handle, data.role);
                 })
                 .catch((err) => console.error("Error al obtener el usuario:", err));
         }
-    }, [user, selectedRange, selectedDate]);
+    }, [user]);
 
     useEffect(() => {
-        fetchSales(user?.handle || "", userRole || "");
-    }, [selectedRange, selectedrDate]);
+        if (user?.handle && userRole) {
+            fetchSales(user.handle, userRole);
+        }
+    }, [user?.handle, userRole, selectedRange, selectedDate, selectedrDate]);
 
 
     const getSalesByDayOfWeek = (sales: any[]) => {
@@ -359,18 +360,23 @@ function Dashboard({ user }: DashboardProps) {
             <div ref={chartRef}>
                 {chartWidth > 0 && (
                     <ResponsiveContainer width="100%" height={300}>
-                        <Newcha data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                            <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} />
-                            <YAxis
-                                tick={{ fontSize: 12 }}
-                                tickLine={false}
-                                axisLine={false}
-                                tickFormatter={(value) => `${value} USD`}
-                            />
-                            <Tooltip />
-                            <Bar dataKey="uv" radius={[4, 4, 0, 0]} fill="#0c2a85" />
-                        </Newcha>
+                        {!formattedData || formattedData.length === 0 ? (
+                            <Loader color="indigo" variant="bars" />
+                        ) : (
+                            <Newcha data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                                <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} />
+                                <YAxis
+                                    tick={{ fontSize: 12 }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(value) => `${value} USD`}
+                                />
+                                <Tooltip />
+                                <Bar dataKey="uv" radius={[4, 4, 0, 0]} fill="#0c2a85" />
+                            </Newcha>
+                        )}
+
                     </ResponsiveContainer>
                 )}
             </div>
@@ -567,7 +573,7 @@ function Dashboard({ user }: DashboardProps) {
                                 <ManagePro />
                                 <AllRetiros />
                                 <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
-                                <AdmincargoReports  user={user}/>
+                                <AdmincargoReports user={user} />
                             </Group>
                         )}
                     </Tabs.Panel>
@@ -603,8 +609,8 @@ function Dashboard({ user }: DashboardProps) {
                                             </Title>
 
 
-                                                <SalesBarChart sales={sales} selectedRange={selectedRange} />
-                                       
+                                            <SalesBarChart sales={sales} selectedRange={selectedRange} />
+
 
                                         </Card>
 

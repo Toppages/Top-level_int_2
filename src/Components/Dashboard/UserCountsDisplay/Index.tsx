@@ -1,4 +1,3 @@
-// UserCountsDisplay.tsx
 import React, { useEffect, useState } from 'react';
 import { Card, Grid, Title } from '@mantine/core';
 

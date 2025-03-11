@@ -5,7 +5,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { UserData, NavLinksProps } from "../../types/types";
 import { fetchTotalSaldos, fetchUserData, handleLogout } from "../../utils/utils";
-import { Stack, Image, Divider, Title, NavLink, Group } from "@mantine/core";
+import { Stack, Image, Divider, Title, NavLink, Group, Loader } from "@mantine/core";
 import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
 
 const data = [
@@ -68,9 +68,13 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                         <Title ta="center" c='#0c2a85' order={6}>
                             Saldo Correracional: {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
                         </Title>
-                        <Title ta="center" c={totalSaldos && userData ? '#0c2a85' : '#000000'} order={6}>
-  Saldo De trabajo: {totalSaldos && userData ? `${(userData.saldo - totalSaldos).toFixed(2)} USD` : 'Suma de saldos no disponible'}
-</Title>
+                        {!(totalSaldos && userData) ? (
+  <Loader color="indigo" variant="bars" />
+) : (
+  <Title ta="center" c="#0c2a85" order={6}>
+    Saldo De trabajo: {`${(userData.saldo - totalSaldos).toFixed(2)} USD`}
+  </Title>
+)}
 
                     </>
                 )}

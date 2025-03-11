@@ -148,7 +148,7 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                             width: '100%',
                             display: 'flex',
                             flexDirection: isMobile ? 'column' : 'row',
-                            gap: '1rem', // Espaciado entre elementos
+                            gap: '1rem', 
                         }}
                     >
                         <div>

@@ -77,10 +77,10 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
     const exportToExcel = (data: any[]) => {
         const filteredData = data.map((transaction) => {
             const {
-                amount,          // Excluimos estas columnas
-                previousBalance, // Excluimos estas columnas
-                type,            // Excluimos estas columnas
-                transactionId,   // Excluimos estas columnas
+                amount,         
+                previousBalance, 
+                type,            
+                transactionId,  
                 _id,
                 userId,
                 created_at,
