@@ -6,7 +6,7 @@ export const fetchUserRole = async (
   setUserRole: React.Dispatch<React.SetStateAction<string | null>>,
 ) => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_Url}/user`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/user`, {
       method: "GET",
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
@@ -47,8 +47,8 @@ export const fetchReports = async (
   
   try {
     const url = userRole === 'master'
-    ? `${import.meta.env.VITE_API_Url}/sales`
-    : `${import.meta.env.VITE_API_Url}/sales/user/${userHandle}`;
+    ? `${import.meta.env.VITE_API_URL}/sales`
+    : `${import.meta.env.VITE_API_URL}/sales/user/${userHandle}`;
     
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -79,9 +79,9 @@ export const fetchTransactions = async (
   try {
     let url = '';
     if (userRole === 'master') {
-      url = `${import.meta.env.VITE_API_Url}/transactions`;
+      url = `${import.meta.env.VITE_API_URL}/transactions`;
     } else {
-      url = `${import.meta.env.VITE_API_Url}/transactions/${userHandle}`;
+      url = `${import.meta.env.VITE_API_URL}/transactions/${userHandle}`;
     }
     
     const response = await axios.get(url, {
@@ -128,7 +128,7 @@ export const copyToClipboard = (text: string, isAllPins: boolean = false) => {
 export const fetchProductsFromAPI = async (setFetchedProducts: React.Dispatch<React.SetStateAction<Product[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
   setLoading(true);
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_Url}/products`);
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
     if (response.status === 200) {
       const filteredProducts = response.data.filter((product: Product) => product.product_group === "Free Fire Latam");
       setFetchedProducts(filteredProducts);
@@ -146,7 +146,7 @@ export const fetchUserData = async (
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_Url}/user`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUserData(response.data);
@@ -162,7 +162,7 @@ export const fetchTotalSaldos = async (
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_Url}/total-saldos`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/total-saldos`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTotalSaldos(response.data.totalSaldo); 
@@ -186,7 +186,7 @@ export const updateProductAPI = async (product: Product) => {
   }
   
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_Url}/products/${product._id}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/products/${product._id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

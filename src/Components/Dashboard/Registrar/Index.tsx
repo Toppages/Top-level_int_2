@@ -74,7 +74,7 @@ function Registrar() {
     const [selectedAdmin, setSelectedAdmin] = useState<string | null>(null);
 
     useEffect(() => {
-        axios.get<Client[]>(`${import.meta.env.VITE_API_Url}/users/admins`)
+        axios.get<Client[]>(`${import.meta.env.VITE_API_URL}/users/admins`)
             .then(({ data }) => {
                 setadmins(data.map(client => ({
                     value: client.handle,  
@@ -113,7 +113,7 @@ function Registrar() {
                 data.rango = "bronce";
             }
     
-            const response = await axios.post(`${import.meta.env.VITE_API_Url}/auth/register`, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/register`, {
                 handle: data.handle,
                 name: data.name,
                 email: data.email,

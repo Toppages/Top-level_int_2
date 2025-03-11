@@ -50,7 +50,7 @@ function Dashboard({ user }: DashboardProps) {
 
     useEffect(() => {
         if (user) {
-            fetch(`${import.meta.env.VITE_API_Url}/user`, {
+            fetch(`${import.meta.env.VITE_API_URL}/user`, {
                 method: "GET",
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             })
@@ -109,8 +109,8 @@ function Dashboard({ user }: DashboardProps) {
 
         try {
             const url = userRole === 'master'
-                ? `${import.meta.env.VITE_API_Url}/sales`
-                : `${import.meta.env.VITE_API_Url}/sales/user/${userHandle}`;
+                ? `${import.meta.env.VITE_API_URL}/sales`
+                : `${import.meta.env.VITE_API_URL}/sales/user/${userHandle}`;
 
             const response = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
