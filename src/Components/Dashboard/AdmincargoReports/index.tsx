@@ -1,72 +1,70 @@
-import Pines from "./Pines";
-import axios from "axios";
-import AdminBR from "./AdminBR";
-import ManagePro from "./ManagePro";
-import Registrar from "./Registrar/Index";
-import EditAdmins from "./EditAdmins/Index";
-import EditClient from "./EditClient/Index";
-import AllRetiros from "./AllRetiros";
-import AdmincargoReports from "./AdmincargoReports";
-import UserCountsDisplay from "./UserCountsDisplay/Index";
-import { useMediaQuery } from "@mantine/hooks";
-import { useEffect, useRef, useState } from "react";
-import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
-import { Group, ScrollArea, Select, Tabs, Text, Title, Card, Badge } from "@mantine/core";
-import { IconCalendarWeek, IconTicket, IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
+import { useState, useEffect, useRef } from 'react';
+import { Modal, Button, Group, Select, Title, Text, Card, ScrollArea } from '@mantine/core';
+import axios from 'axios';
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
+import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
+import { IconCalendarWeek } from '@tabler/icons-react';
 
-interface DashboardProps {
-    user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
+
+interface EditClientProps {
+    user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; } | null;
 }
-
-function Dashboard({ user }: DashboardProps) {
-    const [userRole, setUserRole] = useState<string | null>(null);
-    const isSmallScreen = useMediaQuery('(max-width: 768px)');
-    const [selectedRange, setSelectedRange] = useState<string>("general");
+function AdmincargoReports({ user }: EditClientProps) {
+    const [opened, setOpened] = useState(false);
+    const [users, setUsers] = useState<{ value: string; label: string; group: string }[]>([]);
+    const [selectedUser, setSelectedUser] = useState<string | null>(null);
     const [sales, setSales] = useState<any[]>([]);
-    const [error, setError] = useState<string | null>(null);
+    const [selectedRange, setSelectedRange] = useState<string>("general");
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [totalSales, setTotalSales] = useState(0);
-    const [windowHeight, setWindowHeight] = useState(window.innerHeight);
-    const [productTotals, setProductTotals] = useState<Record<string, number>>({});
+    const [totalPrice, setTotalPrice] = useState<number>(0);
     const today = new Date();
     const fiveDaysLater = new Date(today);
-    const [selectedrDate, setSelecterdDate] = useState<DateRangePickerValue>([
+    const [selectedrDate, setSelectedrDate] = useState<DateRangePickerValue>([
         today,
         fiveDaysLater,
     ]);
-    const [totalPrice, setTotalPrice] = useState<number>(0);
-    const onBalanceUpdate = (newBalance: number) => {
-        console.log('Nuevo saldo:', newBalance);
-    };
-    const maxHeight = isSmallScreen ? windowHeight * 0.9 : windowHeight - 70;
+    const [error, setError] = useState<string | null>(null);
+
+    const [productTotals, setProductTotals] = useState<Record<string, number>>({});
 
     useEffect(() => {
-        const handleResize = () => setWindowHeight(window.innerHeight);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-
-    useEffect(() => {
-        if (user) {
-            fetch(`${import.meta.env.VITE_API_Url}/user`, {
-                method: "GET",
-                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    setUserRole(data.role);
-                    fetchSales(data.handle, data.role);
-                })
-                .catch((err) => console.error("Error al obtener el usuario:", err));
+        const fetchUsers = async () => {
+          if (user && user.handle) {  
+            try {
+              const response = await axios.get(`${import.meta.env.VITE_API_Url}/users/under-admin/${user.handle}`);
+              const formattedUsers = response.data.map((user: any) => ({
+                value: user.handle,
+                label: user.name,
+                group: user.role.charAt(0).toUpperCase() + user.role.slice(1),
+              }));
+              setUsers(formattedUsers);
+            } catch (error) {
+              console.error('Error al obtener los usuarios:', error);
+            }
+          }
+        };
+    
+        if (opened) {
+          fetchUsers();
         }
-    }, [user, selectedRange, selectedDate]);
+      }, [opened, user]);
 
     useEffect(() => {
-        fetchSales(user?.handle || "", userRole || "");
-    }, [selectedRange, selectedrDate]);
+        setSales([]);
+        setTotalSales(0);
+        setTotalPrice(0);
+        setError(null);
 
+        if (selectedUser) {
+            fetchSales(selectedUser || "");
+        }
+    }, [selectedUser, selectedRange, selectedDate, selectedrDate]);
+
+    const handleDateChange = (date: Date | null) => {
+        setSelectedDate(date);
+
+    };
 
     const getSalesByDayOfWeek = (sales: any[]) => {
         const weekSales: Record<"Lunes" | "Martes" | "Miércoles" | "Jueves" | "Viernes" | "Sábado" | "Domingo", { count: number, totalPrice: number }> = {
@@ -91,7 +89,7 @@ function Dashboard({ user }: DashboardProps) {
         return weekSales;
     };
 
-    const fetchSales = async (userHandle: string, userRole: string) => {
+    const fetchSales = async (userHandle: string) => {
         const getTotalPriceByProductName = (sales: any[]) => {
             return sales.reduce((acc: Record<string, number>, sale: any) => {
                 const productName = sale.productName;
@@ -100,20 +98,12 @@ function Dashboard({ user }: DashboardProps) {
             }, {});
         };
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setError('No se encontró el token. Inicia sesión nuevamente.');
-            return;
-        }
+
 
         try {
-            const url = userRole === 'master'
-                ? `${import.meta.env.VITE_API_Url}/sales`
-                : `${import.meta.env.VITE_API_Url}/sales/user/${userHandle}`;
+            const url = `${import.meta.env.VITE_API_Url}/sales/user/${userHandle}`;
 
-            const response = await axios.get(url, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const response = await axios.get(url);
 
             let filteredSales = response.data;
 
@@ -121,7 +111,11 @@ function Dashboard({ user }: DashboardProps) {
                 setError('La respuesta del servidor no es válida.');
                 return;
             }
-
+            if (filteredSales.length === 0) {
+                setSales([]);
+                setError('No se encontraron ventas para este usuario');
+                return;
+            }
             const formatDate = (dateString: string) => {
                 if (!dateString) return null;
                 const date = new Date(dateString);
@@ -302,81 +296,65 @@ function Dashboard({ user }: DashboardProps) {
         }
     };
 
-    const handleDateChange = (date: Date | null) => {
-        setSelectedDate(date);
-
-    };
-
-    const salesByProduct = sales.reduce((acc, sale) => {
-        acc[sale.productName] = (acc[sale.productName] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-
-    const extractDiamantes = (productName: string) => {
-        const match = productName.match(/(\d+)\s*Diamantes/);
-        return match ? `${match[1]} Diamantes` : productName;
-    };
-
-    const productNames = Object.keys(salesByProduct).map(extractDiamantes);
-    const salesData = Object.values(salesByProduct) as (number | null)[];
-
-    const SalesBarChart = ({ sales, selectedRange }: any) => {
-        const chartRef = useRef<HTMLDivElement | null>(null);
-        const [chartWidth, setChartWidth] = useState<number>(0);
-
-        useEffect(() => {
-            if (chartRef.current) {
-                const width = chartRef.current.getBoundingClientRect().width;
-                setChartWidth(width);
-            }
-        }, [chartRef.current]);
-
-        let formattedData = [];
-
-        if (selectedRange === "año") {
-            formattedData = sales.map((item: any) => ({
-                name: item.month,
-                uv: item.count
-            }));
-        } else if (selectedRange === "semana") {
-            formattedData = sales.map((item: any) => ({
-                name: item.day,
-                uv: item.count
-            }));
-        } else if (selectedRange === "mes") {
-            formattedData = sales.map((item: any) => ({
-                name: item.week,
-                uv: item.count
-            }));
-        } else {
-            formattedData = salesData.map((count: any, index: number) => ({
-                name: productNames[index],
-                uv: count
-            }));
-        }
-
+    const ProductList = ({ productTotals }: any) => {
         return (
-            <div ref={chartRef}>
-                {chartWidth > 0 && (
-                    <ResponsiveContainer width="100%" height={300}>
-                        <Newcha data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                            <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} />
-                            <YAxis
-                                tick={{ fontSize: 12 }}
-                                tickLine={false}
-                                axisLine={false}
-                                tickFormatter={(value) => `${value} USD`}
-                            />
-                            <Tooltip />
-                            <Bar dataKey="uv" radius={[4, 4, 0, 0]} fill="#0c2a85" />
-                        </Newcha>
-                    </ResponsiveContainer>
-                )}
+            <div>
+                {Object.entries(productTotals).map(([productName, totalPrice]) => (
+                    <div key={productName}>
+                        <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
+                            <Group position="apart">
+
+                                <Text mt={5} weight={700} mb="sm">
+
+                                    {productName}
+                                </Text>
+                                <Text c='green' mt={5} weight={700} mb="sm">
+
+                                    {(totalPrice as number).toFixed(2)} USD
+                                </Text>
+                            </Group>
+                        </Card>
+
+                    </div>
+                ))}
             </div>
         );
     };
 
+    const RangeSelect = ({ selectedRange, setSelectedRange }: any) => {
+        return (
+            <Select
+                label="Selecciona el rango de fecha"
+                radius="md"
+                icon={<IconCalendarWeek />}
+                size="lg"
+                transition="pop-top-left"
+                transitionDuration={80}
+                transitionTimingFunction="ease"
+                value={selectedRange}
+                onChange={(value) => setSelectedRange(value || "general")}
+                data={[
+                    { value: "general", label: "General (todos los Retiro)" },
+                    { value: "hoy", label: "Día de hoy" },
+                    { value: "semana", label: "Esta semana" },
+                    { value: "mes", label: "Este mes" },
+                    { value: "año", label: "Este año" },
+                    { value: "custom", label: "Elegir día" },
+                    { value: "rangoDia", label: "Rango del día" },
+                ]}
+                styles={() => ({
+                    item: {
+                        '&[data-selected]': {
+                            '&, &:hover': {
+                                backgroundColor: '#0c2a85',
+                                color: 'white',
+                            },
+                        },
+                    },
+                })}
+            />
+        );
+    };
 
     const SalesBreakdown = ({ sales, selectedRange }: any) => {
         let breakdown = [];
@@ -472,122 +450,132 @@ function Dashboard({ user }: DashboardProps) {
         return <div>{breakdown}</div>;
     };
 
-    const ProductList = ({ productTotals }: any) => {
+    const extractDiamantes = (productName: string) => {
+        const match = productName.match(/(\d+)\s*Diamantes/);
+        return match ? `${match[1]} Diamantes` : productName;
+    };
+
+    const salesByProduct = sales.reduce((acc, sale) => {
+        acc[sale.productName] = (acc[sale.productName] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const productNames = Object.keys(salesByProduct).map(extractDiamantes);
+    const salesData = Object.values(salesByProduct) as (number | null)[];
+
+    const SalesBarChart = ({ sales, selectedRange }: any) => {
+        const chartRef = useRef<HTMLDivElement | null>(null);
+        const [chartWidth, setChartWidth] = useState<number>(0);
+
+        useEffect(() => {
+            if (chartRef.current) {
+                const width = chartRef.current.getBoundingClientRect().width;
+                setChartWidth(width);
+            }
+        }, [chartRef.current]);
+
+        let formattedData = [];
+
+        if (selectedRange === "año") {
+            formattedData = sales.map((item: any) => ({
+                name: item.month,
+                uv: item.count
+            }));
+        } else if (selectedRange === "semana") {
+            formattedData = sales.map((item: any) => ({
+                name: item.day,
+                uv: item.count
+            }));
+        } else if (selectedRange === "mes") {
+            formattedData = sales.map((item: any) => ({
+                name: item.week,
+                uv: item.count
+            }));
+        } else {
+            formattedData = salesData.map((count: any, index: number) => ({
+                name: productNames[index],
+                uv: count
+            }));
+        }
+
         return (
-            <div>
-                {Object.entries(productTotals).map(([productName, totalPrice]) => (
-                    <div key={productName}>
-                        <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
-                            <Group position="apart">
-
-                                <Text mt={5} weight={700} mb="sm">
-
-                                    {productName}
-                                </Text>
-                                <Text c='green' mt={5} weight={700} mb="sm">
-
-                                    {(totalPrice as number).toFixed(2)} USD
-                                </Text>
-                            </Group>
-                        </Card>
-
-                    </div>
-                ))}
+            <div ref={chartRef}>
+                {chartWidth > 0 && (
+                    <ResponsiveContainer width="100%" height={300}>
+                        <Newcha data={formattedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                            <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} />
+                            <YAxis
+                                tick={{ fontSize: 12 }}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(value) => `${value} USD`}
+                            />
+                            <Tooltip />
+                            <Bar dataKey="uv" radius={[4, 4, 0, 0]} fill="#0c2a85" />
+                        </Newcha>
+                    </ResponsiveContainer>
+                )}
             </div>
         );
     };
-
-    const RangeSelect = ({ selectedRange, setSelectedRange }: any) => {
-        return (
-            <Select
-                label="Selecciona el rango de fecha"
-                radius="md"
-                icon={<IconCalendarWeek />}
-                size="lg"
-                transition="pop-top-left"
-                transitionDuration={80}
-                transitionTimingFunction="ease"
-                value={selectedRange}
-                onChange={(value) => setSelectedRange(value || "general")}
-                data={[
-                    { value: "general", label: "General (todos los Retiro)" },
-                    { value: "hoy", label: "Día de hoy" },
-                    { value: "semana", label: "Esta semana" },
-                    { value: "mes", label: "Este mes" },
-                    { value: "año", label: "Este año" },
-                    { value: "custom", label: "Elegir día" },
-                    { value: "rangoDia", label: "Rango del día" },
-                ]}
-                styles={() => ({
-                    item: {
-                        '&[data-selected]': {
-                            '&, &:hover': {
-                                backgroundColor: '#0c2a85',
-                                color: 'white',
-                            },
-                        },
-                    },
-                })}
-            />
-        );
-    };
-
-    useEffect(() => {
-        const handleResize = () => setWindowHeight(window.innerHeight);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
     return (
         <>
-            <div style={{ width: '100%', overflowX: 'hidden' }}>
+            <Modal opened={opened} withCloseButton={false} onClose={() => setOpened(false)} title="Selecciona un usuario">
+                <Select
+                    label="Usuarios"
+                    placeholder="Selecciona un usuario"
+                    data={users}
+                    searchable
+                    clearable
+                    value={selectedUser}
+                    transition="pop-top-left"
+                    transitionDuration={80}
+                    transitionTimingFunction="ease"
+                    onChange={(value) => setSelectedUser(value)}
+                    styles={() => ({
+                        item: {
+                            '&[data-selected]': {
+                                '&, &:hover': {
+                                    backgroundColor: '#0c2a85',
+                                    color: 'white',
+                                },
+                            },
+                        },
+                    })}
+                />
 
 
-                <Tabs defaultValue="Retiro">
+                {selectedUser && (
+                    <div>
+                        {error ? (
+                            <p>{error}</p>
+                        ) : (
+                            <>
+                                <Title mt={5} ta="center" weight={700} mb="sm" order={3}>
 
-                    <Tabs.List>
-                        <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
-                        <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
-                        {(userRole === "master" || userRole === "admin") && (
+                                    Retiros de {selectedUser}
+                                </Title>
+                                <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
 
-
-                            <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
-                        )}
-                    </Tabs.List>
-
-                    <Tabs.Panel value="control" pt="xs">
-
-                        {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
-
-                        {(userRole === "master" || userRole === "admin") && (
-                            <Group>
-                                <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
-                                <Registrar />
-                                <AdminBR />
-                                <ManagePro />
-                                <AllRetiros />
-                                <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
-                                <AdmincargoReports  user={user}/>
-                            </Group>
-                        )}
-                    </Tabs.Panel>
-
-                    <Tabs.Panel value="Retiro" pt="xs">
-                        <div>
-                            <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
-
-                            <ScrollArea style={{ height: maxHeight - 130 }} type='always'>
                                 {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
-                                {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
+                                {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelectedrDate(date)} />}
 
                                 {sales.length > 0 ? (
                                     <div>
 
+                                        <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
+                                            TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
+                                        </Title>
+
+                                        <Title mt={5} weight={700} mb='md' order={5}>
+                                            Monto total de retiros {totalPrice.toFixed(2)} USD
+                                        </Title>
                                         <Card
                                             mt={15}
                                             mb={45}
-                                            mr={10}
-                                            ml={10}
+                                            mr={15}
+                                            ml={15}
                                             style={{
                                                 boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
                                                 transition: "all 0.3s ease",
@@ -595,73 +583,33 @@ function Dashboard({ user }: DashboardProps) {
                                             }}
                                             radius="md"
                                         >
-                                            <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                                TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
-                                            </Title>
-                                            <Title mt={5} weight={700} mb='md' order={5}>
-                                                Monto total de retiros {totalPrice.toFixed(2)} USD
-                                            </Title>
-
+                                            <ScrollArea w='100%' type="never">
 
                                                 <SalesBarChart sales={sales} selectedRange={selectedRange} />
-                                       
+                                            </ScrollArea>
 
                                         </Card>
 
-                                        <Card
-                                            mt={15}
-                                            mb={45}
-                                            mr={10}
-                                            ml={10}
-                                            style={{
-                                                boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                                                transition: "all 0.3s ease",
-                                                transform: "scale(1)",
-                                            }}
-                                            radius="md"
-                                        >
-                                            <Badge variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Gastos por Producto </Badge>
-                                            <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
-                                            <ProductList productTotals={productTotals} />
-                                        </Card>
+                                        <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
+                                        <ProductList productTotals={productTotals} />
 
-                                        {(selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" || selectedRange === "rango de día") && (
-                                            <Card
-                                                mt={15}
-                                                mb={45}
-                                                mr={10}
-                                                ml={10}
-                                                style={{
-                                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                                                    transition: "all 0.3s ease",
-                                                    transform: "scale(1)",
-                                                }}
-                                                radius="md"
-                                            >
-                                                <SalesBreakdown sales={sales} selectedRange={selectedRange} />
-                                            </Card>
-                                        )}
-
-
+                                        <SalesBreakdown sales={sales} selectedRange={selectedRange} />
                                     </div>
                                 ) : (
                                     <p>{error ? error : 'No hay Retiros disponibles.'}</p>
                                 )}
-                            </ScrollArea>
-                        </div>
-                    </Tabs.Panel>
+                            </>
+                        )}
+                    </div>
+                )}
 
-                    <Tabs.Panel value="Pines" pt="xs">
-                        <Pines user={user} />
+            </Modal>
 
-                    </Tabs.Panel>
-
-
-                </Tabs>
-
-            </div>
+            <Group position="center">
+                <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver Graficas de las personas a mi cargo</Button>
+            </Group>
         </>
     );
 }
 
-export default Dashboard;
+export default AdmincargoReports;

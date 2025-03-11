@@ -253,7 +253,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         onClose();
         setActiveStep(0);
         setCapturedPins([]);
-        window.location.reload();
     };
 
     const tableTextStyle = {
@@ -262,7 +261,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     };
     const handleModalClose = () => {
         onClose();
-        window.location.reload();
     };
     return (
         <Modal opened={opened} onClose={handleModalClose} withCloseButton={false} size="xl">

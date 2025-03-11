@@ -114,7 +114,8 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
         <>
             <Title ta="center" weight={700} mb="sm" order={2}>Pines No Usados</Title>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+           <Group position='center'>
+
                 {defaultProducts.map(name => (
                     <Checkbox
                         key={name}
@@ -125,7 +126,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                     />
 
                 ))}
-            </div>
+           </Group>
             <Group position='apart'>
                 <Pagination
                     total={Math.ceil(filteredPins.length / itemsPerPage)}

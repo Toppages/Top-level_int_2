@@ -115,7 +115,7 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
     const [error, setError] = useState<string | null>(null);
     const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
 
-  const isMobile = useMediaQuery('(max-width: 1000px)');
+    const isMobile = useMediaQuery('(max-width: 1000px)');
     useEffect(() => {
         if (user) {
             const { handle, role } = user;
@@ -142,15 +142,15 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                         TOTAL DE PINES: {reportSummary.totalKeys}
                     </Title>
                     <Group
-  position="center"
-  align="center"
-  style={{
-    width: '100%',
-    display: 'flex',
-    flexDirection: isMobile ? 'column' : 'row',
-    gap: '1rem', // Espaciado entre elementos
-  }}
->
+                        position="center"
+                        align="center"
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: isMobile ? 'column' : 'row',
+                            gap: '1rem', // Espaciado entre elementos
+                        }}
+                    >
                         <div>
                             <Piec width={300} height={200}>
                                 <Pie
@@ -169,11 +169,11 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                                 </Pie>
                                 <Tooltip />
                             </Piec>
-<Group position='center'>
+                            <Group position='center'>
 
-                            <Badge mr={5} variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Pines no usados</Badge>
-                            <Badge variant="gradient" gradient={{ from: '#ff0000', to: '#ff0000' }}>Pines usados</Badge>
-</Group>
+                                <Badge mr={5} variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Pines no usados</Badge>
+                                <Badge variant="gradient" gradient={{ from: '#ff0000', to: '#ff0000' }}>Pines usados</Badge>
+                            </Group>
                         </div>
 
                         <div>
