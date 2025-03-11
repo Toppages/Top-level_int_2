@@ -1,4 +1,4 @@
-import { useState, useEffect,useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Modal, Button, Group, Select, Title, Text, Card, ScrollArea } from '@mantine/core';
 import axios from 'axios';
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
@@ -27,7 +27,7 @@ function AllRetiros() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await axios.get('http://localhost:4000/users/all');
+                const response = await axios.get(`${import.meta.env.VITE_API_Url}/users/all`);
                 const formattedUsers = response.data.map((user: any) => ({
                     value: user.handle,
                     label: user.name,
@@ -95,7 +95,7 @@ function AllRetiros() {
 
 
         try {
-            const url = `http://localhost:4000/sales/user/${userHandle}`;
+            const url = `${import.meta.env.VITE_API_Url}/sales/user/${userHandle}`;
 
             const response = await axios.get(url);
 
@@ -107,7 +107,7 @@ function AllRetiros() {
             }
             if (filteredSales.length === 0) {
                 setSales([]);
-                setError('No se encontraron ventas para este usuario'); 
+                setError('No se encontraron ventas para este usuario');
                 return;
             }
             const formatDate = (dateString: string) => {
@@ -522,11 +522,11 @@ function AllRetiros() {
                     data={users}
                     searchable
                     clearable
-                    value={selectedUser} 
+                    value={selectedUser}
                     transition="pop-top-left"
                     transitionDuration={80}
                     transitionTimingFunction="ease"
-                    onChange={(value) => setSelectedUser(value)} 
+                    onChange={(value) => setSelectedUser(value)}
                     styles={() => ({
                         item: {
                             '&[data-selected]': {
@@ -562,7 +562,9 @@ function AllRetiros() {
                                             TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                         </Title>
 
-                                        <Title mt={5} weight={700} mb="sm" order={4}>Monto total de retiros {totalPrice} USD</Title>
+                                        <Title mt={5} weight={700} mb='md' order={5}>
+                                            Monto total de retiros {totalPrice.toFixed(2)} USD
+                                        </Title>
                                         <Card
                                             mt={15}
                                             mb={45}

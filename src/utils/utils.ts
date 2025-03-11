@@ -6,7 +6,7 @@ export const fetchUserRole = async (
   setUserRole: React.Dispatch<React.SetStateAction<string | null>>,
 ) => {
   try {
-    const response = await fetch("http://localhost:4000/user", {
+    const response = await fetch(`${import.meta.env.VITE_API_Url}/user`, {
       method: "GET",
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
@@ -29,6 +29,7 @@ export const handleSearchChange = (
   );
   setFilteredReports(filtered);
 };
+
 export const fetchReports = async (
   userHandle: string,
   userRole: string,
@@ -46,8 +47,8 @@ export const fetchReports = async (
   
   try {
     const url = userRole === 'master'
-    ? 'http://localhost:4000/sales'
-    : `http://localhost:4000/sales/user/${userHandle}`;
+    ? `${import.meta.env.VITE_API_Url}/sales`
+    : `${import.meta.env.VITE_API_Url}/sales/user/${userHandle}`;
     
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
@@ -55,10 +56,8 @@ export const fetchReports = async (
     
     setAllReports(response.data);
     setFilteredReports(response.data);
-    toast.success('Reportes cargados exitosamente');
     
   } catch (err) {
-    toast.error('Hubo un problema al obtener los reportes.');
   }
 };
 
@@ -80,11 +79,9 @@ export const fetchTransactions = async (
   try {
     let url = '';
     if (userRole === 'master') {
-      // Si el rol es 'master', obtenemos todas las transacciones
-      url = 'http://localhost:4000/transactions';
+      url = `${import.meta.env.VITE_API_Url}/transactions`;
     } else {
-      // Si no es 'master', obtenemos transacciones por el handle del usuario
-      url = `http://localhost:4000/transactions/${userHandle}`;
+      url = `${import.meta.env.VITE_API_Url}/transactions/${userHandle}`;
     }
     
     const response = await axios.get(url, {
@@ -93,10 +90,8 @@ export const fetchTransactions = async (
     
     setAllTransactions(response.data);
     setFilteredTransactions(response.data);
-    toast.success('Transacciones cargadas exitosamente');
   } catch (err) {
     setError('Hubo un problema al obtener las transacciones.');
-    toast.error('Hubo un problema al obtener las transacciones.');
   }
 };
 
@@ -133,9 +128,8 @@ export const copyToClipboard = (text: string, isAllPins: boolean = false) => {
 export const fetchProductsFromAPI = async (setFetchedProducts: React.Dispatch<React.SetStateAction<Product[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
   setLoading(true);
   try {
-    const response = await axios.get('http://localhost:4000/products');
+    const response = await axios.get(`${import.meta.env.VITE_API_Url}/products`);
     if (response.status === 200) {
-      // Filtrar los productos donde product_group sea "Free Fire Latam"
       const filteredProducts = response.data.filter((product: Product) => product.product_group === "Free Fire Latam");
       setFetchedProducts(filteredProducts);
     }
@@ -146,14 +140,13 @@ export const fetchProductsFromAPI = async (setFetchedProducts: React.Dispatch<Re
   }
 };
 
-
 export const fetchUserData = async (
   setUserData: React.Dispatch<React.SetStateAction<any | null>>,
 ) => {
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      const response = await axios.get('http://localhost:4000/user', {
+      const response = await axios.get(`${import.meta.env.VITE_API_Url}/user`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUserData(response.data);
@@ -162,13 +155,14 @@ export const fetchUserData = async (
     }
   }
 };
+
 export const fetchTotalSaldos = async (
   setTotalSaldos: React.Dispatch<React.SetStateAction<number | null>>,
 ) => {
   const token = localStorage.getItem('token');
   if (token) {
     try {
-      const response = await axios.get('http://localhost:4000/total-saldos', {
+      const response = await axios.get(`${import.meta.env.VITE_API_Url}/total-saldos`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTotalSaldos(response.data.totalSaldo); 
@@ -192,7 +186,7 @@ export const updateProductAPI = async (product: Product) => {
   }
   
   try {
-    const response = await fetch(`http://localhost:4000/products/${product._id}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_Url}/products/${product._id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

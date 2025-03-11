@@ -49,7 +49,7 @@ function Dashboard({ user }: DashboardProps) {
 
     useEffect(() => {
         if (user) {
-            fetch("http://localhost:4000/user", {
+            fetch(`${import.meta.env.VITE_API_Url}/user`, {
                 method: "GET",
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             })
@@ -107,8 +107,8 @@ function Dashboard({ user }: DashboardProps) {
 
         try {
             const url = userRole === 'master'
-                ? 'http://localhost:4000/sales'
-                : `http://localhost:4000/sales/user/${userHandle}`;
+                ? `${import.meta.env.VITE_API_Url}/sales`
+                : `${import.meta.env.VITE_API_Url}/sales/user/${userHandle}`;
 
             const response = await axios.get(url, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -574,7 +574,7 @@ function Dashboard({ user }: DashboardProps) {
                         <div>
                             <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
 
-                            <ScrollArea style={{ height: maxHeight - 130 }} type="never">
+                            <ScrollArea style={{ height: maxHeight - 130 }} type='always'>
                                 {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
                                 {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
 
@@ -596,11 +596,13 @@ function Dashboard({ user }: DashboardProps) {
                                             <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
                                                 TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                             </Title>
-                                            <Title mt={5} weight={700} mb='md' order={5}>Monto total de retiros {totalPrice} USD</Title>
-                                            <ScrollArea type="never">
+                                            <Title mt={5} weight={700} mb='md' order={5}>
+                                                Monto total de retiros {totalPrice.toFixed(2)} USD
+                                            </Title>
+
 
                                                 <SalesBarChart sales={sales} selectedRange={selectedRange} />
-                                            </ScrollArea>
+                                       
 
                                         </Card>
 

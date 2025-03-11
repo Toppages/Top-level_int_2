@@ -69,8 +69,9 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                             Saldo Correracional: {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
                         </Title>
                         <Title ta="center" c={totalSaldos && userData ? '#0c2a85' : '#000000'} order={6}>
-                            Saldo De trabajo: {totalSaldos && userData ? `${userData.saldo - totalSaldos} USD` : 'Suma de saldos no disponible'}
-                        </Title>
+  Saldo De trabajo: {totalSaldos && userData ? `${(userData.saldo - totalSaldos).toFixed(2)} USD` : 'Suma de saldos no disponible'}
+</Title>
+
                     </>
                 )}
 

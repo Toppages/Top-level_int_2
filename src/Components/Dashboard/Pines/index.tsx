@@ -3,6 +3,7 @@ import axios from 'axios';
 import { PieChart as Piec, Pie, Cell, Tooltip } from 'recharts';
 import { Group, Title, Text, Badge, Card, Progress, ScrollArea } from '@mantine/core';
 
+import { useMediaQuery } from '@mantine/hooks';
 interface Pin {
     serial: string;
     key: string;
@@ -67,8 +68,8 @@ export const fetchReports = async (
 
     try {
         const url = userRole === 'master'
-            ? 'http://localhost:4000/sales'
-            : `http://localhost:4000/sales/user/${userHandle}`;
+            ? `${import.meta.env.VITE_API_Url}/sales`
+            : `${import.meta.env.VITE_API_Url}/sales/user/${userHandle}`;
 
         const response = await axios.get(url, {
             headers: { Authorization: `Bearer ${token}` },
@@ -114,6 +115,7 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
     const [error, setError] = useState<string | null>(null);
     const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
 
+  const isMobile = useMediaQuery('(max-width: 1000px)');
     useEffect(() => {
         if (user) {
             const { handle, role } = user;
@@ -139,9 +141,18 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                     <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
                         TOTAL DE PINES: {reportSummary.totalKeys}
                     </Title>
-                    <Group position="apart">
+                    <Group
+  position="center"
+  align="center"
+  style={{
+    width: '100%',
+    display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
+    gap: '1rem', // Espaciado entre elementos
+  }}
+>
                         <div>
-                            <Piec width={400} height={200}>
+                            <Piec width={300} height={200}>
                                 <Pie
                                     data={datax}
                                     cx="50%"
@@ -158,9 +169,11 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                                 </Pie>
                                 <Tooltip />
                             </Piec>
+<Group position='center'>
 
                             <Badge mr={5} variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Pines no usados</Badge>
                             <Badge variant="gradient" gradient={{ from: '#ff0000', to: '#ff0000' }}>Pines usados</Badge>
+</Group>
                         </div>
 
                         <div>

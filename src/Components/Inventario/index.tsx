@@ -39,7 +39,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
     const fetchUnusedPins = async () => {
         try {
             const response = await axios.get<{ unusedPins: Pin[] }>(
-                `http://localhost:4000/sales/user/${user.handle}/unused-pins`
+                `${import.meta.env.VITE_API_Url}/sales/user/${user.handle}/unused-pins`
             );
             setPins(response.data.unusedPins || []);
         } catch (error) {
@@ -54,7 +54,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                 prevPins.map(pin => (pin.key === pinId ? { ...pin, usado: true } : pin))
             );
 
-            await axios.put(`http://localhost:4000/sales/user/${user.handle}/pins/${pinId}`, { usado: true });
+            await axios.put(`${import.meta.env.VITE_API_Url}/sales/user/${user.handle}/pins/${pinId}`, { usado: true });
             fetchUnusedPins();
             toast.success('Pin marcado como usado');
         } catch (error) {

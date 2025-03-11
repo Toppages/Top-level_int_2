@@ -74,7 +74,7 @@ function Registrar() {
     const [selectedAdmin, setSelectedAdmin] = useState<string | null>(null);
 
     useEffect(() => {
-        axios.get<Client[]>('http://localhost:4000/users/admins')
+        axios.get<Client[]>(`${import.meta.env.VITE_API_Url}/users/admins`)
             .then(({ data }) => {
                 setadmins(data.map(client => ({
                     value: client.handle,  
@@ -121,7 +121,7 @@ function Registrar() {
                 role: data.role,
                 saldo: data.saldo,
                 rango: data.rango,
-                admin: ["vendedor", "cliente"].includes(data.role) ? selectedAdmin : undefined, // Debe ser el handle
+                admin: ["vendedor", "cliente"].includes(data.role) ? selectedAdmin : undefined,
             });
     
             toast.success("Registro exitoso: " + (response.data.message || "Usuario registrado correctamente"));

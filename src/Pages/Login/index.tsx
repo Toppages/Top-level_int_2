@@ -23,7 +23,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
     const onSubmit = async (data: ILoginFormInputs) => {
         try {
-            const response = await axios.post('http://localhost:4000/auth/login', data);
+            const response = await axios.post(`${import.meta.env.VITE_API_Url}/auth/login`, data);
             const token = response.data;
     
             if (token) {
