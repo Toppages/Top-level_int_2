@@ -28,12 +28,27 @@ const LimitVendedores = () => {
         fetchProductsFromAPI(setFetchedProducts, setLoading);
     }, []);
 
+    useEffect(() => {
+        if (selectedVendedor) {
+            axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores/${selectedVendedor}`)
+                .then(({ data }) => {
+                    if (data.purchaseLimits) {
+                        const limits: Record<string, number> = {};
+                        Object.keys(data.purchaseLimits).forEach((productCode) => {
+                            limits[productCode] = data.purchaseLimits[productCode].limit;
+                        });
+                        setPurchaseLimits(limits);
+                    }
+                })
+                .catch(error => console.error('Error fetching purchase limits:', error));
+        }
+    }, [selectedVendedor]);
+
     const handleClose = () => {
         setOpened(false);
-        setSelectedVendedor(null); 
-        setPurchaseLimits({}); 
+        setSelectedVendedor(null);
+        setPurchaseLimits({});
     };
-    
 
     const handleSelectChange = (value: string | null) => {
         setSelectedVendedor(value);
@@ -51,36 +66,36 @@ const LimitVendedores = () => {
             toast.error("Selecciona un vendedor antes de actualizar.");
             return;
         }
-    
-        const updates = Object.entries(purchaseLimits).filter(([_, limit]) => limit > 0);
-    
+
+        const updates = Object.entries(purchaseLimits);
+
         if (updates.length === 0) {
             toast.error("Debes ingresar al menos un límite para actualizar.");
             return;
         }
-    
-        setLoading(true); 
-    
+
+        setLoading(true);
+
         try {
             for (const [productCode, limit] of updates) {
                 const product = fetchedProducts.find((p) => p.code === productCode);
                 if (!product) continue;
-    
+
                 await axios.put(
                     `${import.meta.env.VITE_API_URL}/users/${selectedVendedor}/purchase-limits/${productCode}`,
                     { productCode, limit, name: product.name, price: product.price }
                 );
             }
-    
+
             toast.success("Límites actualizados correctamente.");
             handleClose();
         } catch (error) {
             toast.error("Hubo un error al actualizar los límites.");
         } finally {
-            setLoading(false); 
+            setLoading(false);
         }
     };
-    
+
 
     const extractDiamantes = (productName: string) => {
         let cleanName = productName.replace(/Free Fire\s*-*\s*/i, "").trim();
