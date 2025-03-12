@@ -7,6 +7,7 @@ import EditAdmins from "./EditAdmins/Index";
 import EditClient from "./EditClient/Index";
 import AllRetiros from "./AllRetiros";
 import EditmyClients from "./EditmyClients/Index";
+import LimitesmyVend from "./LimitesmyVend/Index";
 import LimitVendedores from "./LimitVendedores/Index";
 import AdmincargoReports from "./AdmincargoReports";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
@@ -567,24 +568,49 @@ function Dashboard({ user }: DashboardProps) {
 
                         {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
 
-                        {(userRole === "master" ) && (
-                            <Group>
-                                <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
-                                <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
+                        {(userRole === "master") && (
+                            <>
+                            <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    General
+                                </Title>
+                                <Group>
+
                                 <AllRetiros />
                                 <Registrar />
-                                <LimitVendedores />
                                 <ManagePro />
                                 <AdminBR />
-                            </Group>
+                                </Group>
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    Clientes
+                                </Title>
+                                <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    Administradores
+                                </Title>
+                                <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
+                                   <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    Vendedores
+                                </Title>
+                                <LimitVendedores />
+                            </>
                         )}
-                                 {(userRole === "admin" ) && (
-                            <Group>
+                        {(userRole === "admin") && (
+                            <>
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    General
+                                </Title>
                                 <AdmincargoReports user={user} />
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    Clientes
+                                </Title>
                                 <EditmyClients user={user} onBalanceUpdate={onBalanceUpdate} />
-                            </Group>
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    Vendedores
+                                </Title>
+                                <LimitesmyVend user={user} />
+                            </>
                         )}
-                       
+
                     </Tabs.Panel>
 
                     <Tabs.Panel value="Retiro" pt="xs">

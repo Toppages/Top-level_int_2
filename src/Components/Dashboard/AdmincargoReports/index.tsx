@@ -605,9 +605,8 @@ function AdmincargoReports({ user }: EditClientProps) {
 
             </Modal>
 
-            <Group position="center">
                 <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver Graficas de las personas a mi cargo</Button>
-            </Group>
+            
         </>
     );
 }

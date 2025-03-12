@@ -313,9 +313,8 @@ function Registrar() {
                 </form>
             </Modal>
 
-            <Group position="center">
                 <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Registrar Usuario</Button>
-            </Group>
+           
         </>
     );
 }

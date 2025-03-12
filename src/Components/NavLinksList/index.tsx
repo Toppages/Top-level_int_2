@@ -8,7 +8,6 @@ import { fetchTotalSaldos, fetchUserData, handleLogout } from "../../utils/utils
 import { Stack, Image, Divider, Title, NavLink, Group, Loader, Text, ActionIcon, Modal, Accordion, ScrollArea } from "@mantine/core";
 import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX, IconInfoCircle } from "@tabler/icons-react";
 
-// Datos para los enlaces de navegación
 const data = [
     { icon: IconGauge, label: 'CONTROL DE RETIROS' },
     { icon: IconUsers, label: 'COMPRA DE PINES' },
@@ -17,7 +16,6 @@ const data = [
     { icon: IconArchive, label: 'INVENTARIO' },
 ];
 
-// Función para obtener el color según el rango del usuario
 const getSaldoColor = (rango: string) => {
     switch (rango) {
         case 'ultrap':

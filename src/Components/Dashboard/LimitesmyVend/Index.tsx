@@ -5,7 +5,19 @@ import { fetchProductsFromAPI } from "../../../utils/utils";
 import { Modal, Button, Group, Card, Stack, Select, Text, Loader, NumberInput } from "@mantine/core";
 import { toast } from 'sonner';
 
-const LimitVendedores = () => {
+interface tProps {
+    user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; } | null;
+}
+
+interface vendedor {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    handle: string;
+}
+
+const LimitesmyVend = ({ user }: tProps) => {
     const [opened, setOpened] = useState(false);
     const [vendedores, setVendedores] = useState<{ value: string, label: string }[]>([]);
     const [selectedVendedor, setSelectedVendedor] = useState<string | null>(null);
@@ -14,19 +26,22 @@ const LimitVendedores = () => {
     const [purchaseLimits, setPurchaseLimits] = useState<Record<string, number>>({});
 
     useEffect(() => {
-        if (opened) {
-            axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores`)
-                .then(({ data }) => {
-                    setVendedores(data.map((vendedor: { handle: string, name: string }) => ({
-                        value: vendedor.handle,
-                        label: `${vendedor.name}`
-                    })));
-                })
-                .catch(error => console.error('Error fetching vendedores:', error));
+        if (!user) return;
 
-            fetchProductsFromAPI(setFetchedProducts, setLoading);
-        }
-    }, [opened]);
+        axios.get<vendedor[]>(`${import.meta.env.VITE_API_URL}/users/under-admin/${user.handle}`)
+            .then(({ data }) => {
+                setVendedores(data
+                    .filter(client => client.role === 'vendedor')
+                    .map(client => ({
+                        value: client.handle,
+                        label: `${client.name} (${client.email})`,
+                    }))
+                );
+            })
+            .catch(error => console.error('Error fetching users under admin:', error));
+
+        fetchProductsFromAPI(setFetchedProducts, setLoading);
+    }, [user]);
 
     useEffect(() => {
         if (selectedVendedor) {
@@ -43,7 +58,6 @@ const LimitVendedores = () => {
                 .catch(error => console.error('Error fetching purchase limits:', error));
         }
     }, [selectedVendedor]);
-    
 
     const handleClose = () => {
         setOpened(false);
@@ -97,6 +111,41 @@ const LimitVendedores = () => {
         }
     };
 
+    const handleUpdateAllLimits = async () => {
+        setLoading(true);
+        try {
+            const { data: allVendedores } = await axios.get<vendedor[]>(`${import.meta.env.VITE_API_URL}/users/under-admin/${user?.handle}`);
+            const vendedoresFiltrados = allVendedores.filter(client => client.role === 'vendedor');
+
+            for (const vendedor of vendedoresFiltrados) {
+                const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores/${vendedor.handle}`);
+
+                if (data.purchaseLimits) {
+                    for (const productCode in data.purchaseLimits) {
+                        const product = fetchedProducts.find((p) => p.code === productCode);
+                        if (!product) continue;
+
+                        await axios.put(
+                            `${import.meta.env.VITE_API_URL}/users/${vendedor.handle}/purchase-limits/${productCode}`,
+                            {
+                                productCode,
+                                limit: data.purchaseLimits[productCode].originLimit,
+                                name: product.name,
+                                price: product.price,
+                            }
+                        );
+                    }
+                }
+            }
+
+            toast.success("Límites de todos los vendedores actualizados correctamente.");
+        } catch (error) {
+            toast.error("Hubo un error al actualizar los límites de todos los vendedores.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const extractDiamantes = (productName: string) => {
         let cleanName = productName.replace(/Free Fire\s*-*\s*/i, "").trim();
         const match = cleanName.match(/^(\d{1,3}(?:\.\d{3})*|\d+)\s*Diamantes/);
@@ -109,6 +158,10 @@ const LimitVendedores = () => {
         <>
             <Modal radius="lg" opened={opened} onClose={handleClose} withCloseButton={false}>
                 <Text fw={500} fz="xl">Límite de compra por vendedor</Text>
+
+                <Button mb={15} fullWidth style={{ background: '#0c2a85' }} onClick={handleUpdateAllLimits}>
+                        Restablecer Todos los Límites
+                    </Button>
                 <Select
                     label="Selecciona un vendedor"
                     placeholder="Elige un vendedor"
@@ -165,13 +218,18 @@ const LimitVendedores = () => {
                         Actualizar Límite
                     </Button>
                 </Group>
+               
             </Modal>
+            <Group>
+
+
 
             <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
                 Límite de los vendedores
             </Button>
+            </Group>
         </>
     );
 };
 
-export default LimitVendedores;
+export default LimitesmyVend;

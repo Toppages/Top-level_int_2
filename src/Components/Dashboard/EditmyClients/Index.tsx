@@ -13,6 +13,7 @@ interface Client {
     _id: string;
     name: string;
     email: string;
+    role: string;
 }
 
 interface EditClientProps {
@@ -35,13 +36,17 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
 
         axios.get<Client[]>(`${import.meta.env.VITE_API_URL}/users/under-admin/${user.handle}`)
             .then(({ data }) => {
-                setClients(data.map(client => ({
-                    value: client._id,
-                    label: `${client.name} (${client.email})`,
-                })));
+                setClients(data
+                    .filter(client => client.role === 'cliente')
+                    .map(client => ({
+                        value: client._id,
+                        label: `${client.name} (${client.email})`,
+                    }))
+                );
             })
             .catch(error => console.error('Error fetching users under admin:', error));
     }, [user]);
+
 
     const handleClose = () => {
         setOpened(false);
