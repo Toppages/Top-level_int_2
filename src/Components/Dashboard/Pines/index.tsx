@@ -106,7 +106,6 @@ export const fetchReports = async (
 
         setReportSummary(summary);
     } catch (err) {
-        setError('Error al cargar los reportes.');
     }
 };
 

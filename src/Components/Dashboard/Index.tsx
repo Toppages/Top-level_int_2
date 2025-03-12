@@ -6,13 +6,15 @@ import Registrar from "./Registrar/Index";
 import EditAdmins from "./EditAdmins/Index";
 import EditClient from "./EditClient/Index";
 import AllRetiros from "./AllRetiros";
+import EditmyClients from "./EditmyClients/Index";
+import LimitVendedores from "./LimitVendedores/Index";
 import AdmincargoReports from "./AdmincargoReports";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
-import { Group, ScrollArea, Select, Tabs, Text, Title, Card, Badge, Loader } from "@mantine/core";
 import { IconCalendarWeek, IconTicket, IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
+import { Group, ScrollArea, Select, Tabs, Text, Title, Card, Badge, Loader } from "@mantine/core";
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
 
 interface DashboardProps {
@@ -565,17 +567,24 @@ function Dashboard({ user }: DashboardProps) {
 
                         {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
 
-                        {(userRole === "master" || userRole === "admin") && (
+                        {(userRole === "master" ) && (
                             <Group>
                                 <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
-                                <Registrar />
-                                <AdminBR />
-                                <ManagePro />
-                                <AllRetiros />
                                 <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
-                                <AdmincargoReports user={user} />
+                                <AllRetiros />
+                                <Registrar />
+                                <LimitVendedores />
+                                <ManagePro />
+                                <AdminBR />
                             </Group>
                         )}
+                                 {(userRole === "admin" ) && (
+                            <Group>
+                                <AdmincargoReports user={user} />
+                                <EditmyClients user={user} onBalanceUpdate={onBalanceUpdate} />
+                            </Group>
+                        )}
+                       
                     </Tabs.Panel>
 
                     <Tabs.Panel value="Retiro" pt="xs">

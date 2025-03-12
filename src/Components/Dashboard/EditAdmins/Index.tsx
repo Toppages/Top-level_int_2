@@ -90,6 +90,19 @@ const EditAdmins = ({ user, onBalanceUpdate }: EditClientProps) => {
                             data={clients}
                             onChange={(value) => setValue("clientId", value)}
                             value={clientId}
+                            transition="pop-top-left"
+                            transitionDuration={80}
+                            transitionTimingFunction="ease"
+                            styles={() => ({
+                                item: {
+                                    '&[data-selected]': {
+                                        '&, &:hover': {
+                                            backgroundColor: '#0c2a85',
+                                            color: 'white',
+                                        },
+                                    },
+                                },
+                            })}
                         />
                         <NumberInput
                             radius="md"
@@ -116,7 +129,7 @@ const EditAdmins = ({ user, onBalanceUpdate }: EditClientProps) => {
                 </form>
             </Modal>
             <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
-                Añadir Saldo a los administradores
+                Añadir Saldo administradores
             </Button>
         </>
     );

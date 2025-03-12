@@ -78,13 +78,13 @@ const AdminBR = () => {
                     </Stack>
 
                     <Group position="center" mt="md">
-                        <Button type="submit">Sumar Saldo Admin</Button>
+                        <Button style={{ background: '#0c2a85' }} type="submit">Sumar Saldo Del baul</Button>
                     </Group>
                 </form>
             </Modal>
 
             <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
-                Añadir Saldo
+                Añadir Saldo Del baul
             </Button>
         </>
     );
