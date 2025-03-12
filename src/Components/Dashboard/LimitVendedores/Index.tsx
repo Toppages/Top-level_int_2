@@ -14,19 +14,19 @@ const LimitVendedores = () => {
     const [purchaseLimits, setPurchaseLimits] = useState<Record<string, number>>({});
 
     useEffect(() => {
-        axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores`)
-            .then(({ data }) => {
-                setVendedores(data.map((vendedor: { handle: string, name: string }) => ({
-                    value: vendedor.handle,
-                    label: `${vendedor.name}`
-                })));
-            })
-            .catch(error => console.error('Error fetching vendedores:', error));
-    }, []);
+        if (opened) {
+            axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores`)
+                .then(({ data }) => {
+                    setVendedores(data.map((vendedor: { handle: string, name: string }) => ({
+                        value: vendedor.handle,
+                        label: `${vendedor.name}`
+                    })));
+                })
+                .catch(error => console.error('Error fetching vendedores:', error));
 
-    useEffect(() => {
-        fetchProductsFromAPI(setFetchedProducts, setLoading);
-    }, []);
+            fetchProductsFromAPI(setFetchedProducts, setLoading);
+        }
+    }, [opened]);
 
     useEffect(() => {
         if (selectedVendedor) {
@@ -95,7 +95,6 @@ const LimitVendedores = () => {
             setLoading(false);
         }
     };
-
 
     const extractDiamantes = (productName: string) => {
         let cleanName = productName.replace(/Free Fire\s*-*\s*/i, "").trim();

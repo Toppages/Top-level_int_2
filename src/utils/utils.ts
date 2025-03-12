@@ -157,7 +157,12 @@ export const fetchUserData = async (
 };
 
 export const fetchTotalSaldos = async (
-  setTotalSaldos: React.Dispatch<React.SetStateAction<number | null>>,
+  setTotalSaldos: React.Dispatch<React.SetStateAction<{
+    totalSaldoAdmins: number;
+    totalSaldoClientes: number;
+    admins: { handle: string; correo: string; saldo: number }[];
+    clientes: { handle: string; correo: string; saldo: number }[];
+  } | null>>,
 ) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -165,12 +170,21 @@ export const fetchTotalSaldos = async (
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/total-saldos`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTotalSaldos(response.data.totalSaldo); 
+
+      // Actualizar el estado con los saldos y los detalles de los usuarios
+      setTotalSaldos({
+        totalSaldoAdmins: response.data.totalSaldoAdmins,
+        totalSaldoClientes: response.data.totalSaldoClientes,
+        admins: response.data.admins,
+        clientes: response.data.clientes,
+      });
     } catch (error) {
       toast.error('Error al obtener la suma de saldos');
     }
   }
 };
+
+
 
 export const handleLogout = (navigate: Function) => {
   localStorage.removeItem('token');

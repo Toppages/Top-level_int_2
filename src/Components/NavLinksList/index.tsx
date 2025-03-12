@@ -5,9 +5,10 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { UserData, NavLinksProps } from "../../types/types";
 import { fetchTotalSaldos, fetchUserData, handleLogout } from "../../utils/utils";
-import { Stack, Image, Divider, Title, NavLink, Group, Loader } from "@mantine/core";
-import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX } from "@tabler/icons-react";
+import { Stack, Image, Divider, Title, NavLink, Group, Loader, Text, ActionIcon, Modal, Accordion, ScrollArea } from "@mantine/core";
+import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX, IconInfoCircle } from "@tabler/icons-react";
 
+// Datos para los enlaces de navegación
 const data = [
     { icon: IconGauge, label: 'CONTROL DE RETIROS' },
     { icon: IconUsers, label: 'COMPRA DE PINES' },
@@ -16,14 +17,15 @@ const data = [
     { icon: IconArchive, label: 'INVENTARIO' },
 ];
 
+// Función para obtener el color según el rango del usuario
 const getSaldoColor = (rango: string) => {
     switch (rango) {
         case 'ultrap':
-            return '#0c2a85'; 
+            return '#0c2a85';
         case 'oro':
-            return '#FFD700'; 
+            return '#FFD700';
         case 'plata':
-            return '#C0C0C0'; 
+            return '#C0C0C0';
         case 'bronce':
             return '#cd7f32';
         default:
@@ -32,8 +34,14 @@ const getSaldoColor = (rango: string) => {
 };
 
 function NavLinks({ active, setActiveLink }: NavLinksProps) {
+    const [opened, setOpened] = useState(false);
     const [userData, setUserData] = useState<UserData | null>(null);
-    const [totalSaldos, setTotalSaldos] = useState<number | null>(null);
+    const [totalSaldos, setTotalSaldos] = useState<{
+        totalSaldoAdmins: number;
+        totalSaldoClientes: number;
+        admins: { handle: string; correo: string; saldo: number }[]; 
+        clientes: { handle: string; correo: string; saldo: number }[];
+    } | null>(null);
 
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width: 1000px)");
@@ -41,13 +49,80 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
     useEffect(() => {
         fetchUserData(setUserData);
         fetchTotalSaldos(setTotalSaldos);
-        const intervalId = setInterval(() => fetchUserData(setUserData), 5000);
+
+        const intervalId = setInterval(() => {
+            fetchUserData(setUserData);
+            fetchTotalSaldos(setTotalSaldos);
+        }, 5000);
+
         return () => clearInterval(intervalId);
     }, []);
 
     return (
         <Stack justify="space-between" style={{ height: isMobile ? '85vh' : '90vh' }}>
             <div>
+                <Modal
+                    radius='lg'
+                    opened={opened}
+                    onClose={() => setOpened(false)}
+                    withCloseButton={false}
+                >
+                    {totalSaldos ? (
+                        <>
+                            <Title fz="xl" ta="center" c='#0c2a85' order={5}>
+                                Total Saldo de Administradores: {totalSaldos.totalSaldoAdmins} USD
+                            </Title>
+
+                            <Title fz="xl" mt={15} ta="center" c='#0c2a85' order={5}>
+                                Total Saldo de Clientes: {totalSaldos.totalSaldoClientes} USD
+                            </Title>
+
+                            <Accordion mt={15} variant="separated">
+                                <Accordion.Item value="Administradores">
+                                    <Accordion.Control>
+                                        <Title ta="center" c='#0c2a85' order={6}>
+                                            Detalles de Administradores:
+                                        </Title>
+                                    </Accordion.Control>
+                                    <Accordion.Panel>
+                                        <ScrollArea style={{ height: 200 }}>
+                                            {totalSaldos.admins.map((admin, index) => (
+                                                <div key={index}>
+                                                    <Group position='apart'>
+                                                        <p>{admin.handle} {admin.correo}</p>
+                                                        <Text c="teal.4">{admin.saldo} USD</Text>
+                                                    </Group>
+                                                </div>
+                                            ))}
+                                        </ScrollArea>
+                                    </Accordion.Panel>
+                                </Accordion.Item>
+
+                                <Accordion.Item value="Clientes">
+                                    <Accordion.Control>
+                                        <Title ta="center" c='#0c2a85' order={6}>
+                                            Detalles de Clientes:
+                                        </Title>
+                                    </Accordion.Control>
+                                    <Accordion.Panel>
+                                        <ScrollArea style={{ height: 200 }}>
+                                            {totalSaldos.clientes.map((cliente, index) => (
+                                                <div key={index}>
+                                                    <Group position='apart'>
+                                                        <p>{cliente.handle} {cliente.correo}</p>
+                                                        <Text c="teal.4">{cliente.saldo} USD</Text>
+                                                    </Group>
+                                                </div>
+                                            ))}
+                                        </ScrollArea>
+                                    </Accordion.Panel>
+                                </Accordion.Item>
+                            </Accordion>
+                        </>
+                    ) : (
+                        <Loader color="indigo" variant="bars" />
+                    )}
+                </Modal>
                 <div style={{ width: 150, marginLeft: 'auto', marginRight: 'auto' }}>
                     <Image mt={-50} src={Logo} alt="Panda" />
                 </div>
@@ -69,26 +144,31 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                             Saldo Correracional: {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
                         </Title>
                         {!(totalSaldos && userData) ? (
-  <Loader color="indigo" variant="bars" />
-) : (
-  <Title ta="center" c="#0c2a85" order={6}>
-    Saldo De trabajo: {`${(userData.saldo - totalSaldos).toFixed(2)} USD`}
-  </Title>
-)}
+                            <Loader color="indigo" variant="bars" />
+                        ) : (
+                            <Group position='center'>
+                                <Title ta="center" c="#0c2a85" order={6}>
+                                    Saldo De trabajo: {`${(userData.saldo - totalSaldos.totalSaldoAdmins - totalSaldos.totalSaldoClientes).toFixed(2)} USD`}
+                                </Title>
 
+                                <ActionIcon color="indigo" size="sm" onClick={() => setOpened(true)}>
+                                    <IconInfoCircle size={26} />
+                                </ActionIcon>
+                            </Group>
+                        )}
                     </>
                 )}
 
                 {!userData || userData.role !== 'master' && (
                     <>
-                    <Group ml={5} mr={5} position='apart'>
-                    <Title ta="center" c='#0c2a85' order={5}>
-                        Saldo:
-                    </Title>
-                    <Title ta="center" c={userData ? getSaldoColor(userData.rango) : '#000000'} order={6}>
-                       {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
-                    </Title>
-                    </Group>
+                        <Group ml={5} mr={5} position='apart'>
+                            <Title ta="center" c='#0c2a85' order={5}>
+                                Saldo:
+                            </Title>
+                            <Title ta="center" c={userData ? getSaldoColor(userData.rango) : '#000000'} order={6}>
+                                {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
+                            </Title>
+                        </Group>
                     </>
                 )}
 
