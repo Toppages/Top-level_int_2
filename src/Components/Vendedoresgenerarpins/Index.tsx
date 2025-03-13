@@ -1,11 +1,12 @@
 import { Title, Card, Text, Group, Badge, ScrollArea, Button } from '@mantine/core';
 import { IconShoppingCart } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
-import { VendedoresgenerarpinsProps, Report, ReportSummary } from '../../types/types'; 
+import { PurchaseLimit, Report, ReportSummary } from '../../types/types';
 import { useMediaQuery } from "@mantine/hooks";
 import axios from 'axios';
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
+import { fetchUserData } from '../../utils/utils';
 
 const fetchReports = async (
     userHandle: string,
@@ -65,8 +66,9 @@ const fetchReports = async (
     }
 };
 
-function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
+function Vendedoresgenerarpins() {
     const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+    const [userData, setUserData] = useState<any | null>(null);
     const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isAuthorizing, setIsAuthorizing] = useState(false);
@@ -80,43 +82,49 @@ function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
         const handleResize = () => setWindowHeight(window.innerHeight);
         window.addEventListener('resize', handleResize);
 
-        if (user) {
-            const { handle, rango } = user;
-            fetchReports(handle, rango, setError, setReportSummary);
-        }
+        fetchUserData(setUserData);
+        const intervalId = setInterval(() => {
+            fetchUserData(setUserData);
+        }, 5000);
 
         return () => window.removeEventListener('resize', handleResize);
-    }, [user]);
+    }, []);
+
+    useEffect(() => {
+        if (userData) {
+            const { handle, rango } = userData;
+            fetchReports(handle, rango, setError, setReportSummary);
+        }
+    }, [userData]);
 
     const handleAuthorize = async () => {
-        if (!selectedProduct) {
-            console.error("Producto no seleccionado.");
+        if (!selectedProduct || !userData) {
+            console.error("Producto no seleccionado o datos del usuario no disponibles.");
             return;
         }
-      
-        // Obtener el precio del PurchaseLimit
-        const userPrice = user?.purchaseLimits?.[selectedProduct.product]?.price || 0;
-        console.log("Precio del producto:", userPrice); // Verifica el precio del producto
-      
+
+        const userPrice = userData?.purchaseLimits?.[selectedProduct.product]?.price || 0;
+        console.log("Precio del producto:", userPrice);
+
         setIsAuthorizing(true);
-      
+
         const apiKey = import.meta.env.VITE_API_KEY;
         const apiSecret = import.meta.env.VITE_API_SECRET;
-      
+
         if (!apiKey || !apiSecret) {
             setIsAuthorizing(false);
             return;
         }
-      
+
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
         const url = 'https://pincentral.baul.pro/api/pins/authorize';
         const verb = "POST";
         const route = "/api/pins/authorize";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
-      
+
         const chunks = Math.ceil(quantity / 10);
         let allCapturedPins: string[] = [];
-      
+
         for (let i = 0; i < chunks; i++) {
             const batchQuantity = i === chunks - 1 ? quantity % 10 : 10;
             const body = {
@@ -124,12 +132,12 @@ function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
                 quantity: batchQuantity,
                 order_id: moment().format("YYYYMMDD_HHmmss") + `_${i}`,
             };
-      
+
             const jsonBody = JSON.stringify(body);
             const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
             const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
             const authorizationHeader = `${apiKey}:${hmacSignature}`;
-      
+
             try {
                 const response = await axios.post(url, body, {
                     headers: {
@@ -138,7 +146,7 @@ function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
                         'Authorization': authorizationHeader
                     }
                 });
-      
+
                 if (response.status === 200 && response.data.status === "authorized") {
                     const captureResponse = await handleCapture(response.data.id);
                     allCapturedPins = [...allCapturedPins, ...captureResponse];
@@ -149,14 +157,13 @@ function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
                 console.error("Error en la solicitud de autorización:", error);
             }
         }
-      
+
         if (allCapturedPins.length > 0) {
-            sendSaleToBackend(allCapturedPins, userPrice); // Enviar el precio correcto al backend
+            sendSaleToBackend(allCapturedPins, userPrice);
         }
-      
+
         setIsAuthorizing(false);
     };
-    
 
     const handleCapture = async (playerId: string) => {
         if (!playerId || !selectedProduct) {
@@ -175,12 +182,9 @@ function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
 
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
         const captureUrl = 'https://pincentral.baul.pro/api/pins/capture';
-        const captureBody = {
-            id: playerId
-        };
+        const captureBody = { id: playerId };
 
         const jsonBody = JSON.stringify(captureBody);
-
         const verb = "POST";
         const route = "/api/pins/capture";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
@@ -216,10 +220,9 @@ function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
         try {
             const totalPrice = userPrice * quantity;
             const totalOriginalPrice = userPrice * quantity;
-    
-            // Obtener el límite de compra para el producto seleccionado
-            const productLimit = user?.purchaseLimits?.[selectedProduct?.product]?.limit || 0;
-    
+
+            const productLimit = userData?.purchaseLimits?.[selectedProduct?.product]?.limit || 0;
+
             const saleData = {
                 quantity,
                 product: selectedProduct?.product,
@@ -229,33 +232,27 @@ function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
                 totalOriginalPrice: totalOriginalPrice.toFixed(2),
                 status: "captured",
                 order_id: moment().format("YYYYMMDD_HHmmss"),
-                user: user ? {
-                    id: user._id,
-                    handle: user.handle,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    saldo: user.saldo
+                user: userData ? {
+                    id: userData._id,
+                    handle: userData.handle,
+                    name: userData.name,
+                    email: userData.email,
+                    role: userData.role,
+                    saldo: userData.saldo
                 } : null,
-                pins: pins.map(pin => ({ serial: "", key: pin })), // Aquí estamos enviando los pines
-                // Enviar el límite de compra al backend
+                pins: pins.map(pin => ({ serial: "", key: pin })),
                 purchaseLimit: productLimit
             };
-    
-            // Enviar la venta al backend
+
             const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             if (response.status === 201) {
                 console.log("Venta registrada con éxito en el backend");
-    
-                // Recibir los límites de compra actualizados
                 const updatedLimits = response.data.purchaseLimits;
-    
-                // Puedes almacenar los límites actualizados en el estado del frontend o realizar las acciones necesarias
                 console.log("Límites de compra actualizados: ", updatedLimits);
             } else {
                 console.error("Error al registrar la venta en el backend");
@@ -264,62 +261,69 @@ function Vendedoresgenerarpins({ user }: VendedoresgenerarpinsProps) {
             console.error("Error al enviar la venta al backend:", error);
         }
     };
-    
 
     return (
         <>
             {error && <Text color="red">{error}</Text>}
 
-            {user ? (
+            {userData ? (
                 <>
                     <Title order={3}>Productos disponibles</Title>
                     <Text fz="lg">Seleccione un producto para generar un código</Text>
                     <ScrollArea style={{ height: maxHeight - 70 }}>
-                        {user.purchaseLimits && Object.keys(user.purchaseLimits).length > 0 ? (
-                            Object.entries(user.purchaseLimits)
-                                .filter(([_, limitData]) => limitData.limit > 0)
-                                .map(([code, limitData]) => (
-                                    <Card key={code} shadow="xs" padding="md" radius="sm" withBorder mt="sm">
-                                        <Group position='apart'>
-                                            <div>
-                                                <Text>{limitData.name}</Text>
-                                                <Badge c='black' color="gray">Limite de hoy: {limitData.limit}</Badge>
-                                            </div>
-                                          
-                                            <div>
-                                                {reportSummary && reportSummary.productSummary[limitData.name] ? (
-                                                    <Text fz="sm">
-                                                        Pines sin usar: {reportSummary.productSummary[limitData.name]?.unused || 0}
-                                                    </Text>
-                                                ) : (
-                                                    <Text fz="sm">Pines sin usar: 0</Text>
-                                                )}
-                                            </div>
-                                            <Group>
-                                                <Button
-                                                    onClick={() => {
-                                                        console.log('Botón presionado');
-                                                        setSelectedProduct({
-                                                            product: code,
-                                                            name: limitData.name
-                                                        });
-                                                        setQuantity(limitData.limit);
-                                                        handleAuthorize();
-                                                    }}
-                                                    style={{ background: '#0c2a85' }}
-                                                    radius="xl"
-                                                    size="sm"
-                                                    rightIcon={<IconShoppingCart />}
-                                                >
-                                                    Generar
-                                                </Button>
+                        {userData.purchaseLimits && Object.keys(userData.purchaseLimits).length > 0 ? (
+                            Object.entries(userData.purchaseLimits)
+                                .filter(([_, limitData]) => (limitData as PurchaseLimit).limit > 0)
+                                .map(([code, limitData]) => {
+                                    const typedLimitData = limitData as PurchaseLimit;
+                                    return (
+                                        <Card key={code} shadow="xs" padding="md" radius="sm" withBorder mt="sm">
+                                            <Group position='apart'>
+                                                <div>
+                                                    <Text>{typedLimitData.name}</Text>
+                                                    <Badge c='black' color="gray">Limite de hoy: {typedLimitData.limit}</Badge>
+                                                </div>
+
+                                                <div>
+                                                    {reportSummary && reportSummary.productSummary[typedLimitData.name] ? (
+                                                        <Text fz="sm">
+                                                            Pines sin usar: {reportSummary.productSummary[typedLimitData.name]?.unused || 0}
+                                                        </Text>
+                                                    ) : (
+                                                        <Text fz="sm">Pines sin usar: 0</Text>
+                                                    )}
+                                                </div>
+                                                <Group>
+                                                    <Button
+                                                        onClick={() => {
+                                                            console.log('Botón presionado');
+                                                            setSelectedProduct({
+                                                                product: code,
+                                                                name: typedLimitData.name
+                                                            });
+                                                            setQuantity(typedLimitData.limit);
+                                                            handleAuthorize();
+                                                        }}
+                                                        style={{
+                                                            background: (reportSummary?.productSummary[typedLimitData.name]?.unused ?? 0) >= typedLimitData.limit ? 'gray' : '#0c2a85',
+                                                        }}
+                                                        radius="xl"
+                                                        size="sm"
+                                                        rightIcon={<IconShoppingCart />}
+                                                        disabled={(reportSummary?.productSummary?.[typedLimitData.name]?.unused ?? 0) >= typedLimitData.limit}
+                                                    >
+                                                        Generar
+                                                    </Button>
+
+                                                </Group>
                                             </Group>
-                                        </Group>
-                                    </Card>
-                                ))
+                                        </Card>
+                                    );
+                                })
                         ) : (
                             <Text>No hay límites de compra asignados.</Text>
                         )}
+
                     </ScrollArea>
                 </>
             ) : (
