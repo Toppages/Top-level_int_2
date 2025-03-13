@@ -7,6 +7,7 @@ import axios from 'axios';
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
 import { fetchUserData } from '../../utils/utils';
+import { toast } from 'sonner';
 
 const fetchReports = async (
     userHandle: string,
@@ -81,14 +82,18 @@ function Vendedoresgenerarpins() {
     useEffect(() => {
         const handleResize = () => setWindowHeight(window.innerHeight);
         window.addEventListener('resize', handleResize);
-
+    
         fetchUserData(setUserData);
         const intervalId = setInterval(() => {
             fetchUserData(setUserData);
-        }, 5000);
-
-        return () => window.removeEventListener('resize', handleResize);
+        }, 5000); 
+    
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            clearInterval(intervalId); 
+        };
     }, []);
+    
 
     useEffect(() => {
         if (userData) {
@@ -251,11 +256,12 @@ function Vendedoresgenerarpins() {
             });
 
             if (response.status === 201) {
-                console.log("Venta registrada con éxito en el backend");
+                toast.success("Venta registrada con éxito");
                 const updatedLimits = response.data.purchaseLimits;
                 console.log("Límites de compra actualizados: ", updatedLimits);
             } else {
-                console.error("Error al registrar la venta en el backend");
+                toast.error("Error al registrar la venta");
+
             }
         } catch (error) {
             console.error("Error al enviar la venta al backend:", error);
@@ -294,26 +300,26 @@ function Vendedoresgenerarpins() {
                                                     )}
                                                 </div>
                                                 <Group>
-                                                    <Button
-                                                        onClick={() => {
-                                                            console.log('Botón presionado');
-                                                            setSelectedProduct({
-                                                                product: code,
-                                                                name: typedLimitData.name
-                                                            });
-                                                            setQuantity(typedLimitData.limit);
-                                                            handleAuthorize();
-                                                        }}
-                                                        style={{
-                                                            background: (reportSummary?.productSummary[typedLimitData.name]?.unused ?? 0) >= typedLimitData.limit ? 'gray' : '#0c2a85',
-                                                        }}
-                                                        radius="xl"
-                                                        size="sm"
-                                                        rightIcon={<IconShoppingCart />}
-                                                        disabled={(reportSummary?.productSummary?.[typedLimitData.name]?.unused ?? 0) >= typedLimitData.limit}
-                                                    >
-                                                        Generar
-                                                    </Button>
+                                                <Button
+    onClick={() => {
+        toast("Registrando venta...");
+        setSelectedProduct({
+            product: code,
+            name: typedLimitData.name
+        });
+        setQuantity(typedLimitData.limit);
+        handleAuthorize();
+    }}
+    style={{
+        background: (reportSummary?.productSummary[typedLimitData.name]?.unused ?? 0) >= typedLimitData.limit ? 'gray' : '#0c2a85',
+    }}
+    radius="xl"
+    size="sm"
+    rightIcon={<IconShoppingCart />}
+    disabled={(reportSummary?.productSummary?.[typedLimitData.name]?.unused ?? 0) >= typedLimitData.limit}
+>
+    Generar
+</Button>
 
                                                 </Group>
                                             </Group>

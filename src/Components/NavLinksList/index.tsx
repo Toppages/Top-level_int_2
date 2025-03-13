@@ -146,11 +146,11 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                             <Loader color="indigo" variant="bars" />
                         ) : (
                             <Group position='center'>
-                                <Title ta="center" c="#0c2a85" order={6}>
+                                <Title  c="#0c2a85" order={6}>
                                     Saldo De trabajo: {`${(userData.saldo - totalSaldos.totalSaldoAdmins - totalSaldos.totalSaldoClientes).toFixed(2)} USD`}
                                 </Title>
 
-                                <ActionIcon color="indigo" size="sm" onClick={() => setOpened(true)}>
+                                <ActionIcon color="indigo" size="xs" onClick={() => setOpened(true)}>
                                     <IconInfoCircle size={26} />
                                 </ActionIcon>
                             </Group>

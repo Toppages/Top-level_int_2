@@ -552,10 +552,15 @@ function Dashboard({ user }: DashboardProps) {
             <div style={{ width: '100%', overflowX: 'hidden' }}>
 
 
-                <Tabs defaultValue="Retiro">
+                <Tabs defaultValue={userRole === "vendedor" ? "Retiro" : "Pines"}>
 
                     <Tabs.List>
-                        <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
+                        {userRole !== "vendedor" && (
+                            <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>
+                                Retiro
+                            </Tabs.Tab>
+                        )}
+
                         <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
                         {(userRole === "master" || userRole === "admin") && (
 
@@ -563,55 +568,57 @@ function Dashboard({ user }: DashboardProps) {
                             <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
                         )}
                     </Tabs.List>
+                    {userRole !== "vendedor" && (
 
-                    <Tabs.Panel value="control" pt="xs">
+                        <Tabs.Panel value="control" pt="xs">
 
-                        {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
+                            {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
 
-                        {(userRole === "master") && (
-                            <>
-                            <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                    General
-                                </Title>
-                                <Group>
+                            {(userRole === "master") && (
+                                <>
+                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                        General
+                                    </Title>
+                                    <Group>
 
-                                <AllRetiros />
-                                <Registrar />
-                                <ManagePro />
-                                <AdminBR />
-                                </Group>
-                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                    Clientes
-                                </Title>
-                                <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
-                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                    Administradores
-                                </Title>
-                                <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
-                                   <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                    Vendedores
-                                </Title>
-                                <LimitVendedores />
-                            </>
-                        )}
-                        {(userRole === "admin") && (
-                            <>
-                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                    General
-                                </Title>
-                                <AdmincargoReports user={user} />
-                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                    Clientes
-                                </Title>
-                                <EditmyClients user={user} onBalanceUpdate={onBalanceUpdate} />
-                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                    Vendedores
-                                </Title>
-                                <LimitesmyVend user={user} />
-                            </>
-                        )}
+                                        <AllRetiros />
+                                        <Registrar />
+                                        <ManagePro />
+                                        <AdminBR />
+                                    </Group>
+                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                        Clientes
+                                    </Title>
+                                    <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
+                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                        Administradores
+                                    </Title>
+                                    <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
+                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                        Vendedores
+                                    </Title>
+                                    <LimitVendedores />
+                                </>
+                            )}
+                            {(userRole === "admin") && (
+                                <>
+                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                        General
+                                    </Title>
+                                    <AdmincargoReports user={user} />
+                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                        Clientes
+                                    </Title>
+                                    <EditmyClients user={user} onBalanceUpdate={onBalanceUpdate} />
+                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                        Vendedores
+                                    </Title>
+                                    <LimitesmyVend user={user} />
+                                </>
+                            )}
 
-                    </Tabs.Panel>
+                        </Tabs.Panel>
+                    )}
 
                     <Tabs.Panel value="Retiro" pt="xs">
                         <div>

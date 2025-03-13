@@ -183,8 +183,8 @@ function Reports({ user }: ReportsProps) {
 
       </Modal>
 
-      <Title ta="center" weight={700} mb="sm" order={2}>Reportes de Retiros</Title>
-      {userRole == 'cliente' && (
+      <Title ta="center" weight={700} mb="xl" order={2}>Reportes de Retiros</Title>
+      {userRole == 'cliente' || userRole == 'vendedor' && (
         <>
 
           <Group
@@ -283,8 +283,8 @@ function Reports({ user }: ReportsProps) {
               <ActionIcon
                 style={{ background: '#0c2a85', color: 'white', }}
                 radius="md"
-                size="xl"
                 color="indigo"
+                size="xl"
                 variant="filled"
                 onClick={() => exportToExcel(filteredReports)}
               >
@@ -319,9 +319,8 @@ function Reports({ user }: ReportsProps) {
       )}
 
       {filteredReports.length > 0 && (
-        <ScrollArea mb={15} style={{height:isMobile ? 450 : 370}}>
 
-        <Table mt={15} mb={isMobile ? 100 : 10} striped highlightOnHover withBorder withColumnBorders>
+        <Table mt={5}  striped highlightOnHover withBorder withColumnBorders>
           <thead style={{ background: '#0c2a85' }}>
             <tr>
               <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
@@ -336,8 +335,10 @@ function Reports({ user }: ReportsProps) {
                   <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Cantidad</Title></th>
                 </>
               )}
+               { userRole !== 'vendedor' && (
               <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio total</Title></th>
-              {!isMobile && (
+                )}
+              {!isMobile && userRole !== 'vendedor' && (
                 <>
                   <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Saldo Actual</Title></th>
                 </>
@@ -375,8 +376,10 @@ function Reports({ user }: ReportsProps) {
                     <td style={{ textAlign: 'center' }}>{report.quantity}</td>
                   </>
                 )}
+                  { userRole !== 'vendedor' && (
                 <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>
-                {!isMobile && (
+                  )}
+                {!isMobile && userRole !== 'vendedor' &&  (
                   <>
                     <td style={{ textAlign: 'center' }}>{report.moneydisp}  USD</td>
                   </>
@@ -388,6 +391,7 @@ function Reports({ user }: ReportsProps) {
                   <ActionIcon
                     style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
                     color="indigo"
+                    size='sm'
                     variant="filled"
                     onClick={() => handlePinClick(report, setPines, setPinsModalOpened, setSelectedReport)}
                   >
@@ -398,7 +402,6 @@ function Reports({ user }: ReportsProps) {
             ))}
           </tbody>
         </Table>
-        </ScrollArea>
       )}
     </>
   );

@@ -38,7 +38,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
       case 0:
         return <Dashboard user={user} />;
       case 1:
-        return user?.role === "vendedor" ? <Vendedoresgenerarpins user={user} /> : <TableM user={user} />;
+        return user?.role === "vendedor" ? <Vendedoresgenerarpins/> : <TableM user={user} />;
       case 2:
         return <Reports user={user} />;
       case 3:
@@ -67,7 +67,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
             style={{
               padding: '20px',
               boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-              height: '95vh',
+              height: '100%',
               display: navOpen ? 'block' : 'none',
             }}
             radius="md"
@@ -80,7 +80,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
           style={{
             padding: '20px',
             boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-            height: activeLink === 2 ? '95vh' : '100%',
+            height: activeLink === 2 ? '95%' : '100%',
             maxWidth: '100%',
           }}
         >
