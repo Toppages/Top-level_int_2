@@ -62,7 +62,7 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
       {loading ? (
         <Loader color="indigo" size="xl" variant="dots" style={{ margin: 'auto', display: 'block' }} />
       ) : (
-        <ScrollArea style={{ height: windowHeight - 100 }} type="never">
+        <ScrollArea style={{ height: windowHeight - 90 }} type="never">
           <Table striped highlightOnHover>
             <thead style={{ background: '#0c2a85' }}>
               <tr>

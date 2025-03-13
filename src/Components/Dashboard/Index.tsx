@@ -636,7 +636,7 @@ function Dashboard({ user }: DashboardProps) {
                             <div>
                                 <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
 
-                                <ScrollArea style={{ height: maxHeight - 130 }} type='always'>
+                                <ScrollArea style={{ height: maxHeight - 140 }} type='always'>
                                     {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
                                     {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
 

@@ -67,7 +67,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
             style={{
               padding: '20px',
               boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-              height: '100%',
+              height: '95vh',
               display: navOpen ? 'block' : 'none',
             }}
             radius="md"
@@ -80,7 +80,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
           style={{
             padding: '20px',
             boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-            height: activeLink === 2 ? '95%' : '100%',
+            height: activeLink === 2 ? '95vh' : '95vh',
             maxWidth: '100%',
           }}
         >

@@ -58,7 +58,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
     }, []);
 
     return (
-        <Stack justify="space-between" style={{ height: isMobile ? '85vh' : '90vh' }}>
+        <Stack justify="space-between" style={{ height: isMobile ? '85vh' : '80vh' }}>
             <div>
                 <Modal
                     radius='lg'
@@ -145,12 +145,12 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                         {!(totalSaldos && userData) ? (
                             <Loader color="indigo" variant="bars" />
                         ) : (
-                            <Group position='center'>
+                            <Group >
                                 <Title  c="#0c2a85" order={6}>
                                     Saldo De trabajo: {`${(userData.saldo - totalSaldos.totalSaldoAdmins - totalSaldos.totalSaldoClientes).toFixed(2)} USD`}
                                 </Title>
 
-                                <ActionIcon color="indigo" size="xs" onClick={() => setOpened(true)}>
+                                <ActionIcon ml={-15} color="indigo" size="xs" onClick={() => setOpened(true)}>
                                     <IconInfoCircle size={26} />
                                 </ActionIcon>
                             </Group>
@@ -173,7 +173,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
 
                 <Divider />
                 <NavLink
-                    mt={5}
+                mt={5}
                     label={userData ? userData.email : 'User@gmail.com'}
                     color="indigo"
                     icon={<IconUserFilled size={16} stroke={1.5} />}
@@ -194,7 +194,6 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                     }}
                 />
                 <NavLink
-                    mt={5}
                     label="Cerrar Sesión"
                     onClick={() => handleLogout(navigate)}
                     color="indigo"

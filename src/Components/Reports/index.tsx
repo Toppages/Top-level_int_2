@@ -320,7 +320,7 @@ function Reports({ user }: ReportsProps) {
 
       {filteredReports.length > 0 && (
 
-        <Table mt={5}  striped highlightOnHover withBorder withColumnBorders>
+        <Table mt={15}  striped highlightOnHover withBorder withColumnBorders>
           <thead style={{ background: '#0c2a85' }}>
             <tr>
               <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
