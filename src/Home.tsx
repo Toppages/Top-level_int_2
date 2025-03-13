@@ -5,14 +5,24 @@ import NavLinks from './Components/NavLinksList';
 import Dashboard from './Components/Dashboard/Index';
 import Inventario from './Components/Inventario';
 import BalanceReports from './Components/BalanceReports';
+import Vendedoresgenerarpins from './Components/Vendedoresgenerarpins/Index';
 import { Toaster } from 'sonner';
 import { Card, Group } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+
 interface HomeProps {
   navOpen: boolean;
   activeLink: number;
   setActiveLink: (index: number) => void;
-  user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    handle: string;
+    role: string;
+    saldo: number;
+    rango: string;
+  } | null;
 }
 
 function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
@@ -28,7 +38,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
       case 0:
         return <Dashboard user={user} />;
       case 1:
-        return <TableM user={user} />;
+        return user?.role === "vendedor" ? <Vendedoresgenerarpins user={user} /> : <TableM user={user} />;
       case 2:
         return <Reports user={user} />;
       case 3:

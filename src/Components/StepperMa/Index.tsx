@@ -248,7 +248,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         }
     };
 
-
     const handleFinishClick = () => {
         onClose();
         setActiveStep(0);

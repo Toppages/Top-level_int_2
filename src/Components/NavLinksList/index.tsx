@@ -8,13 +8,7 @@ import { fetchTotalSaldos, fetchUserData, handleLogout } from "../../utils/utils
 import { Stack, Image, Divider, Title, NavLink, Group, Loader, Text, ActionIcon, Modal, Accordion, ScrollArea } from "@mantine/core";
 import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX, IconInfoCircle } from "@tabler/icons-react";
 
-const data = [
-    { icon: IconGauge, label: 'CONTROL DE RETIROS' },
-    { icon: IconUsers, label: 'COMPRA DE PINES' },
-    { icon: IconReport, label: 'REPORTES DE RETIROS' },
-    { icon: IconWallet, label: 'BALANCE' },
-    { icon: IconArchive, label: 'INVENTARIO' },
-];
+
 
 const getSaldoColor = (rango: string) => {
     switch (rango) {
@@ -34,13 +28,20 @@ const getSaldoColor = (rango: string) => {
 function NavLinks({ active, setActiveLink }: NavLinksProps) {
     const [opened, setOpened] = useState(false);
     const [userData, setUserData] = useState<UserData | null>(null);
+    
     const [totalSaldos, setTotalSaldos] = useState<{
         totalSaldoAdmins: number;
         totalSaldoClientes: number;
         admins: { handle: string; correo: string; saldo: number }[]; 
         clientes: { handle: string; correo: string; saldo: number }[];
     } | null>(null);
-
+    const data = [
+        { icon: IconGauge, label: 'CONTROL DE RETIROS' },
+        { icon: IconUsers, label: userData?.role === 'vendedor' ? 'GENERAR PINES' : 'COMPRA DE PINES' },
+        { icon: IconReport, label: 'REPORTES DE RETIROS' },
+        { icon: IconWallet, label: 'BALANCE' },
+        { icon: IconArchive, label: 'INVENTARIO' },
+    ];
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width: 1000px)");
 
@@ -157,7 +158,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                     </>
                 )}
 
-                {!userData || userData.role !== 'master' && (
+                {!userData || userData.role !== 'master' && userData.role !== 'vendedor' && (
                     <>
                         <Group ml={5} mr={5} position='apart'>
                             <Title ta="center" c='#0c2a85' order={5}>
