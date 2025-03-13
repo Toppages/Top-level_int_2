@@ -32,7 +32,7 @@ function AdmincargoReports({ user }: EditClientProps) {
         const fetchUsers = async () => {
           if (user && user.handle) {  
             try {
-              const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/under-admin/${user.handle}`);
+              const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/under-admin/${user.handle}`);
               const formattedUsers = response.data.map((user: any) => ({
                 value: user.handle,
                 label: user.name,
@@ -101,7 +101,7 @@ function AdmincargoReports({ user }: EditClientProps) {
 
 
         try {
-            const url = `${import.meta.env.VITE_API_URL}/sales/user/${userHandle}`;
+            const url = `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
 
             const response = await axios.get(url);
 

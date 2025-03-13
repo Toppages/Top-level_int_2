@@ -68,8 +68,8 @@ export const fetchReports = async (
 
     try {
         const url = userRole === 'master'
-            ? `${import.meta.env.VITE_API_URL}/sales`
-            : `${import.meta.env.VITE_API_URL}/sales/user/${userHandle}`;
+            ? `${import.meta.env.VITE_API_BASE_URL}/sales`
+            : `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
 
         const response = await axios.get(url, {
             headers: { Authorization: `Bearer ${token}` },

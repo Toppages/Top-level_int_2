@@ -16,7 +16,7 @@ const UserCountsDisplay: React.FC<UserCountsDisplayProps> = ({ token }) => {
 
     useEffect(() => {
         if (token) {
-            fetch(`${import.meta.env.VITE_API_URL}/users/count`, {
+            fetch(`${import.meta.env.VITE_API_BASE_URL}/users/count`, {
                 method: "GET",
                 headers: { Authorization: `Bearer ${token}` },
             })

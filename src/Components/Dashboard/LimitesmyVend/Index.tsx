@@ -28,7 +28,7 @@ const LimitesmyVend = ({ user }: tProps) => {
     useEffect(() => {
         if (!user) return;
 
-        axios.get<vendedor[]>(`${import.meta.env.VITE_API_URL}/users/under-admin/${user.handle}`)
+        axios.get<vendedor[]>(`${import.meta.env.VITE_API_BASE_URL}/users/under-admin/${user.handle}`)
             .then(({ data }) => {
                 setVendedores(data
                     .filter(client => client.role === 'vendedor')
@@ -45,7 +45,7 @@ const LimitesmyVend = ({ user }: tProps) => {
 
     useEffect(() => {
         if (selectedVendedor) {
-            axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores/${selectedVendedor}`)
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/vendedores/${selectedVendedor}`)
                 .then(({ data }) => {
                     if (data.purchaseLimits) {
                         const limits: Record<string, number> = {};
@@ -97,7 +97,7 @@ const LimitesmyVend = ({ user }: tProps) => {
                 if (!product) continue;
 
                 await axios.put(
-                    `${import.meta.env.VITE_API_URL}/users/${selectedVendedor}/purchase-limits/${productCode}`,
+                    `${import.meta.env.VITE_API_BASE_URL}/users/${selectedVendedor}/purchase-limits/${productCode}`,
                     { productCode, limit, name: product.name, price: product.price }
                 );
             }
@@ -114,11 +114,11 @@ const LimitesmyVend = ({ user }: tProps) => {
     const handleUpdateAllLimits = async () => {
         setLoading(true);
         try {
-            const { data: allVendedores } = await axios.get<vendedor[]>(`${import.meta.env.VITE_API_URL}/users/under-admin/${user?.handle}`);
+            const { data: allVendedores } = await axios.get<vendedor[]>(`${import.meta.env.VITE_API_BASE_URL}/users/under-admin/${user?.handle}`);
             const vendedoresFiltrados = allVendedores.filter(client => client.role === 'vendedor');
 
             for (const vendedor of vendedoresFiltrados) {
-                const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores/${vendedor.handle}`);
+                const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/vendedores/${vendedor.handle}`);
 
                 if (data.purchaseLimits) {
                     for (const productCode in data.purchaseLimits) {
@@ -126,7 +126,7 @@ const LimitesmyVend = ({ user }: tProps) => {
                         if (!product) continue;
 
                         await axios.put(
-                            `${import.meta.env.VITE_API_URL}/users/${vendedor.handle}/purchase-limits/${productCode}`,
+                            `${import.meta.env.VITE_API_BASE_URL}/users/${vendedor.handle}/purchase-limits/${productCode}`,
                             {
                                 productCode,
                                 limit: data.purchaseLimits[productCode].originLimit,

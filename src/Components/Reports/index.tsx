@@ -319,7 +319,7 @@ function Reports({ user }: ReportsProps) {
       )}
 
       {filteredReports.length > 0 && (
-        <ScrollArea mb={15} style={{height:isMobile ? 250 : 370}}>
+        <ScrollArea mb={15} style={{height:isMobile ? 450 : 370}}>
 
         <Table mt={15} mb={isMobile ? 100 : 10} striped highlightOnHover withBorder withColumnBorders>
           <thead style={{ background: '#0c2a85' }}>

@@ -27,7 +27,7 @@ const AdminBR = () => {
         try {
             const saldoRedondeado = parseFloat(data.saldo.toFixed(2));
 
-            const response = await axios.put(`${import.meta.env.VITE_API_URL}/admin/balance`, {
+            const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/balance`, {
                 saldo: saldoRedondeado,
             });
 

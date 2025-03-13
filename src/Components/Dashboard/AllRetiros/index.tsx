@@ -27,7 +27,7 @@ function AllRetiros() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/all`);
+                const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/all`);
                 const formattedUsers = response.data.map((user: any) => ({
                     value: user.handle,
                     label: user.name,
@@ -95,7 +95,7 @@ function AllRetiros() {
 
 
         try {
-            const url = `${import.meta.env.VITE_API_URL}/sales/user/${userHandle}`;
+            const url = `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
 
             const response = await axios.get(url);
 

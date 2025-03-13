@@ -34,7 +34,7 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
     useEffect(() => {
         if (!user) return;
 
-        axios.get<Client[]>(`${import.meta.env.VITE_API_URL}/users/under-admin/${user.handle}`)
+        axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/under-admin/${user.handle}`)
             .then(({ data }) => {
                 setClients(data
                     .filter(client => client.role === 'cliente')
@@ -67,7 +67,7 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
         handleClose();
 
         try {
-            const response = await axios.put(`${import.meta.env.VITE_API_URL}/user/balance`, {
+            const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/user/balance`, {
                 userId: data.clientId,
                 amount: data.saldo,
                 transactionUserName: user?.handle,

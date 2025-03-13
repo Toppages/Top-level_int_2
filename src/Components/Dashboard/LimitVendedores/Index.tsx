@@ -15,7 +15,7 @@ const LimitVendedores = () => {
 
     useEffect(() => {
         if (opened) {
-            axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores`)
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/vendedores`)
                 .then(({ data }) => {
                     setVendedores(data.map((vendedor: { handle: string, name: string }) => ({
                         value: vendedor.handle,
@@ -30,7 +30,7 @@ const LimitVendedores = () => {
 
     useEffect(() => {
         if (selectedVendedor) {
-            axios.get(`${import.meta.env.VITE_API_URL}/users/vendedores/${selectedVendedor}`)
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/users/vendedores/${selectedVendedor}`)
                 .then(({ data }) => {
                     if (data.purchaseLimits) {
                         const limits: Record<string, number> = {};
@@ -83,7 +83,7 @@ const LimitVendedores = () => {
                 if (!product) continue;
 
                 await axios.put(
-                    `${import.meta.env.VITE_API_URL}/users/${selectedVendedor}/purchase-limits/${productCode}`,
+                    `${import.meta.env.VITE_API_BASE_URL}/users/${selectedVendedor}/purchase-limits/${productCode}`,
                     { productCode, limit, name: product.name, price: product.price }
                 );
             }

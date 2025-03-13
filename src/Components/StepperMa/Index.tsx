@@ -231,7 +231,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
             console.log("Enviando venta:", saleData);
 
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/sales`, saleData, {
+            const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
