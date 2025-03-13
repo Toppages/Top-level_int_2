@@ -550,25 +550,38 @@ function Dashboard({ user }: DashboardProps) {
     return (
         <>
             <div style={{ width: '100%', overflowX: 'hidden' }}>
+                {(userRole === "vendedor") && (
+                    <Tabs defaultValue="Pines">
+
+                        <Tabs.List>
+                            <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
+
+                        </Tabs.List>
 
 
-                <Tabs defaultValue={userRole === "vendedor" ? "Retiro" : "Pines"}>
 
-                    <Tabs.List>
-                        {userRole !== "vendedor" && (
-                            <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>
-                                Retiro
-                            </Tabs.Tab>
-                        )}
+                        <Tabs.Panel value="Pines" pt="xs">
+                            <Pines user={user} />
 
-                        <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
-                        {(userRole === "master" || userRole === "admin") && (
+                        </Tabs.Panel>
 
 
-                            <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
-                        )}
-                    </Tabs.List>
-                    {userRole !== "vendedor" && (
+                    </Tabs>
+                )}
+                {(userRole !== "vendedor") && (
+
+
+                    <Tabs defaultValue="Retiro">
+
+                        <Tabs.List>
+                            <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
+                            <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
+                            {(userRole === "master" || userRole === "admin") && (
+
+
+                                <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
+                            )}
+                        </Tabs.List>
 
                         <Tabs.Panel value="control" pt="xs">
 
@@ -618,62 +631,18 @@ function Dashboard({ user }: DashboardProps) {
                             )}
 
                         </Tabs.Panel>
-                    )}
 
-                    <Tabs.Panel value="Retiro" pt="xs">
-                        <div>
-                            <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
+                        <Tabs.Panel value="Retiro" pt="xs">
+                            <div>
+                                <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
 
-                            <ScrollArea style={{ height: maxHeight - 130 }} type='always'>
-                                {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
-                                {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
+                                <ScrollArea style={{ height: maxHeight - 130 }} type='always'>
+                                    {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
+                                    {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
 
-                                {sales.length > 0 ? (
-                                    <div>
+                                    {sales.length > 0 ? (
+                                        <div>
 
-                                        <Card
-                                            mt={15}
-                                            mb={45}
-                                            mr={10}
-                                            ml={10}
-                                            style={{
-                                                boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                                                transition: "all 0.3s ease",
-                                                transform: "scale(1)",
-                                            }}
-                                            radius="md"
-                                        >
-                                            <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                                TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
-                                            </Title>
-                                            <Title mt={5} weight={700} mb='md' order={5}>
-                                                Monto total de retiros {totalPrice.toFixed(2)} USD
-                                            </Title>
-
-
-                                            <SalesBarChart sales={sales} selectedRange={selectedRange} />
-
-
-                                        </Card>
-
-                                        <Card
-                                            mt={15}
-                                            mb={45}
-                                            mr={10}
-                                            ml={10}
-                                            style={{
-                                                boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                                                transition: "all 0.3s ease",
-                                                transform: "scale(1)",
-                                            }}
-                                            radius="md"
-                                        >
-                                            <Badge variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Gastos por Producto </Badge>
-                                            <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
-                                            <ProductList productTotals={productTotals} />
-                                        </Card>
-
-                                        {(selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" || selectedRange === "rango de día") && (
                                             <Card
                                                 mt={15}
                                                 mb={45}
@@ -686,26 +655,72 @@ function Dashboard({ user }: DashboardProps) {
                                                 }}
                                                 radius="md"
                                             >
-                                                <SalesBreakdown sales={sales} selectedRange={selectedRange} />
+                                                <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
+                                                    TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
+                                                </Title>
+                                                <Title mt={5} weight={700} mb='md' order={5}>
+                                                    Monto total de retiros {totalPrice.toFixed(2)} USD
+                                                </Title>
+
+
+                                                <SalesBarChart sales={sales} selectedRange={selectedRange} />
+
+
                                             </Card>
-                                        )}
+
+                                            <Card
+                                                mt={15}
+                                                mb={45}
+                                                mr={10}
+                                                ml={10}
+                                                style={{
+                                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                                    transition: "all 0.3s ease",
+                                                    transform: "scale(1)",
+                                                }}
+                                                radius="md"
+                                            >
+                                                <Badge variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Gastos por Producto </Badge>
+                                                <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
+                                                <ProductList productTotals={productTotals} />
+                                            </Card>
+
+                                            {(selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" || selectedRange === "rango de día") && (
+                                                <Card
+                                                    mt={15}
+                                                    mb={45}
+                                                    mr={10}
+                                                    ml={10}
+                                                    style={{
+                                                        boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                                        transition: "all 0.3s ease",
+                                                        transform: "scale(1)",
+                                                    }}
+                                                    radius="md"
+                                                >
+                                                    <SalesBreakdown sales={sales} selectedRange={selectedRange} />
+                                                </Card>
+                                            )}
 
 
-                                    </div>
-                                ) : (
-                                    <p>{error ? error : 'No hay Retiros disponibles.'}</p>
-                                )}
-                            </ScrollArea>
-                        </div>
-                    </Tabs.Panel>
+                                        </div>
+                                    ) : (
+                                        <p>{error ? error : 'No hay Retiros disponibles.'}</p>
+                                    )}
+                                </ScrollArea>
+                            </div>
+                        </Tabs.Panel>
 
-                    <Tabs.Panel value="Pines" pt="xs">
-                        <Pines user={user} />
+                        <Tabs.Panel value="Pines" pt="xs">
+                            <Pines user={user} />
 
-                    </Tabs.Panel>
+                        </Tabs.Panel>
 
 
-                </Tabs>
+                    </Tabs>
+                )
+
+                }
 
             </div>
         </>

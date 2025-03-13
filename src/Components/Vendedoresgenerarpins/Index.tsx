@@ -72,28 +72,28 @@ function Vendedoresgenerarpins() {
     const [userData, setUserData] = useState<any | null>(null);
     const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [isAuthorizing, setIsAuthorizing] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const [quantity, setQuantity] = useState(0);
+    const [selectedProduct] = useState<any>(null);
+    const [quantity] = useState(0);
 
+    const [isProcessing, setIsProcessing] = useState(false);
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
     const maxHeight = isSmallScreen ? windowHeight * 0.9 : windowHeight - 70;
 
     useEffect(() => {
         const handleResize = () => setWindowHeight(window.innerHeight);
         window.addEventListener('resize', handleResize);
-    
+
         fetchUserData(setUserData);
         const intervalId = setInterval(() => {
             fetchUserData(setUserData);
-        }, 5000); 
-    
+        }, 5000);
+
         return () => {
             window.removeEventListener('resize', handleResize);
-            clearInterval(intervalId); 
+            clearInterval(intervalId);
         };
     }, []);
-    
+
 
     useEffect(() => {
         if (userData) {
@@ -107,17 +107,15 @@ function Vendedoresgenerarpins() {
             console.error("Producto no seleccionado o datos del usuario no disponibles.");
             return;
         }
-
+        setIsProcessing(true);
         const userPrice = userData?.purchaseLimits?.[selectedProduct.product]?.price || 0;
         console.log("Precio del producto:", userPrice);
 
-        setIsAuthorizing(true);
 
         const apiKey = import.meta.env.VITE_API_KEY;
         const apiSecret = import.meta.env.VITE_API_SECRET;
 
         if (!apiKey || !apiSecret) {
-            setIsAuthorizing(false);
             return;
         }
 
@@ -167,12 +165,10 @@ function Vendedoresgenerarpins() {
             sendSaleToBackend(allCapturedPins, userPrice);
         }
 
-        setIsAuthorizing(false);
     };
 
     const handleCapture = async (playerId: string) => {
         if (!playerId || !selectedProduct) {
-            setIsAuthorizing(false);
             return [];
         }
 
@@ -181,7 +177,6 @@ function Vendedoresgenerarpins() {
 
         if (!apiKey || !apiSecret) {
             console.error("Error en la solicitud de captura");
-            setIsAuthorizing(false);
             return [];
         }
 
@@ -215,7 +210,6 @@ function Vendedoresgenerarpins() {
         } catch (error) {
             console.error("Error en la solicitud de captura:", error);
         } finally {
-            setIsAuthorizing(false);
         }
 
         return [];
@@ -300,26 +294,26 @@ function Vendedoresgenerarpins() {
                                                     )}
                                                 </div>
                                                 <Group>
-                                                <Button
-    onClick={() => {
-        toast("Registrando venta...");
-        setSelectedProduct({
-            product: code,
-            name: typedLimitData.name
-        });
-        setQuantity(typedLimitData.limit);
-        handleAuthorize();
-    }}
-    style={{
-        background: (reportSummary?.productSummary[typedLimitData.name]?.unused ?? 0) >= typedLimitData.limit ? 'gray' : '#0c2a85',
-    }}
-    radius="xl"
-    size="sm"
-    rightIcon={<IconShoppingCart />}
-    disabled={(reportSummary?.productSummary?.[typedLimitData.name]?.unused ?? 0) >= typedLimitData.limit}
->
-    Generar
-</Button>
+                                                    <Button
+                                                        onClick={() => {
+                                                            handleAuthorize();
+                                                        }}
+                                                        disabled={isProcessing || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit}
+                                                        style={{
+                                                            background: (isProcessing || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit)
+                                                                ? 'gray'
+                                                                : '#0c2a85',
+                                                            cursor: (isProcessing || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit)
+                                                                ? 'not-allowed'
+                                                                : 'pointer'
+                                                        }}
+                                                        radius="xl"
+                                                        size="sm"
+                                                        rightIcon={<IconShoppingCart />}
+                                                    >
+                                                        {isProcessing ? "Generando..." : "Generar"}
+                                                    </Button>
+
 
                                                 </Group>
                                             </Group>
