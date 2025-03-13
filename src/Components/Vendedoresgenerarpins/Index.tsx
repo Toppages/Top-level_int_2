@@ -72,10 +72,9 @@ function Vendedoresgenerarpins() {
     const [userData, setUserData] = useState<any | null>(null);
     const [reportSummary, setReportSummary] = useState<ReportSummary | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [selectedProduct] = useState<any>(null);
-    const [quantity] = useState(0);
-
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<any>(null);
+    const [quantity, setQuantity] = useState(0);
+    const [isProcessing, setIsProcessing] = useState<{ [key: string]: boolean }>({});
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
     const maxHeight = isSmallScreen ? windowHeight * 0.9 : windowHeight - 70;
 
@@ -93,6 +92,11 @@ function Vendedoresgenerarpins() {
             clearInterval(intervalId);
         };
     }, []);
+    useEffect(() => {
+        if (selectedProduct && quantity > 0) {
+            handleAuthorize(selectedProduct.product);
+        }
+    }, [selectedProduct, quantity]);
 
 
     useEffect(() => {
@@ -102,69 +106,79 @@ function Vendedoresgenerarpins() {
         }
     }, [userData]);
 
-    const handleAuthorize = async () => {
+    const handleAuthorize = async (productCode: string) => {
         if (!selectedProduct || !userData) {
             console.error("Producto no seleccionado o datos del usuario no disponibles.");
             return;
         }
-        setIsProcessing(true);
-        const userPrice = userData?.purchaseLimits?.[selectedProduct.product]?.price || 0;
-        console.log("Precio del producto:", userPrice);
 
-
-        const apiKey = import.meta.env.VITE_API_KEY;
-        const apiSecret = import.meta.env.VITE_API_SECRET;
-
-        if (!apiKey || !apiSecret) {
+        if (isProcessing[productCode]) {
             return;
         }
 
-        const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
-        const url = 'https://pincentral.baul.pro/api/pins/authorize';
-        const verb = "POST";
-        const route = "/api/pins/authorize";
-        const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
+        setIsProcessing(prev => ({ ...prev, [productCode]: true }));
 
-        const chunks = Math.ceil(quantity / 10);
-        let allCapturedPins: string[] = [];
+        try {
+            const userPrice = userData?.purchaseLimits?.[selectedProduct.product]?.price || 0;
+            console.log("Precio del producto:", userPrice);
 
-        for (let i = 0; i < chunks; i++) {
-            const batchQuantity = i === chunks - 1 ? quantity % 10 : 10;
-            const body = {
-                product: selectedProduct.product,
-                quantity: batchQuantity,
-                order_id: moment().format("YYYYMMDD_HHmmss") + `_${i}`,
-            };
+            const apiKey = import.meta.env.VITE_API_KEY;
+            const apiSecret = import.meta.env.VITE_API_SECRET;
 
-            const jsonBody = JSON.stringify(body);
-            const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
-            const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
-            const authorizationHeader = `${apiKey}:${hmacSignature}`;
-
-            try {
-                const response = await axios.post(url, body, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Date': date,
-                        'Authorization': authorizationHeader
-                    }
-                });
-
-                if (response.status === 200 && response.data.status === "authorized") {
-                    const captureResponse = await handleCapture(response.data.id);
-                    allCapturedPins = [...allCapturedPins, ...captureResponse];
-                } else {
-                    console.error("Error en la solicitud de autorización:");
-                }
-            } catch (error) {
-                console.error("Error en la solicitud de autorización:", error);
+            if (!apiKey || !apiSecret) {
+                return;
             }
-        }
 
-        if (allCapturedPins.length > 0) {
-            sendSaleToBackend(allCapturedPins, userPrice);
-        }
+            const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
+            const url = 'https://pincentral.baul.pro/api/pins/authorize';
+            const verb = "POST";
+            const route = "/api/pins/authorize";
+            const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
 
+            const chunks = Math.ceil(quantity / 10);
+            let allCapturedPins: string[] = [];
+
+            for (let i = 0; i < chunks; i++) {
+                const batchQuantity = i === chunks - 1 ? quantity % 10 : 10;
+                const body = {
+                    product: selectedProduct.product,
+                    quantity: batchQuantity,
+                    order_id: moment().format("YYYYMMDD_HHmmss") + `_${i}`,
+                };
+
+                const jsonBody = JSON.stringify(body);
+                const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
+                const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
+                const authorizationHeader = `${apiKey}:${hmacSignature}`;
+
+                try {
+                    const response = await axios.post(url, body, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Date': date,
+                            'Authorization': authorizationHeader
+                        }
+                    });
+
+                    if (response.status === 200 && response.data.status === "authorized") {
+                        const captureResponse = await handleCapture(response.data.id);
+                        allCapturedPins = [...allCapturedPins, ...captureResponse];
+                    } else {
+                        console.error("Error en la solicitud de autorización:");
+                    }
+                } catch (error) {
+                    console.error("Error en la solicitud de autorización:", error);
+                }
+            }
+
+            if (allCapturedPins.length > 0) {
+                sendSaleToBackend(allCapturedPins, userPrice);
+            }
+        } catch (error) {
+            console.error("Error al autorizar el producto:", error);
+        } finally {
+            setIsProcessing(prev => ({ ...prev, [productCode]: false }));
+        }
     };
 
     const handleCapture = async (playerId: string) => {
@@ -209,7 +223,6 @@ function Vendedoresgenerarpins() {
             }
         } catch (error) {
             console.error("Error en la solicitud de captura:", error);
-        } finally {
         }
 
         return [];
@@ -296,14 +309,19 @@ function Vendedoresgenerarpins() {
                                                 <Group>
                                                     <Button
                                                         onClick={() => {
-                                                            handleAuthorize();
+                                                            if (!isProcessing[code]) {
+                                                                toast("Registrando venta...");
+                                                                setQuantity(typedLimitData.limit);
+                                                                setSelectedProduct({ product: code, name: typedLimitData.name });
+                                                                handleAuthorize(code);
+                                                            }
                                                         }}
-                                                        disabled={isProcessing || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit}
+                                                        disabled={isProcessing[code] || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit}
                                                         style={{
-                                                            background: (isProcessing || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit)
+                                                            background: (isProcessing[code] || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit)
                                                                 ? 'gray'
                                                                 : '#0c2a85',
-                                                            cursor: (isProcessing || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit)
+                                                            cursor: (isProcessing[code] || (reportSummary?.productSummary[typedLimitData.name]?.unused || 0) >= typedLimitData.limit)
                                                                 ? 'not-allowed'
                                                                 : 'pointer'
                                                         }}
@@ -311,7 +329,7 @@ function Vendedoresgenerarpins() {
                                                         size="sm"
                                                         rightIcon={<IconShoppingCart />}
                                                     >
-                                                        {isProcessing ? "Generando..." : "Generar"}
+                                                        Generar
                                                     </Button>
 
 
