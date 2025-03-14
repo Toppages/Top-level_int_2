@@ -31,8 +31,10 @@ function ManagePro() {
     }, [opened]);
 
     useEffect(() => {
-        setFilteredProducts(products);
+        const sortedProducts = [...products].sort((a, b) => Number(a.price) - Number(b.price));
+        setFilteredProducts(sortedProducts);
     }, [products]);
+    
 
     const handleSearchChange = (query: string) => {
         setSearchQuery(query);

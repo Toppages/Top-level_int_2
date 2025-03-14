@@ -5,12 +5,14 @@ import ManagePro from "./ManagePro";
 import Registrar from "./Registrar/Index";
 import EditAdmins from "./EditAdmins/Index";
 import EditClient from "./EditClient/Index";
+import DeleteUser from "./DeleteUser";
 import AllRetiros from "./AllRetiros";
 import EditmyClients from "./EditmyClients/Index";
 import LimitesmyVend from "./LimitesmyVend/Index";
 import LimitVendedores from "./LimitVendedores/Index";
 import AdmincargoReports from "./AdmincargoReports";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
+// import EditUser from "./EditUser";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
@@ -598,19 +600,32 @@ function Dashboard({ user }: DashboardProps) {
                                         <Registrar />
                                         <ManagePro />
                                         <AdminBR />
+                                        {/* <EditUser/> */}
+                                        <DeleteUser />
                                     </Group>
-                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                        Clientes
-                                    </Title>
-                                    <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
-                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                        Administradores
-                                    </Title>
-                                    <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
-                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                        Vendedores
-                                    </Title>
-                                    <LimitVendedores />
+                                    <Group>
+                                        <div>
+
+                                            <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                                Clientes
+                                            </Title>
+                                            <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
+                                        </div>
+                                        <div>
+
+                                            <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                                Administradores
+                                            </Title>
+                                            <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
+                                        </div>
+                                        <div>
+
+                                            <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                                Vendedores
+                                            </Title>
+                                            <LimitVendedores />
+                                        </div>
+                                    </Group>
                                 </>
                             )}
                             {(userRole === "admin") && (
