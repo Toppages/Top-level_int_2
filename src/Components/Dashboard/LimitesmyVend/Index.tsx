@@ -26,8 +26,8 @@ const LimitesmyVend = ({ user }: tProps) => {
     const [purchaseLimits, setPurchaseLimits] = useState<Record<string, number>>({});
 
     useEffect(() => {
-        if (!user) return;
-
+        if (!opened || !user?.handle) return;
+    
         axios.get<vendedor[]>(`${import.meta.env.VITE_API_BASE_URL}/users/under-admin/${user.handle}`)
             .then(({ data }) => {
                 setVendedores(data
@@ -38,10 +38,14 @@ const LimitesmyVend = ({ user }: tProps) => {
                     }))
                 );
             })
-            .catch(error => console.error('Error fetching users under admin:', error));
-
+            .catch(error => {
+                toast.error('Error al obtener la lista de vendedores.');
+                console.error('Error fetching users under admin:', error);
+            });
+    
         fetchProductsFromAPI(setFetchedProducts, setLoading);
-    }, [user]);
+    }, [opened, user?.handle]);
+    
 
     useEffect(() => {
         if (selectedVendedor) {

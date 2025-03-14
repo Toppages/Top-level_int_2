@@ -31,16 +31,21 @@ const EditAdmins = ({ user, onBalanceUpdate }: EditClientProps) => {
     const clientId = watch("clientId", "");
 
     useEffect(() => {
-        axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/admins`)
-            .then(({ data }) => {
-                setClients(data.map(client => ({
-                    value: client._id,
-                    label: `${client.name} (${client.email})`,
-                })));
-            })
-            .catch(error => console.error('Error fetching clients:', error));
-    }, []);
-
+        if (opened) {
+            axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/admins`)
+                .then(({ data }) => {
+                    setClients(data.map(client => ({
+                        value: client._id,
+                        label: `${client.name} (${client.email})`,
+                    })));
+                })
+                .catch(error => {
+                    toast.error('Error al obtener la lista de administradores');
+                    console.error('Error fetching admins:', error);
+                });
+        }
+    }, [opened]);
+    
     const handleClose = () => {
         setOpened(false);
         reset();

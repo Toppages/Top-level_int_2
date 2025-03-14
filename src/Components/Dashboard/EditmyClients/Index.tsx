@@ -32,8 +32,8 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
     const clientId = watch("clientId", "");
 
     useEffect(() => {
-        if (!user) return;
-
+        if (!opened || !user?.handle) return;
+    
         axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/under-admin/${user.handle}`)
             .then(({ data }) => {
                 setClients(data
@@ -41,11 +41,14 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
                     .map(client => ({
                         value: client._id,
                         label: `${client.name} (${client.email})`,
-                    }))
-                );
+                    })));
             })
-            .catch(error => console.error('Error fetching users under admin:', error));
-    }, [user]);
+            .catch(error => {
+                toast.error('Error al obtener la lista de clientes.');
+                console.error('Error fetching users under admin:', error);
+            });
+    }, [opened, user?.handle]);
+    
 
 
     const handleClose = () => {

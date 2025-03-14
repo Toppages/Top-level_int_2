@@ -74,16 +74,17 @@ function Registrar() {
     const [selectedAdmin, setSelectedAdmin] = useState<string | null>(null);
 
     useEffect(() => {
-        axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/admins`)
-            .then(({ data }) => {
-                setadmins(data.map(client => ({
-                    value: client.handle,  
-                    label: `${client.name} (${client.email})`,
-                })));
-            })
-            .catch(error => console.error('Error fetching admins:', error));
-    }, []);
-    
+        if (opened) {
+            axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/admins`)
+                .then(({ data }) => {
+                    setadmins(data.map(client => ({
+                        value: client.handle,
+                        label: `${client.name} (${client.email})`,
+                    })));
+                })
+                .catch(error => console.error('Error fetching admins:', error));
+        }
+    }, [opened]);
 
     const {
         register,
@@ -112,7 +113,7 @@ function Registrar() {
             } else if (data.role === "cliente" && !data.rango) {
                 data.rango = "bronce";
             }
-    
+
             const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/register`, {
                 handle: data.handle,
                 name: data.name,
@@ -123,9 +124,9 @@ function Registrar() {
                 rango: data.rango,
                 admin: ["vendedor", "cliente"].includes(data.role) ? selectedAdmin : undefined,
             });
-    
+
             toast.success("Registro exitoso: " + (response.data.message || "Usuario registrado correctamente"));
-    
+
             setOpened(false);
             reset();
         } catch (error: unknown) {
@@ -187,65 +188,65 @@ function Registrar() {
                             error={errors.email?.message}
                         />
 
-<Select
-    label="Rol"
-    radius="md"
-    {...register("role", { required: "El rol es obligatorio" })}
-    data={[
-        { value: "admin", label: "Administrador" },
-        { value: "vendedor", label: "Vendedor" },
-        { value: "cliente", label: "Cliente" },
-        { value: "master", label: "Master" },
-    ]}
-    onChange={(value) => {
-        const selectedRole = value as "admin" | "vendedor" | "cliente" | "master";
-        setValue("role", selectedRole);
-        if (["admin", "vendedor", "master"].includes(selectedRole)) {
-            setValue("rango", "ultrap");
-        } else {
-            setValue("rango", "bronce");
-        }
-    }}
-    error={errors.role?.message}
-/>
+                        <Select
+                            label="Rol"
+                            radius="md"
+                            {...register("role", { required: "El rol es obligatorio" })}
+                            data={[
+                                { value: "admin", label: "Administrador" },
+                                { value: "vendedor", label: "Vendedor" },
+                                { value: "cliente", label: "Cliente" },
+                                { value: "master", label: "Master" },
+                            ]}
+                            onChange={(value) => {
+                                const selectedRole = value as "admin" | "vendedor" | "cliente" | "master";
+                                setValue("role", selectedRole);
+                                if (["admin", "vendedor", "master"].includes(selectedRole)) {
+                                    setValue("rango", "ultrap");
+                                } else {
+                                    setValue("rango", "bronce");
+                                }
+                            }}
+                            error={errors.role?.message}
+                        />
 
                         {watch('role') === 'cliente' && (
                             <>
+                                <Select
+                                    label="Rango"
+                                    radius='md'
+                                    {...register("rango", { required: "El rango es obligatorio para el rol cliente" })}
+                                    data={[
+                                        { value: "oro", label: "Oro" },
+                                        { value: "plata", label: "Plata" },
+                                        { value: "bronce", label: "Bronce" },
+                                    ]}
+                                    error={errors.rango?.message}
+                                    onChange={(value) => {
+                                        const selectedRango = value as "ultrap" | "plata" | "oro" | "bronce";
+                                        setValue("rango", selectedRango);
+                                    }}
+                                />
+                            </>
+
+                        )}
+                        {["vendedor", "cliente"].includes(watch("role")) && (
                             <Select
-                                label="Rango"
-                                radius='md'
-                                {...register("rango", { required: "El rango es obligatorio para el rol cliente" })}
-                                data={[
-                                    { value: "oro", label: "Oro" },
-                                    { value: "plata", label: "Plata" },
-                                    { value: "bronce", label: "Bronce" },
-                                ]}
-                                error={errors.rango?.message}
+                                label="Selecciona un Admin"
+                                placeholder="Elige un Admin"
+                                data={admins}
                                 onChange={(value) => {
-                                    const selectedRango = value as "ultrap" | "plata" | "oro" | "bronce"; 
-                                    setValue("rango", selectedRango);
+                                    if (value) {
+                                        setSelectedAdmin(value);
+                                        console.log("Admin seleccionado:", value);
+                                    } else {
+                                        console.log("No se seleccionó ningún admin.");
+                                    }
                                 }}
                             />
-                            </>
-                            
-                        )}
-                      {["vendedor", "cliente"].includes(watch("role")) && (
-                       <Select
-                       label="Selecciona un Admin"
-                       placeholder="Elige un Admin"
-                       data={admins}
-                       onChange={(value) => {
-                           if (value) {
-                               setSelectedAdmin(value);
-                               console.log("Admin seleccionado:", value);
-                           } else {
-                               console.log("No se seleccionó ningún admin.");
-                           }
-                       }}
-                   />
-                   
 
-)}
+
+                        )}
 
                         <NumberInput
                             radius='md'
@@ -313,8 +314,8 @@ function Registrar() {
                 </form>
             </Modal>
 
-                <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Registrar Usuario</Button>
-           
+            <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Registrar Usuario</Button>
+
         </>
     );
 }
