@@ -38,26 +38,30 @@ export const fetchReports = async (
   setError: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
   if (!userHandle) return;
-  
+
   const token = localStorage.getItem('token');
   if (!token) {
     setError('No se encontró el token. Inicia sesión nuevamente.');
     return;
   }
-  
+
   try {
     const url = userRole === 'master'
-    ? `${import.meta.env.VITE_API_BASE_URL}/sales`
-    : `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
-    
+      ? `${import.meta.env.VITE_API_BASE_URL}/sales`
+      : `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
+
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    
-    setAllReports(response.data);
-    setFilteredReports(response.data);
-    
+
+    // Ordenar los reportes del último al primero
+    const sortedReports = response.data.reverse();
+
+    setAllReports(sortedReports);
+    setFilteredReports(sortedReports);
+
   } catch (err) {
+    setError('Hubo un error al obtener los reportes.');
   }
 };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Table, Text, Title, Pagination, ActionIcon, Checkbox, Group } from '@mantine/core';
+import { Table, Text, Title, Pagination, ActionIcon, Checkbox, Group, Button } from '@mantine/core';
 import axios from 'axios';
 import { IconCheckbox, IconCopy, IconDownload } from '@tabler/icons-react';
 import * as XLSX from 'xlsx';
@@ -21,6 +21,25 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
     const [selectedProducts, setSelectedProducts] = useState<string[]>([
         'Free Fire 100 Diamantes + 10 Bono',
     ]);
+    const handleMarkAllUsed = async () => {
+        try {
+            const updateRequests = filteredPins.map(pin =>
+                axios.put(`${import.meta.env.VITE_API_BASE_URL}/sales/user/${user.handle}/pins/${pin.key}`, { usado: true })
+            );
+
+            await Promise.all(updateRequests);
+
+            setPins(prevPins => prevPins.map(pin =>
+                filteredPins.some(fp => fp.key === pin.key) ? { ...pin, usado: true } : pin
+            ));
+
+            toast.success('Todos los pines filtrados han sido marcados como usados');
+        } catch (error) {
+            setError('Hubo un error al actualizar los pines.');
+            console.error(error);
+        }
+    };
+
     const defaultProducts = [
         'Free Fire 100 Diamantes + 10 Bono',
         'Free Fire - 310 Diamantes + 31 Bono',
@@ -114,7 +133,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
         <>
             <Title ta="center" weight={700} mb="sm" order={2}>Pines No Usados</Title>
 
-           <Group position='center'>
+            <Group position='center'>
 
                 {defaultProducts.map(name => (
                     <Checkbox
@@ -126,7 +145,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                     />
 
                 ))}
-           </Group>
+            </Group>
             <Group position='apart'>
                 <Pagination
                     total={Math.ceil(filteredPins.length / itemsPerPage)}
@@ -146,26 +165,43 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
 
                 {filteredPins.length > 0 && (
                     <Group>
-                        <ActionIcon
+
+
+                        <Button
                             style={{ background: '#0c2a85', color: 'white' }}
+                            leftIcon={<IconCopy />}
                             radius="md"
-                            size="xl"
+                            size="sm"
                             color="indigo"
                             variant="filled"
-                            onClick={handleCopyAll}
-                        >
-                            <IconCopy size={30} />
-                        </ActionIcon>
-                        <ActionIcon
+                            onClick={handleCopyAll}>
+                            Copiar todo
+                        </Button>
+
+                        <Button
                             style={{ background: '#0c2a85', color: 'white' }}
+                            leftIcon={<IconDownload />}
                             radius="md"
-                            size="xl"
+                            size="sm"
                             color="indigo"
                             variant="filled"
-                            onClick={handleDownload}
-                        >
-                            <IconDownload size={30} />
-                        </ActionIcon>
+                            onClick={handleDownload}>
+                            Descargar
+                        </Button>
+
+                        <Button
+                            style={{ background: '#0c2a85', color: 'white' }}
+                            leftIcon={<IconCheckbox />}
+                            radius="md"
+                            size="sm"
+                            color="indigo"
+                            variant="filled"
+                            onClick={handleMarkAllUsed}>
+                            Marca todos usados
+                        </Button>
+
+                      
+
                     </Group>
                 )}
 
@@ -180,7 +216,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                     <thead style={{ background: '#0c2a85' }}>
                         <tr>
                             <th style={{ textAlign: 'center', color: 'white' }}>
-                            Productos ({filteredPins.length})
+                                Productos ({filteredPins.length})
                             </th>
                             <th style={{ textAlign: 'center', color: 'white' }}>Copiar</th>
                             <th style={{ textAlign: 'center', color: 'white' }}>Marcar usado</th>

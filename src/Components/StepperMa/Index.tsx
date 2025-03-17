@@ -83,68 +83,65 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             console.error("Producto no seleccionado.");
             return;
         }
-
+    
+        if (quantity < 1 || quantity > 10) {
+            console.error("La cantidad debe estar entre 1 y 10.");
+            return;
+        }
+    
         setIsAuthorizing(true);
-
+    
         const apiKey = import.meta.env.VITE_API_KEY;
         const apiSecret = import.meta.env.VITE_API_SECRET;
-
+    
         if (!apiKey || !apiSecret) {
             setIsAuthorizing(false);
             return;
         }
-
+    
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
         const url = 'https://pincentral.baul.pro/api/pins/authorize';
-        const verb = "POST";
         const route = "/api/pins/authorize";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
-
-        const chunks = Math.ceil(quantity / 10);
-        let allCapturedPins: string[] = [];
-
-        for (let i = 0; i < chunks; i++) {
-            const batchQuantity = i === chunks - 1 ? quantity % 10 : 10;
-            const body = {
-                product: selectedProduct.code,
-                quantity: batchQuantity,
-                order_id: moment().format("YYYYMMDD_HHmmss") + `_${i}`,
-                client_name: "Juan Pérez",
-                client_email: "juanperez@email.com"
-            };
-
-            const jsonBody = JSON.stringify(body);
-            const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
-            const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
-            const authorizationHeader = `${apiKey}:${hmacSignature}`;
-
-            try {
-                const response = await axios.post(url, body, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Date': date,
-                        'Authorization': authorizationHeader
-                    }
-                });
-
-                if (response.status === 200 && response.data.status === "authorized") {
-                    const captureResponse = await handleCapture(response.data.id);
-                    allCapturedPins = [...allCapturedPins, ...captureResponse];
-                } else {
-                    console.error("Error en la solicitud de autorización:");
+    
+        const body = {
+            product: selectedProduct.code,
+            quantity: quantity, // Se usa la cantidad directamente
+            order_id: moment().format("YYYYMMDD_HHmmss"),
+            client_name: "Juan Pérez",
+            client_email: "juanperez@email.com"
+        };
+    
+        const jsonBody = JSON.stringify(body);
+        const hmacData = `POST${routeForHmac}${date}${jsonBody}`;
+        const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
+        const authorizationHeader = `${apiKey}:${hmacSignature}`;
+    
+        try {
+            const response = await axios.post(url, body, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Date': date,
+                    'Authorization': authorizationHeader
                 }
-            } catch (error) {
-                console.error("Error en la solicitud de autorización:", error);
+            });
+    
+            if (response.status === 200 && response.data.status === "authorized") {
+                const captureResponse = await handleCapture(response.data.id);
+                if (captureResponse.length > 0) {
+                    sendSaleToBackend(captureResponse);
+                    setActiveStep(2);
+                }
+            } else {
+                console.error("Error en la solicitud de autorización.");
             }
+        } catch (error) {
+            console.error("Error en la solicitud de autorización:", error);
+        } finally {
+            setIsAuthorizing(false);
         }
-
-        if (allCapturedPins.length > 0) {
-            sendSaleToBackend(allCapturedPins);
-            setActiveStep(2);
-        }
-
-        setIsAuthorizing(false);
     };
+    
 
     const handleCapture = async (playerId: string) => {
         if (!playerId || !selectedProduct) {
@@ -334,7 +331,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                         <>
                             <NumberInput
                                 min={1}
-                                max={100}
+                                max={10}
                                 ta="center"
                                 label="Cantidad"
                                 placeholder="Cantidad"
@@ -352,7 +349,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                     inputElement.value = inputElement.value.replace(/\D/g, "");
 
                                     if (inputElement.value !== "" && Number(inputElement.value) > 100) {
-                                        inputElement.value = "100";
+                                        inputElement.value = "10";
                                     }
                                 }}
                                 step={1}

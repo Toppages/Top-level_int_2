@@ -4,7 +4,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { useState, useEffect } from 'react';
 import { IconCopy, IconReload, IconEye, IconDownload, IconCalendarWeek, IconUser } from '@tabler/icons-react';
 import { fetchUserRole, fetchReports, formatDate, handlePinClick, copyToClipboard } from '../../utils/utils';
-import { Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Pagination, Divider, Select } from '@mantine/core';
+import { Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Pagination, Divider, Select, Button } from '@mantine/core';
 
 interface ReportsProps {
   user: { _id: string; name: string; email: string; handle: string; role: string; } | null;
@@ -184,13 +184,13 @@ function Reports({ user }: ReportsProps) {
       </Modal>
 
       <Title ta="center" weight={700} mb="xl" order={2}>Reportes de Retiros</Title>
-      {userRole == 'cliente' || userRole == 'vendedor' && (
-        <>
 
+      {(userRole === 'cliente' || userRole === 'vendedor') && (
+        <>
           <Group
             style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '4fr 1fr' : ' 6fr 1fr',
+              gridTemplateColumns: isMobile ? '4fr 1fr' : '6fr 1fr',
               gap: '10px',
               width: '100%',
             }}
@@ -208,17 +208,19 @@ function Reports({ user }: ReportsProps) {
               onChange={handleDateChange}
             />
             <Group mt={25}>
-
-              <ActionIcon
-                style={{ background: '#0c2a85', color: 'white', }}
+              <Button
+                style={{ background: '#0c2a85', color: 'white' }}
+                leftIcon={<IconDownload />}
                 radius="md"
-                size="xl"
+                size="md"
                 color="indigo"
                 variant="filled"
                 onClick={() => exportToExcel(filteredReports)}
               >
-                <IconDownload size={30} />
-              </ActionIcon>
+                Descargar
+              </Button>
+
+            
             </Group>
           </Group>
         </>
@@ -230,7 +232,7 @@ function Reports({ user }: ReportsProps) {
           <Group
             style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : ' 3fr 3fr 1fr',
+              gridTemplateColumns: isMobile ? '1fr' : ' 1.2fr 1fr 1fr',
               gap: '10px',
               width: '100%',
             }}
@@ -272,24 +274,31 @@ function Reports({ user }: ReportsProps) {
               onChange={handleDateChange}
             />
             <Group position={isMobile ? 'center' : 'apart'} mt={25}>
-              <ActionIcon
-                style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
+              
+              <Button
+                style={{ background: '#0c2a85', color: 'white' }}
+                leftIcon={<IconReload />}
+                radius="md"
+                size="md"
                 color="indigo"
                 variant="filled"
                 onClick={clearFilters}
               >
-                <IconReload size={30} />
-              </ActionIcon>
-              <ActionIcon
-                style={{ background: '#0c2a85', color: 'white', }}
+                Recargar
+              </Button>
+                            
+              <Button
+                style={{ background: '#0c2a85', color: 'white' }}
+                leftIcon={<IconDownload />}
                 radius="md"
+                size="md"
                 color="indigo"
-                size="xl"
                 variant="filled"
                 onClick={() => exportToExcel(filteredReports)}
               >
-                <IconDownload size={30} />
-              </ActionIcon>
+                Recargar
+              </Button>
+             
             </Group>
           </Group>
         </>
@@ -320,7 +329,7 @@ function Reports({ user }: ReportsProps) {
 
       {filteredReports.length > 0 && (
 
-        <Table mt={15}  striped highlightOnHover withBorder withColumnBorders>
+        <Table mt={15} striped highlightOnHover withBorder withColumnBorders>
           <thead style={{ background: '#0c2a85' }}>
             <tr>
               <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
@@ -335,9 +344,9 @@ function Reports({ user }: ReportsProps) {
                   <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Cantidad</Title></th>
                 </>
               )}
-               { userRole !== 'vendedor' && (
-              <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio total</Title></th>
-                )}
+              {userRole !== 'vendedor' && (
+                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio total</Title></th>
+              )}
               {!isMobile && userRole !== 'vendedor' && (
                 <>
                   <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Saldo Actual</Title></th>
@@ -376,10 +385,10 @@ function Reports({ user }: ReportsProps) {
                     <td style={{ textAlign: 'center' }}>{report.quantity}</td>
                   </>
                 )}
-                  { userRole !== 'vendedor' && (
-                <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>
-                  )}
-                {!isMobile && userRole !== 'vendedor' &&  (
+                {userRole !== 'vendedor' && (
+                  <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>
+                )}
+                {!isMobile && userRole !== 'vendedor' && (
                   <>
                     <td style={{ textAlign: 'center' }}>{report.moneydisp}  USD</td>
                   </>

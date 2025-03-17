@@ -3,7 +3,7 @@ import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from '@mantine/hooks';
 import { fetchTransactions } from '../../utils/utils';
 import { useState, useEffect } from 'react';
-import { Group, Table, Text, Title, ActionIcon, Pagination, Select, Modal } from '@mantine/core';
+import { Group, Table, Text, Title, ActionIcon, Pagination, Select, Modal, Button } from '@mantine/core';
 import { IconCalendarWeek, IconDownload, IconInfoCircle, IconReload, IconUser } from '@tabler/icons-react';
 
 
@@ -46,13 +46,13 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
 
     useEffect(() => {
         let filtered = allTransactions;
-    
+
         if (selectedUserHandle && selectedUserHandle !== 'todos') {
             filtered = filtered.filter((transaction) =>
                 transaction.transactionUserName.toLowerCase().includes(selectedUserHandle.toLowerCase())
             );
         }
-    
+
         if (selectedDate) {
             const dateStr = selectedDate.toISOString().split('T')[0];
             filtered = filtered.filter(transaction => {
@@ -60,27 +60,27 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                 return transactionDate === dateStr;
             });
         }
-    
+
         if (searchTerm) {
             filtered = filtered.filter((transaction) =>
                 transaction.transactionUserName?.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
-    
+
         if (filtered !== filteredTransactions) {
             setFilteredTransactions(filtered);
             setCurrentPage(1);
         }
     }, [selectedUserHandle, selectedDate, searchTerm, allTransactions]);
-    
+
 
     const exportToExcel = (data: any[]) => {
         const filteredData = data.map((transaction) => {
             const {
-                amount,         
-                previousBalance, 
-                type,            
-                transactionId,  
+                amount,
+                previousBalance,
+                type,
+                transactionId,
                 _id,
                 userId,
                 created_at,
@@ -152,7 +152,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                     <Group
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: isMobile ? '1fr' : ' 3fr 3fr 1fr',
+                            gridTemplateColumns: isMobile ? '1fr' : ' 1.2fr 1fr 1fr',
                             gap: '10px',
                             width: '100%',
                         }}
@@ -195,82 +195,88 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                         />
 
                         <Group position={isMobile ? 'center' : 'apart'} mt={25}>
-                            <ActionIcon
-                                style={{ background: '#0c2a85', color: 'white', }} radius="md" size="xl"
+                            <Button
+                                style={{ background: '#0c2a85', color: 'white' }}
+                                leftIcon={<IconReload />}
+                                radius="md"
+                                size="md"
                                 color="indigo"
                                 variant="filled"
                                 onClick={clearFilters}
                             >
-                                <IconReload size={30} />
-                            </ActionIcon>
-                            <ActionIcon
-                                style={{ background: '#0c2a85', color: 'white', }}
+                                Recargar
+                            </Button>
+                            <Button
+                                style={{ background: '#0c2a85', color: 'white' }}
+                                leftIcon={<IconDownload />}
                                 radius="md"
-                                size="xl"
+                                size="md"
                                 color="indigo"
                                 variant="filled"
                                 onClick={() => exportToExcel(filteredTransactions)}
                             >
-                                <IconDownload size={30} />
-                            </ActionIcon>
+                                Descargar
+                            </Button>
+
+
                         </Group>
                     </Group>
                 </>
             )}
 
-                    <Modal
-                        opened={opened}
-                        withCloseButton={false}
-                        onClose={() => setOpened(false)}
-                    >
-                        {modalTransaction && (
+            <Modal
+                opened={opened}
+                withCloseButton={false}
+                onClose={() => setOpened(false)}
+            >
+                {modalTransaction && (
+                    <>
+                        <Title ta='center' mb={5} order={4}>Detalles de la recarga</Title>
+                        <Group position="center">
+                            <IconUser size={150} />
+                        </Group>
+                        <Group mt='md' position="apart" mb="md">
+                            <Title order={4}>ID:</Title>
+                            <Title order={4}>{modalTransaction.transactionId}</Title>
+                        </Group>
+                        <Group mt='md' position="apart" mb="md">
+                            <Title order={4}>Fecha:</Title>
+                            <Title order={4}>{new Date(modalTransaction.created_at).toLocaleString('es-ES', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                            })}</Title>
+                        </Group>
+                        <Group mt='md' position="apart" mb="md">
+                            <Title order={4}>Saldo Anterior:</Title>
+                            <Title order={4}>{modalTransaction.previousBalance} USD</Title>
+                        </Group>
+                        <Group mt='md' position="apart" mb="md">
+                            <Title order={4}>Carga de Saldo:</Title>
+                            <Title order={4}>{modalTransaction.amount} USD USD</Title>
+                        </Group>
+                        <Group mt='md' position="apart" mb="md">
+                            <Title order={4}>Saldo Final:</Title>
+                            <Title order={4}>{modalTransaction.amount + modalTransaction.previousBalance} USD</Title>
+                        </Group>
+                        {userRole !== 'cliente' && (
                             <>
-                                <Title ta='center' mb={5} order={4}>Detalles de la recarga</Title>
-                                <Group position="center">
-                                    <IconUser size={150} />
+                                <Group mt='md' position="apart" mb="md">
+                                    <Title order={4}>Realizado por:</Title>
+                                    <Title order={4}>{modalTransaction.transactionUserName}</Title>
                                 </Group>
                                 <Group mt='md' position="apart" mb="md">
-                                    <Title order={4}>ID:</Title>
-                                    <Title order={4}>{modalTransaction.transactionId}</Title>
+                                    <Title order={4}>Beneficiado:</Title>
+                                    <Title order={4}>{modalTransaction.userhandle}</Title>
                                 </Group>
-                                <Group mt='md' position="apart" mb="md">
-                                    <Title order={4}>Fecha:</Title>
-                                    <Title order={4}>{new Date(modalTransaction.created_at).toLocaleString('es-ES', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}</Title>
-                                </Group>
-                                <Group mt='md' position="apart" mb="md">
-                                    <Title order={4}>Saldo Anterior:</Title>
-                                    <Title order={4}>{modalTransaction.previousBalance} USD</Title>
-                                </Group>
-                                <Group mt='md' position="apart" mb="md">
-                                    <Title order={4}>Carga de Saldo:</Title>
-                                    <Title order={4}>{modalTransaction.amount} USD USD</Title>
-                                </Group>
-                                <Group mt='md' position="apart" mb="md">
-                                    <Title order={4}>Saldo Final:</Title>
-                                    <Title order={4}>{modalTransaction.amount + modalTransaction.previousBalance} USD</Title>
-                                </Group>
-                                {userRole !== 'cliente' && (
-                                    <>
-                                        <Group mt='md' position="apart" mb="md">
-                                            <Title order={4}>Realizado por:</Title>
-                                            <Title order={4}>{modalTransaction.transactionUserName}</Title>
-                                        </Group>
-                                        <Group mt='md' position="apart" mb="md">
-                                            <Title order={4}>Beneficiado:</Title>
-                                            <Title order={4}>{modalTransaction.userhandle}</Title>
-                                        </Group>
-                                    </>
-                                )}
-
                             </>
                         )}
-                    </Modal>
+
+                    </>
+                )}
+            </Modal>
             {userRole == 'cliente' && (
                 <>
                     <Group
@@ -296,16 +302,17 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                         />
                         <Group mt={25}>
 
-                            <ActionIcon
-                                style={{ background: '#0c2a85', color: 'white', }}
+                            <Button
+                                style={{ background: '#0c2a85', color: 'white' }}
+                                leftIcon={<IconDownload />}
                                 radius="md"
-                                size="xl"
+                                size="md"
                                 color="indigo"
                                 variant="filled"
                                 onClick={() => exportToExcel(filteredTransactions)}
                             >
-                                <IconDownload size={30} />
-                            </ActionIcon>
+                                Descargar
+                            </Button>
                         </Group>
                     </Group>
                 </>
