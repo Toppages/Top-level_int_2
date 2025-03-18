@@ -329,6 +329,8 @@ function Reports({ user }: ReportsProps) {
 
       {filteredReports.length > 0 && (
 
+<ScrollArea>
+
         <Table mt={15} striped highlightOnHover withBorder withColumnBorders>
           <thead style={{ background: '#0c2a85' }}>
             <tr>
@@ -411,6 +413,7 @@ function Reports({ user }: ReportsProps) {
             ))}
           </tbody>
         </Table>
+</ScrollArea>
       )}
     </>
   );
