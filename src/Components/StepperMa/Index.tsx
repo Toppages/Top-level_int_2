@@ -361,7 +361,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                 </Title>
 
                                 <Title order={5}>
-                                    Total: {(Number(getPriceForUser(selectedProduct, user)) * quantity).toFixed(2)} USD
+                                    Total: {(Number(getPriceForUser(selectedProduct, user)) * quantity).toFixed(3)} USD
                                 </Title>
                             </Group>
 

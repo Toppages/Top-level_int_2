@@ -6,11 +6,11 @@ import { Modal, Button, Group, NumberInput, Stack, Select } from "@mantine/core"
 
 interface AdminBalanceFormData {
     saldo: number;
-    clientId: string | null;
+    clientHandle: string | null;
 }
 
 interface Client {
-    _id: string;
+    handle: string;
     name: string;
     email: string;
     role: string;
@@ -25,11 +25,11 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
     const [opened, setOpened] = useState(false);
     const [clients, setClients] = useState<{ value: string, label: string }[]>([]);
     const { handleSubmit, reset, setValue, watch } = useForm<AdminBalanceFormData>({
-        defaultValues: { saldo: 1, clientId: null },
+        defaultValues: { saldo: 1, clientHandle: null },
     });
 
     const saldo = watch("saldo", 1);
-    const clientId = watch("clientId", "");
+    const clientId = watch("clientHandle", "");
 
     useEffect(() => {
         if (!opened || !user?.handle) return;
@@ -39,7 +39,7 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
                 setClients(data
                     .filter(client => client.role === 'cliente')
                     .map(client => ({
-                        value: client._id,
+                        value: client.handle,
                         label: `${client.name} (${client.email})`,
                     })));
             })
@@ -57,7 +57,7 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
     };
 
     const onSubmit = async (data: AdminBalanceFormData) => {
-        if (!data.clientId) {
+        if (!data.clientHandle) {
             toast.error("Por favor, selecciona un Cliente.");
             return;
         }
@@ -70,8 +70,7 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
         handleClose();
 
         try {
-            const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/user/balance`, {
-                userId: data.clientId,
+            const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/user/balance/${data.clientHandle}`, {
                 amount: data.saldo,
                 transactionUserName: user?.handle,
                 role: user?.role,
@@ -98,7 +97,7 @@ const EditmyClients = ({ user, onBalanceUpdate }: EditClientProps) => {
                             label="Selecciona un Cliente"
                             placeholder="Elige un Cliente"
                             data={clients}
-                            onChange={(value) => setValue("clientId", value)}
+                            onChange={(value) => setValue("clientHandle", value)}
                             value={clientId}
                             transition="pop-top-left"
                             transitionDuration={80}

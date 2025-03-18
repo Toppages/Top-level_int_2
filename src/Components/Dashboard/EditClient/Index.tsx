@@ -6,17 +6,17 @@ import { Modal, Button, Group, NumberInput, Stack, Select } from "@mantine/core"
 
 interface AdminBalanceFormData {
     saldo: number;
-    clientId: string | null;
+    clientHandle: string | null;
 }
 
 interface Client {
-    _id: string;
+    handle: string;
     name: string;
     email: string;
 }
 
 interface EditClientProps {
-    user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; } | null;
+    user: { handle: string; role: string; saldo: number; } | null;
     onBalanceUpdate: (newBalance: number) => void;
 }
 
@@ -24,18 +24,18 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
     const [opened, setOpened] = useState(false);
     const [clients, setClients] = useState<{ value: string, label: string }[]>([]);
     const { handleSubmit, reset, setValue, watch } = useForm<AdminBalanceFormData>({
-        defaultValues: { saldo: 1, clientId: null },
+        defaultValues: { saldo: 1, clientHandle: null },
     });
 
     const saldo = watch("saldo", 1);
-    const clientId = watch("clientId", "");
+    const clientHandle = watch("clientHandle", "");
 
     useEffect(() => {
         if (opened) {
             axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/clients`)
                 .then(({ data }) => {
                     setClients(data.map(client => ({
-                        value: client._id,
+                        value: client.handle,
                         label: `${client.name} (${client.email})`,
                     })));
                 })
@@ -43,14 +43,13 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
         }
     }, [opened]);
     
-
     const handleClose = () => {
         setOpened(false);
         reset();
     };
 
     const onSubmit = async (data: AdminBalanceFormData) => {
-        if (!data.clientId) {
+        if (!data.clientHandle) {
             toast.error("Por favor, selecciona un cliente.");
             return;
         }
@@ -63,12 +62,12 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
         handleClose();
 
         try {
-            const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/user/balance`, {
-                userId: data.clientId,
+            const response = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/user/balance/${data.clientHandle}`, {
                 amount: data.saldo,
                 transactionUserName: user?.handle,
                 role: user?.role,
             });
+            
 
             if (response.data?.saldo !== undefined) {
                 toast.success("Saldo actualizado correctamente");
@@ -91,8 +90,8 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
                             label="Selecciona un cliente"
                             placeholder="Elige un cliente"
                             data={clients}
-                            onChange={(value) => setValue("clientId", value)}
-                            value={clientId}
+                            onChange={(value) => setValue("clientHandle", value)}
+                            value={clientHandle}
                             transition="pop-top-left"
                             transitionDuration={80}
                             transitionTimingFunction="ease"
@@ -119,12 +118,12 @@ const EditClient = ({ user, onBalanceUpdate }: EditClientProps) => {
                     <Group position="center" mt="md">
                     <Button
                             style={{
-                                background: !clientId || saldo <= 0 ? 'gray' : '#0c2a85',
-                                cursor: !clientId || saldo <= 0 ? 'not-allowed' : 'pointer',
-                                opacity: !clientId || saldo <= 0 ? 0.6 : 1,
+                                background: !clientHandle || saldo <= 0 ? 'gray' : '#0c2a85',
+                                cursor: !clientHandle || saldo <= 0 ? 'not-allowed' : 'pointer',
+                                opacity: !clientHandle || saldo <= 0 ? 0.6 : 1,
                             }}
                             type="submit"
-                            disabled={!clientId || saldo <= 0}
+                            disabled={!clientHandle || saldo <= 0}
                         >
                             Sumar Saldo
                         </Button>
