@@ -106,7 +106,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     
         const body = {
             product: selectedProduct.code,
-            quantity: quantity, // Se usa la cantidad directamente
+            quantity: quantity,
             order_id: moment().format("YYYYMMDD_HHmmss"),
             client_name: "Juan Pérez",
             client_email: "juanperez@email.com"

@@ -18,9 +18,8 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
     const [pins, setPins] = useState<Pin[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 7;
-    const [selectedProducts, setSelectedProducts] = useState<string[]>([
-        'Free Fire 100 Diamantes + 10 Bono',
-    ]);
+    const [selectedProducts, setSelectedProducts] = useState<string[]>(['Free Fire 100 Diamantes + 10 Bono']);
+
     const handleMarkAllUsed = async () => {
         try {
             const updateRequests = filteredPins.map(pin =>
@@ -29,10 +28,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
 
             await Promise.all(updateRequests);
 
-            setPins(prevPins => prevPins.map(pin =>
-                filteredPins.some(fp => fp.key === pin.key) ? { ...pin, usado: true } : pin
-            ));
-
+            fetchUnusedPins(); 
             toast.success('Todos los pines filtrados han sido marcados como usados');
         } catch (error) {
             setError('Hubo un error al actualizar los pines.');
@@ -97,18 +93,6 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
         toast.success('Todos los pines copiados al portapapeles');
     };
 
-    const handleProductCheckboxChange = (productName: string) => {
-        setSelectedProducts(prevSelected =>
-            prevSelected.includes(productName) ? [] : [productName]
-        );
-    };
-
-    const filteredPins = selectedProducts.length
-        ? pins.filter(pin => selectedProducts.includes(pin.productName))
-        : pins;
-
-    const paginatedPins = filteredPins.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
     const handleDownload = () => {
         const filteredPinsForDownload = filteredPins.map(pin => ({
             Pines: pin.key,
@@ -129,12 +113,25 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
         toast.success('Descarga exitosa');
     };
 
+    const handleProductCheckboxChange = (productName: string) => {
+        if (productName === 'Free Fire 100 Diamantes + 10 Bono') {
+            setSelectedProducts(['Free Fire 100 Diamantes + 10 Bono']);
+        } else {
+            setSelectedProducts([productName]);
+        }
+    };
+
+    const filteredPins = selectedProducts.length
+        ? pins.filter(pin => selectedProducts.includes(pin.productName))
+        : pins;
+
+    const paginatedPins = filteredPins.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     return (
         <>
             <Title ta="center" weight={700} mb="sm" order={2}>Pines No Usados</Title>
 
             <Group position='center'>
-
                 {defaultProducts.map(name => (
                     <Checkbox
                         key={name}
@@ -143,9 +140,9 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                         checked={selectedProducts.includes(name)}
                         onChange={() => handleProductCheckboxChange(name)}
                     />
-
                 ))}
             </Group>
+
             <Group position='apart'>
                 <Pagination
                     total={Math.ceil(filteredPins.length / itemsPerPage)}
@@ -165,8 +162,6 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
 
                 {filteredPins.length > 0 && (
                     <Group>
-
-
                         <Button
                             style={{ background: '#0c2a85', color: 'white' }}
                             leftIcon={<IconCopy />}
@@ -199,12 +194,8 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                             onClick={handleMarkAllUsed}>
                             Marca todos usados
                         </Button>
-
-                      
-
                     </Group>
                 )}
-
             </Group>
 
             {filteredPins.length === 0 && !error && (

@@ -54,7 +54,6 @@ export const fetchReports = async (
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    // Ordenar los reportes del último al primero
     const sortedReports = response.data.reverse();
 
     setAllReports(sortedReports);
@@ -175,7 +174,6 @@ export const fetchTotalSaldos = async (
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Actualizar el estado con los saldos y los detalles de los usuarios
       setTotalSaldos({
         totalSaldoAdmins: response.data.totalSaldoAdmins,
         totalSaldoClientes: response.data.totalSaldoClientes,
@@ -187,8 +185,6 @@ export const fetchTotalSaldos = async (
     }
   }
 };
-
-
 
 export const handleLogout = (navigate: Function) => {
   localStorage.removeItem('token');

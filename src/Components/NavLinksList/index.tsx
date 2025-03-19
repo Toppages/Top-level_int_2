@@ -145,7 +145,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                         {!(totalSaldos && userData) ? (
                             <Loader color="indigo" variant="bars" />
                         ) : (
-                            <Group >
+                            <Group ml={10} >
                                 <Title  c="#0c2a85" order={6}>
                                     Saldo De trabajo: {`${(userData.saldo - totalSaldos.totalSaldoAdmins - totalSaldos.totalSaldoClientes).toFixed(2)} USD`}
                                 </Title>
