@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { Modal, Button, Group, Select, Title, Text, Card, ScrollArea } from '@mantine/core';
 import axios from 'axios';
+import { IconCalendarWeek } from '@tabler/icons-react';
+import { useState, useEffect, useRef } from 'react';
+import { Modal, Tabs, Button, Group, Select, Title, Text, Card, ScrollArea } from '@mantine/core';
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
-import { IconCalendarWeek } from '@tabler/icons-react';
 
 function AllRetiros() {
     const [opened, setOpened] = useState(false);
@@ -21,7 +21,7 @@ function AllRetiros() {
         fiveDaysLater,
     ]);
     const [error, setError] = useState<string | null>(null);
-
+    const [activeTab, setActiveTab] = useState<string | null>('first');
     const [productTotals, setProductTotals] = useState<Record<string, number>>({});
 
     useEffect(() => {
@@ -51,7 +51,7 @@ function AllRetiros() {
         setError(null);
 
         if (selectedUser) {
-            fetchSales(selectedUser || "");
+            fetchSales(selectedUser );
         }
     }, [selectedUser, selectedRange, selectedDate, selectedrDate]);
 
@@ -83,7 +83,17 @@ function AllRetiros() {
         return weekSales;
     };
 
+    const getPinsCountByProductName = (sales: any[]) => {
+        return sales.reduce((acc: Record<string, number>, sale: any) => {
+            const productName = sale.productName;
+            const pinsCount = sale.pins ? sale.pins.length : 0;
+            acc[productName] = (acc[productName] || 0) + pinsCount;
+            return acc;
+        }, {});
+    };
+
     const fetchSales = async (userHandle: string) => {
+
         const getTotalPriceByProductName = (sales: any[]) => {
             return sales.reduce((acc: Record<string, number>, sale: any) => {
                 const productName = sale.productName;
@@ -93,11 +103,18 @@ function AllRetiros() {
         };
 
 
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('No se encontró el token. Inicia sesión nuevamente.');
+            return;
+        }
 
         try {
             const url = `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
 
-            const response = await axios.get(url);
+            const response = await axios.get(url, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
             let filteredSales = response.data;
 
@@ -105,11 +122,7 @@ function AllRetiros() {
                 setError('La respuesta del servidor no es válida.');
                 return;
             }
-            if (filteredSales.length === 0) {
-                setSales([]);
-                setError('No se encontraron ventas para este usuario');
-                return;
-            }
+
             const formatDate = (dateString: string) => {
                 if (!dateString) return null;
                 const date = new Date(dateString);
@@ -149,14 +162,18 @@ function AllRetiros() {
                 const totalWeekPrice = Object.values(weekSales).reduce((acc, { totalPrice }) => acc + totalPrice, 0);
 
                 const productTotals = getTotalPriceByProductName(filteredSales);
+                const pinsCountByProductName = getPinsCountByProductName(filteredSales);
                 setProductTotals(productTotals);
-
-                setSales(Object.entries(weekSales).map(([day, { count, totalPrice }]) => ({ day, count, totalPrice })));
+                setSales(Object.entries(weekSales).map(([day, { count, totalPrice }]) => ({
+                    day,
+                    count,
+                    totalPrice,
+                    pinsCount: pinsCountByProductName[day] || 0,
+                })));
                 setTotalSales(totalSales);
                 setTotalPrice(totalWeekPrice);
                 return;
-            }
-            else if (selectedRange === "mes") {
+            } else if (selectedRange === "mes") {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
@@ -168,43 +185,6 @@ function AllRetiros() {
                 let totalMonthPrice = 0;
 
                 let startOfWeek = new Date(firstDayOfMonth);
-
-                if (startOfWeek.getDay() === 6) {
-                    let endOfWeek = new Date(startOfWeek);
-                    endOfWeek.setDate(startOfWeek.getDate() + 1);
-
-                    const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
-                    weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
-
-                    filteredSales.forEach((sale: any) => {
-                        const saleDate = new Date(sale.created_at);
-                        if (saleDate >= startOfWeek && saleDate <= endOfWeek) {
-                            weeksInMonth[weekLabel].count++;
-                            weeksInMonth[weekLabel].totalPrice += sale.totalPrice;
-                            totalMonthPrice += sale.totalPrice;
-                        }
-                    });
-
-                    startOfWeek.setDate(endOfWeek.getDate() + 1);
-                }
-
-                if (startOfWeek.getDay() === 0) {
-                    let endOfWeek = new Date(startOfWeek);
-
-                    const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
-                    weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
-
-                    filteredSales.forEach((sale: any) => {
-                        const saleDate = new Date(sale.created_at);
-                        if (saleDate.getTime() === startOfWeek.getTime()) {
-                            weeksInMonth[weekLabel].count++;
-                            weeksInMonth[weekLabel].totalPrice += sale.totalPrice;
-                            totalMonthPrice += sale.totalPrice;
-                        }
-                    });
-
-                    startOfWeek.setDate(startOfWeek.getDate() + 1);
-                }
 
                 while (startOfWeek <= lastDayOfMonth) {
                     let endOfWeek = new Date(startOfWeek);
@@ -227,20 +207,20 @@ function AllRetiros() {
                 }
 
                 const productTotals = getTotalPriceByProductName(filteredSales);
+                const pinsCountByProductName = getPinsCountByProductName(filteredSales);
                 setProductTotals(productTotals);
 
                 setSales(Object.entries(weeksInMonth).map(([week, { count, totalPrice }]) => ({
                     week,
                     count,
                     totalPrice,
+                    pinsCount: pinsCountByProductName[week] || 0,
                 })));
 
                 setTotalSales(Object.values(weeksInMonth).reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalMonthPrice);
                 return;
-            }
-
-            else if (selectedRange === "año") {
+            } else if (selectedRange === "año") {
                 const now = new Date();
                 const currentYear = now.getFullYear();
 
@@ -258,12 +238,15 @@ function AllRetiros() {
                 });
 
                 const productTotals = getTotalPriceByProductName(filteredSales);
+                const pinsCountByProductName = getPinsCountByProductName(filteredSales);
                 setProductTotals(productTotals);
 
                 setSales(monthsInYear.map((data, index) => ({
                     month: new Date(0, index).toLocaleString('es-ES', { month: 'long' }),
-                    ...data
+                    ...data,
+                    pinsCount: pinsCountByProductName[index] || 0,
                 })));
+
                 setTotalSales(monthsInYear.reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalYearPrice);
                 return;
@@ -279,8 +262,16 @@ function AllRetiros() {
                 });
             }
 
-
             const productTotals = getTotalPriceByProductName(filteredSales);
+            const pinsCountByProductName = getPinsCountByProductName(filteredSales);
+            setSales(filteredSales.map((sale: any) => {
+                return {
+                    ...sale,
+                    pinsCount: pinsCountByProductName[sale.productName] || 0,
+                };
+            }));
+
+
             setProductTotals(productTotals);
 
             setTotalPrice(filteredSales.reduce((acc: any, sale: { totalPrice: any; }) => acc + sale.totalPrice, 0));
@@ -290,28 +281,39 @@ function AllRetiros() {
         }
     };
 
-    const ProductList = ({ productTotals }: any) => {
+    const ProductList = ({ productTotals, pinsCountByProduct }: any) => {
         return (
-            <div>
-                {Object.entries(productTotals).map(([productName, totalPrice]) => (
-                    <div key={productName}>
-                        <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
-                            <Group position="apart">
+            <>
+                <div>
+                    {Object.entries(productTotals).map(([productName, totalPrice]) => (
+                        <div key={productName}>
+                            <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
+                                <Group
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: ' 2fr 1fr 1fr',
+                                        gap: '10px',
+                                        width: '100%',
+                                    }}
+                                    position="apart">
+                                    <Text mt={5} weight={700} mb="sm">
+                                        {productName}
+                                    </Text>
+                                    {pinsCountByProduct[productName] > 0 && (
+                                        <Text c='blue' mt={5} weight={700} mb="sm">
+                                            {pinsCountByProduct[productName]} Pines
+                                        </Text>
+                                    )}
 
-                                <Text mt={5} weight={700} mb="sm">
-
-                                    {productName}
-                                </Text>
-                                <Text c='green' mt={5} weight={700} mb="sm">
-
-                                    {(totalPrice as number).toFixed(2)} USD
-                                </Text>
-                            </Group>
-                        </Card>
-
-                    </div>
-                ))}
-            </div>
+                                    <Text c='green' mt={5} weight={700} mb="sm">
+                                        {(totalPrice as number).toFixed(2)} USD
+                                    </Text>
+                                </Group>
+                            </Card>
+                        </div>
+                    ))}
+                </div>
+            </>
         );
     };
 
@@ -513,94 +515,112 @@ function AllRetiros() {
             </div>
         );
     };
+
     return (
         <>
-            <Modal opened={opened} withCloseButton={false} onClose={() => setOpened(false)} title="Selecciona un usuario">
-                <Select
-                    label="Usuarios"
-                    placeholder="Selecciona un usuario"
-                    data={users}
-                    searchable
-                    clearable
-                    value={selectedUser}
-                    transition="pop-top-left"
-                    transitionDuration={80}
-                    transitionTimingFunction="ease"
-                    onChange={(value) => setSelectedUser(value)}
-                    styles={() => ({
-                        item: {
-                            '&[data-selected]': {
-                                '&, &:hover': {
-                                    backgroundColor: '#0c2a85',
-                                    color: 'white',
+            <Modal size='lg' opened={opened} withCloseButton={false} onClose={() => setOpened(false)} title="Selecciona un usuario">
+
+                <Tabs value={activeTab} onTabChange={setActiveTab}>
+                    <Tabs.List>
+                        <Tabs.Tab value="first">Retiro por usuario</Tabs.Tab>
+                        <Tabs.Tab value="second">Ganancia</Tabs.Tab>
+                    </Tabs.List>
+
+                    <Tabs.Panel value="first">
+                        <Select
+                            label="Usuarios"
+                            placeholder="Selecciona un usuario"
+                            data={users}
+                            searchable
+                            clearable
+                            value={selectedUser}
+                            transition="pop-top-left"
+                            transitionDuration={80}
+                            transitionTimingFunction="ease"
+                            onChange={(value) => setSelectedUser(value)}
+                            styles={() => ({
+                                item: {
+                                    '&[data-selected]': {
+                                        '&, &:hover': {
+                                            backgroundColor: '#0c2a85',
+                                            color: 'white',
+                                        },
+                                    },
                                 },
-                            },
-                        },
-                    })}
-                />
+                            })}
+                        />
 
 
-                {selectedUser && (
-                    <div>
-                        {error ? (
-                            <p>{error}</p>
-                        ) : (
-                            <>
-                                <Title mt={5} ta="center" weight={700} mb="sm" order={3}>
-
-                                    Retiros de {selectedUser}
-                                </Title>
-                                <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
-
-                                {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
-                                {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelectedrDate(date)} />}
-
-                                {sales.length > 0 ? (
-                                    <div>
-
-                                        <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                            TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
-                                        </Title>
-
-                                        <Title mt={5} weight={700} mb='md' order={5}>
-                                            Monto total de retiros {totalPrice.toFixed(2)} USD
-                                        </Title>
-                                        <Card
-                                            mt={15}
-                                            mb={45}
-                                            mr={15}
-                                            ml={15}
-                                            style={{
-                                                boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                                                transition: "all 0.3s ease",
-                                                transform: "scale(1)",
-                                            }}
-                                            radius="md"
-                                        >
-                                            <ScrollArea w='100%' type="never">
-
-                                                <SalesBarChart sales={sales} selectedRange={selectedRange} />
-                                            </ScrollArea>
-
-                                        </Card>
-
-                                        <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
-                                        <ProductList productTotals={productTotals} />
-
-                                        <SalesBreakdown sales={sales} selectedRange={selectedRange} />
-                                    </div>
+                        {selectedUser && (
+                            <div>
+                                {error ? (
+                                    <p>{error}</p>
                                 ) : (
-                                    <p>{error ? error : 'No hay Retiros disponibles.'}</p>
-                                )}
-                            </>
-                        )}
-                    </div>
-                )}
+                                    <>
+                                        <Title mt={5} ta="center" weight={700} mb="sm" order={3}>
 
+                                            Retiros de {selectedUser}
+                                        </Title>
+                                        <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
+
+                                        {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
+                                        {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelectedrDate(date)} />}
+
+                                        {sales.length > 0 ? (
+                                            <div>
+
+                                                <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
+                                                    TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
+                                                </Title>
+
+                                                <Title mt={5} weight={700} mb='md' order={5}>
+                                                    Monto total de retiros {totalPrice.toFixed(2)} USD
+                                                </Title>
+                                                <Card
+                                                    mt={15}
+                                                    mb={45}
+                                                    mr={15}
+                                                    ml={15}
+                                                    style={{
+                                                        boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                                        transition: "all 0.3s ease",
+                                                        transform: "scale(1)",
+                                                    }}
+                                                    radius="md"
+                                                >
+                                                    <ScrollArea w='100%' type="never">
+
+                                                        <SalesBarChart sales={sales} selectedRange={selectedRange} />
+                                                    </ScrollArea>
+
+                                                </Card>
+
+                                                <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
+                                                <ProductList
+                                                    productTotals={productTotals}
+                                                    pinsCountByProduct={getPinsCountByProductName(sales)}
+                                                />
+
+                                                <SalesBreakdown sales={sales} selectedRange={selectedRange} />
+                                            </div>
+                                        ) : (
+                                            <p>{error ? error : 'No hay Retiros disponibles.'}</p>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </Tabs.Panel>
+
+                    <Tabs.Panel value="second">
+                        Ganancia
+                    </Tabs.Panel>
+
+                </Tabs>
             </Modal>
 
-                <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver retiros</Button>
-         
+            <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver retiros</Button>
+
         </>
     );
 }

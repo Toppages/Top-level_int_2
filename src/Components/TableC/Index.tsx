@@ -1,39 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { ActionIcon, Table, Loader } from '@mantine/core';
-import { IconEye } from '@tabler/icons-react';
-import axios from 'axios';
-import { getAuthHeaders } from '../../utils/auth';
 import StepperRed from '../StepperRed/Index';
+import { IconEye } from '@tabler/icons-react';
 import { Product } from "../../types/types";
+import { fetchProductsFromAPI } from '../../utils/utils';
+import { ActionIcon, Table, Loader } from '@mantine/core';
 
 
-const TableC: React.FC = () => {
+interface TableMProps {
+    user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
+}
+const TableC: React.FC<TableMProps> = ({ user }) => {
     const [opened, setOpened] = useState<boolean>(false);
     const [fetchedProducts, setFetchedProducts] = useState<Product[]>([]);
     const [selectedProductGroup, setSelectedProductGroup] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    const fetchProductsFromAPI = async () => {
-        const headers = getAuthHeaders("GET", "api/products");
-        if (!headers) return;
-
-        setLoading(true);
-        try {
-            const response = await axios.get('https://pincentral.baul.pro/api/products', { headers });
-            if (response.status === 200) {
-                const products: Product[] = response.data;
-                setFetchedProducts(products);
-            }
-        } catch (error) {
-            console.error("Error fetching products:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchProductsFromAPI();
+        fetchProductsFromAPI(setFetchedProducts, setLoading);
     }, []);
+
 
     const openModalForGroup = (group: string) => {
         setSelectedProductGroup(group);
@@ -44,26 +29,7 @@ const TableC: React.FC = () => {
         ? fetchedProducts.filter(product => product.product_group === selectedProductGroup)
         : [];
 
-    const allowedGroups = [
-        "Arena Breakout",
-        "Honor of kings",
-        "Netflix Usa",
-        "Fortnite V-Bucks",
-        "Nintendo US USD",
-        "Parchis Club",
-        "PUBG UC",
-        "Razer Gold Brasil",
-        "Razer Gold Chile",
-        "Razer Gold Colombia",
-        "Recarga Mobile Legends",
-        "Roblox US USD",
-        "Steam US USD",
-        "Xbox US USD",
-        "Free Fire Latam"
-    ];
-
-    const filteredGroups = Array.from(new Set(fetchedProducts.map(product => product.product_group)))
-        .filter(group => allowedGroups.includes(group));
+    const uniqueGroups = Array.from(new Set(fetchedProducts.map(product => product.product_group)));
 
     return (
         <>
@@ -71,20 +37,19 @@ const TableC: React.FC = () => {
 
             {loading ? <Loader color="indigo" size="xl" variant="dots" style={{ margin: 'auto', display: 'block' }} /> :
                 <Table striped highlightOnHover>
-                    <thead>
+                    <thead style={{ background: '#0c2a85' }}>
                         <tr>
-                            <th >Juegos Disponibles </th>
-                            <th ></th>
+                            <th style={{ textAlign: 'center', color: 'white' }}>Juegos Disponibles</th>
+
+                            <th style={{ textAlign: 'center', color: 'white' }}></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredGroups.length > 0 ? (
-                            filteredGroups.map((group, index) => (
+                        {uniqueGroups.length > 0 ? (
+                            uniqueGroups.map((group, index) => (
                                 <tr key={index}>
-                                    <td >
-                                        {group}
-                                    </td>
-                                    <td >
+                                    <td style={{ textAlign: 'center' }}>{group}</td>
+                                    <td>
                                         <ActionIcon
                                             onClick={() => openModalForGroup(group)}
                                             style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
@@ -98,9 +63,10 @@ const TableC: React.FC = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={2} style={{ textAlign: 'center' }}>No se encontraron grupos permitidos.</td>
+                                <td colSpan={2} style={{ textAlign: 'center' }}>No se encontraron grupos.</td>
                             </tr>
                         )}
+
                     </tbody>
                 </Table>
             }

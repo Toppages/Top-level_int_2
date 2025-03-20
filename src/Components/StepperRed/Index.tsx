@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     Modal,
@@ -13,13 +13,11 @@ import {
     TextInput,
 } from '@mantine/core';
 import { IconEye } from '@tabler/icons-react';
-import moment from 'moment';
-import CryptoJS from 'crypto-js';
 
 interface Product {
     code: string;
     name: string;
-    price: string;
+    price: number;
 }
 
 interface StepperMaProps {
@@ -38,69 +36,54 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
     const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
     const [accountName, setAccountName] = useState<string>('');
 
+    useEffect(() => {
+        if (opened) {
+            setActiveStep(0);
+        } else {
+            resetState();
+        }
+    }, [opened]);
+
+    const resetState = () => {
+        setSelectedProduct(null);
+        setCapturedPins([]);
+        setPlayerId('');
+        setIsValidId(false);
+        setErrorMessage('');
+        setAccountName('');
+    };
+
     const handleIdChange = (value: string) => {
         setPlayerId(value);
         setErrorMessage('');
     };
 
-    const handleConfirmClick = async () => {
-        if (!selectedProduct || !playerId) {
-            setErrorMessage('Por favor, ingrese un ID válido y seleccione un producto.');
-            setIsValidId(false);
+    const validatePlayerId = async () => {
+        if (!playerId) {
+            setErrorMessage("El ID del jugador no puede estar vacío.");
             return;
         }
 
         setIsAuthorizing(true);
-        const apiKey = import.meta.env.VITE_API_KEY;
-        const apiSecret = import.meta.env.VITE_API_SECRET;
-
-        if (!apiKey || !apiSecret) {
-            setIsAuthorizing(false);
-            setErrorMessage('No se encontraron las credenciales de autenticación.');
-            return;
-        }
-
-        const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
-        const url = 'https://pincentral.baul.pro/api/recharges/validate';
-        const verb = "POST";
-        const route = "/api/recharges/validate";
-        const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
-
-        const body = {
-            product_code: selectedProduct.code,
-            service_user_id: playerId,
-        };
-
-        const jsonBody = JSON.stringify(body);
-        const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
-        const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
-        const authorizationHeader = `${apiKey}:${hmacSignature}`;
+        setErrorMessage('');
 
         try {
-            const response = await axios.post(url, body, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Date': date,
-                    'Authorization': authorizationHeader,
-                }
-            });
+            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/validar/${playerId}`);
+            const data = response.data;
 
-            if (response.status === 200 && response.data.status === true) {
+            if (data.alerta === 'green') {
+                setAccountName(data.Nickname);
                 setIsValidId(true);
-                setErrorMessage('');
-                setAccountName(response.data.account_name);
-                setActiveStep(2);
             } else {
+                setErrorMessage(data.mensaje);
                 setIsValidId(false);
-                setErrorMessage('El ID del jugador no es válido o la validación falló.');
             }
         } catch (error) {
-            console.error("Error en la validación:", error);
+            setErrorMessage("Error al validar el ID del jugador.");
             setIsValidId(false);
-            setErrorMessage('Hubo un error al validar el ID.');
-        } finally {
-            setIsAuthorizing(false);
         }
+
+        setIsAuthorizing(false);
     };
 
     const handleFinishClick = () => {
@@ -108,13 +91,13 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
         setTimeout(() => {
             onClose();
             setActiveStep(0);
-            setCapturedPins([]);
+            resetState();
         }, 2000);
     };
 
     return (
         <Modal opened={opened} onClose={onClose} withCloseButton={false} size="xl">
-            <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} breakpoint="sm">
+            <Stepper active={activeStep} color="#0c2a85" allowNextStepsSelect={false} onStepClick={setActiveStep} breakpoint="sm">
                 <Stepper.Step label="Detalles del Producto" description="Selecciona un producto">
                     <div>
                         <Title align="center" order={3} style={{ fontWeight: 700, color: '#333' }}>
@@ -176,14 +159,16 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
                             Atrás
                         </Button>
                         <Button
-                            onClick={handleConfirmClick}
                             disabled={isAuthorizing}
+                            onClick={validatePlayerId}
+                            style={{ background: '#0c2a85' }}
                         >
-                            {isAuthorizing ? "Validando..." : "Confirmar"}
+                            {isAuthorizing ? "Validando..." : "Confirmar ID"}
                         </Button>
+
                         <Button
                             onClick={() => setActiveStep(2)}
-                            style={{ display: isValidId ? 'inline-block' : 'none' }}
+                            style={{ display: isValidId ? 'inline-block' : 'none', background: '#0c2a85' }}
                         >
                             Siguiente
                         </Button>

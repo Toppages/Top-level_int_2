@@ -128,13 +128,16 @@ export const copyToClipboard = (text: string, isAllPins: boolean = false) => {
   });
 };
 
-export const fetchProductsFromAPI = async (setFetchedProducts: React.Dispatch<React.SetStateAction<Product[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) => {
+export const fetchProductsFromAPI = async (
+  setFetchedProducts: React.Dispatch<React.SetStateAction<Product[]>>, 
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+) => {
   setLoading(true);
   try {
     const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`);
     if (response.status === 200) {
-      const filteredProducts = response.data.filter((product: Product) => product.product_group === "Free Fire Latam");
-      setFetchedProducts(filteredProducts);
+      const sortedProducts = response.data.sort((a: Product, b: Product) => a.price - b.price);
+      setFetchedProducts(sortedProducts);
     }
   } catch (error) {
     toast.error('Hubo un problema al obtener los productos');
@@ -193,38 +196,39 @@ export const handleLogout = (navigate: Function) => {
 };
 
 export const updateProductAPI = async (product: Product) => {
-  
   if (!product._id) {
-    toast.error('El ID del producto no fue proporcionado');
-    throw new Error('ID del producto no proporcionado');
+      toast.error('El ID del producto no fue proporcionado');
+      throw new Error('ID del producto no proporcionado');
   }
-  
+
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products/${product._id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        price_oro: product.price_oro,
-        price_plata: product.price_plata,
-        price_bronce: product.price_bronce,
-        available: product.available,
-      }),
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      toast.success('Producto actualizado exitosamente');
-      return data;
-    } else {
-      toast.error(data.error || 'Error al actualizar el producto');
-      throw new Error(data.error || 'Error al actualizar el producto');
-    }
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products/${product._id}`, {
+          method: 'PUT',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              price: product.price,           // Agregar el precio base
+              pricebs: product.pricebs,       // Agregar el preciobs
+              price_oro: product.price_oro,
+              price_plata: product.price_plata,
+              price_bronce: product.price_bronce,
+              available: product.available,
+          }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+          toast.success('Producto actualizado exitosamente');
+          return data;
+      } else {
+          toast.error(data.error || 'Error al actualizar el producto');
+          throw new Error(data.error || 'Error al actualizar el producto');
+      }
   } catch (error) {
-    toast.error('Hubo un problema al actualizar el producto');
-    throw error;
+      toast.error('Hubo un problema al actualizar el producto');
+      throw error;
   }
 };
 

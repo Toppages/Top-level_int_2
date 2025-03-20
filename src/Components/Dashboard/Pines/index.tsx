@@ -156,7 +156,7 @@ const Pines: React.FC<PinesProps> = ({ user }) => {
                                     data={datax}
                                     cx="50%"
                                     cy="50%"
-                                    outerRadius={80}
+                                    outerRadius={70}
                                     label
                                     fill="#8884d8"
                                     dataKey="value"

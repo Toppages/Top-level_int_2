@@ -66,7 +66,8 @@ export interface Product {
     name: string;
     code: string;
     type: string;
-    price: string;
+    price: number;
+    pricebs: number;
     price_oro: number;
     price_plata: number;
     price_bronce: number;

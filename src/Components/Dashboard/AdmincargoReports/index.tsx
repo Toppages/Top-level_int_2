@@ -57,7 +57,7 @@ function AdmincargoReports({ user }: EditClientProps) {
         setError(null);
 
         if (selectedUser) {
-            fetchSales(selectedUser || "");
+            fetchSales(selectedUser || "", user?.role || "");
         }
     }, [selectedUser, selectedRange, selectedDate, selectedrDate]);
 
@@ -89,7 +89,17 @@ function AdmincargoReports({ user }: EditClientProps) {
         return weekSales;
     };
 
-    const fetchSales = async (userHandle: string) => {
+    const getPinsCountByProductName = (sales: any[]) => {
+        return sales.reduce((acc: Record<string, number>, sale: any) => {
+            const productName = sale.productName;
+            const pinsCount = sale.pins ? sale.pins.length : 0;
+            acc[productName] = (acc[productName] || 0) + pinsCount;
+            return acc;
+        }, {});
+    };
+
+    const fetchSales = async (userHandle: string, userRole: string) => {
+
         const getTotalPriceByProductName = (sales: any[]) => {
             return sales.reduce((acc: Record<string, number>, sale: any) => {
                 const productName = sale.productName;
@@ -99,11 +109,20 @@ function AdmincargoReports({ user }: EditClientProps) {
         };
 
 
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('No se encontró el token. Inicia sesión nuevamente.');
+            return;
+        }
 
         try {
-            const url = `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
+            const url = userRole === 'master'
+                ? `${import.meta.env.VITE_API_BASE_URL}/sales`
+                : `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
 
-            const response = await axios.get(url);
+            const response = await axios.get(url, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
             let filteredSales = response.data;
 
@@ -111,11 +130,7 @@ function AdmincargoReports({ user }: EditClientProps) {
                 setError('La respuesta del servidor no es válida.');
                 return;
             }
-            if (filteredSales.length === 0) {
-                setSales([]);
-                setError('No se encontraron ventas para este usuario');
-                return;
-            }
+
             const formatDate = (dateString: string) => {
                 if (!dateString) return null;
                 const date = new Date(dateString);
@@ -155,14 +170,18 @@ function AdmincargoReports({ user }: EditClientProps) {
                 const totalWeekPrice = Object.values(weekSales).reduce((acc, { totalPrice }) => acc + totalPrice, 0);
 
                 const productTotals = getTotalPriceByProductName(filteredSales);
+                const pinsCountByProductName = getPinsCountByProductName(filteredSales);
                 setProductTotals(productTotals);
-
-                setSales(Object.entries(weekSales).map(([day, { count, totalPrice }]) => ({ day, count, totalPrice })));
+                setSales(Object.entries(weekSales).map(([day, { count, totalPrice }]) => ({
+                    day,
+                    count,
+                    totalPrice,
+                    pinsCount: pinsCountByProductName[day] || 0,
+                })));
                 setTotalSales(totalSales);
                 setTotalPrice(totalWeekPrice);
                 return;
-            }
-            else if (selectedRange === "mes") {
+            } else if (selectedRange === "mes") {
                 const now = new Date();
                 const currentMonth = now.getMonth();
                 const currentYear = now.getFullYear();
@@ -174,43 +193,6 @@ function AdmincargoReports({ user }: EditClientProps) {
                 let totalMonthPrice = 0;
 
                 let startOfWeek = new Date(firstDayOfMonth);
-
-                if (startOfWeek.getDay() === 6) {
-                    let endOfWeek = new Date(startOfWeek);
-                    endOfWeek.setDate(startOfWeek.getDate() + 1);
-
-                    const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
-                    weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
-
-                    filteredSales.forEach((sale: any) => {
-                        const saleDate = new Date(sale.created_at);
-                        if (saleDate >= startOfWeek && saleDate <= endOfWeek) {
-                            weeksInMonth[weekLabel].count++;
-                            weeksInMonth[weekLabel].totalPrice += sale.totalPrice;
-                            totalMonthPrice += sale.totalPrice;
-                        }
-                    });
-
-                    startOfWeek.setDate(endOfWeek.getDate() + 1);
-                }
-
-                if (startOfWeek.getDay() === 0) {
-                    let endOfWeek = new Date(startOfWeek);
-
-                    const weekLabel = `${String(startOfWeek.getDate()).padStart(2, "0")}-${String(endOfWeek.getDate()).padStart(2, "0")}`;
-                    weeksInMonth[weekLabel] = { count: 0, totalPrice: 0 };
-
-                    filteredSales.forEach((sale: any) => {
-                        const saleDate = new Date(sale.created_at);
-                        if (saleDate.getTime() === startOfWeek.getTime()) {
-                            weeksInMonth[weekLabel].count++;
-                            weeksInMonth[weekLabel].totalPrice += sale.totalPrice;
-                            totalMonthPrice += sale.totalPrice;
-                        }
-                    });
-
-                    startOfWeek.setDate(startOfWeek.getDate() + 1);
-                }
 
                 while (startOfWeek <= lastDayOfMonth) {
                     let endOfWeek = new Date(startOfWeek);
@@ -233,20 +215,20 @@ function AdmincargoReports({ user }: EditClientProps) {
                 }
 
                 const productTotals = getTotalPriceByProductName(filteredSales);
+                const pinsCountByProductName = getPinsCountByProductName(filteredSales);
                 setProductTotals(productTotals);
 
                 setSales(Object.entries(weeksInMonth).map(([week, { count, totalPrice }]) => ({
                     week,
                     count,
                     totalPrice,
+                    pinsCount: pinsCountByProductName[week] || 0,
                 })));
 
                 setTotalSales(Object.values(weeksInMonth).reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalMonthPrice);
                 return;
-            }
-
-            else if (selectedRange === "año") {
+            } else if (selectedRange === "año") {
                 const now = new Date();
                 const currentYear = now.getFullYear();
 
@@ -264,12 +246,15 @@ function AdmincargoReports({ user }: EditClientProps) {
                 });
 
                 const productTotals = getTotalPriceByProductName(filteredSales);
+                const pinsCountByProductName = getPinsCountByProductName(filteredSales);
                 setProductTotals(productTotals);
 
                 setSales(monthsInYear.map((data, index) => ({
                     month: new Date(0, index).toLocaleString('es-ES', { month: 'long' }),
-                    ...data
+                    ...data,
+                    pinsCount: pinsCountByProductName[index] || 0,
                 })));
+
                 setTotalSales(monthsInYear.reduce((acc, { count }) => acc + count, 0));
                 setTotalPrice(totalYearPrice);
                 return;
@@ -285,8 +270,16 @@ function AdmincargoReports({ user }: EditClientProps) {
                 });
             }
 
-
             const productTotals = getTotalPriceByProductName(filteredSales);
+            const pinsCountByProductName = getPinsCountByProductName(filteredSales);
+            setSales(filteredSales.map((sale: any) => {
+                return {
+                    ...sale,
+                    pinsCount: pinsCountByProductName[sale.productName] || 0,
+                };
+            }));
+
+
             setProductTotals(productTotals);
 
             setTotalPrice(filteredSales.reduce((acc: any, sale: { totalPrice: any; }) => acc + sale.totalPrice, 0));
@@ -296,28 +289,32 @@ function AdmincargoReports({ user }: EditClientProps) {
         }
     };
 
-    const ProductList = ({ productTotals }: any) => {
+    const ProductList = ({ productTotals, pinsCountByProduct }: any) => {
         return (
-            <div>
-                {Object.entries(productTotals).map(([productName, totalPrice]) => (
-                    <div key={productName}>
-                        <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
-                            <Group position="apart">
+            <>
+                <div>
+                    {Object.entries(productTotals).map(([productName, totalPrice]) => (
+                        <div key={productName}>
+                            <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
+                                <Group position="apart">
+                                    <Text mt={5} weight={700} mb="sm">
+                                        {productName}
+                                    </Text>
+                                    {pinsCountByProduct[productName] > 0 && (
+                                        <Text c='blue' mt={5} weight={700} mb="sm">
+                                            {pinsCountByProduct[productName]} Pines
+                                        </Text>
+                                    )}
 
-                                <Text mt={5} weight={700} mb="sm">
-
-                                    {productName}
-                                </Text>
-                                <Text c='green' mt={5} weight={700} mb="sm">
-
-                                    {(totalPrice as number).toFixed(2)} USD
-                                </Text>
-                            </Group>
-                        </Card>
-
-                    </div>
-                ))}
-            </div>
+                                    <Text c='green' mt={5} weight={700} mb="sm">
+                                        {(totalPrice as number).toFixed(2)} USD
+                                    </Text>
+                                </Group>
+                            </Card>
+                        </div>
+                    ))}
+                </div>
+            </>
         );
     };
 
@@ -521,7 +518,7 @@ function AdmincargoReports({ user }: EditClientProps) {
     };
     return (
         <>
-            <Modal opened={opened} withCloseButton={false} onClose={() => setOpened(false)} title="Selecciona un usuario">
+            <Modal size='lg' opened={opened} withCloseButton={false} onClose={() => setOpened(false)} title="Selecciona un usuario">
                 <Select
                     label="Usuarios"
                     placeholder="Selecciona un usuario"
@@ -591,8 +588,10 @@ function AdmincargoReports({ user }: EditClientProps) {
                                         </Card>
 
                                         <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
-                                        <ProductList productTotals={productTotals} />
-
+                                        <ProductList
+                                                    productTotals={productTotals}
+                                                    pinsCountByProduct={getPinsCountByProductName(sales)}
+                                                />
                                         <SalesBreakdown sales={sales} selectedRange={selectedRange} />
                                     </div>
                                 ) : (

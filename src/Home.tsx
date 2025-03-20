@@ -1,5 +1,4 @@
 import './App.css';
-import TableM from './Components/TableM/Index';
 import Reports from './Components/Reports';
 import NavLinks from './Components/NavLinksList';
 import Dashboard from './Components/Dashboard/Index';
@@ -9,6 +8,7 @@ import Vendedoresgenerarpins from './Components/Vendedoresgenerarpins/Index';
 import { Toaster } from 'sonner';
 import { Card, Group } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+import TableC from './Components/TableC/Index';
 
 interface HomeProps {
   navOpen: boolean;
@@ -38,7 +38,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
       case 0:
         return <Dashboard user={user} />;
       case 1:
-        return user?.role === "vendedor" ? <Vendedoresgenerarpins/> : <TableM user={user} />;
+        return user?.role === "vendedor" ? <Vendedoresgenerarpins/> : <TableC user={user} />;
       case 2:
         return <Reports user={user} />;
       case 3:

@@ -19,6 +19,7 @@ import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/date
 import { IconCalendarWeek, IconTicket, IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
 import { Group, ScrollArea, Select, Tabs, Text, Title, Card, Badge, Loader } from "@mantine/core";
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
+import AdministrartInventario from "./AdministrartInventario/Index";
 
 interface DashboardProps {
     user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
@@ -595,6 +596,9 @@ function Dashboard({ user }: DashboardProps) {
                                         <Registrar />
                                         <ManagePro />
                                         <AdminBR />
+                                        <AdministrartInventario navOpen={false} setActiveLink={function (): void {
+                                           
+                                        } } user={null} />
                                         {/* <EditUser/> */}
                                         <DeleteUser />
                                     </Group>

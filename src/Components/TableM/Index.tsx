@@ -66,7 +66,7 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
           <Table striped highlightOnHover>
             <thead style={{ background: '#0c2a85' }}>
               <tr>
-                <th style={{ textAlign: 'center', color: 'white' }}>Juegos Disponibles</th>
+              <th style={{ textAlign: 'center', color: 'white' }}>Juegos Disponibles</th>
                 <th>
                   <Input
                     radius="md"

@@ -21,6 +21,8 @@ function ManagePro() {
             price_oro: selectedProduct?.price_oro || 0,
             price_plata: selectedProduct?.price_plata || 0,
             price_bronce: selectedProduct?.price_bronce || 0,
+            price: selectedProduct?.price || 0,  // Agregado
+            pricebs: selectedProduct?.pricebs || 0, // Agregado
         }
     });
 
@@ -34,7 +36,6 @@ function ManagePro() {
         const sortedProducts = [...products].sort((a, b) => Number(a.price) - Number(b.price));
         setFilteredProducts(sortedProducts);
     }, [products]);
-    
 
     const handleSearchChange = (query: string) => {
         setSearchQuery(query);
@@ -52,6 +53,8 @@ function ManagePro() {
         setValue('price_oro', product.price_oro || 0);
         setValue('price_plata', product.price_plata || 0);
         setValue('price_bronce', product.price_bronce || 0);
+        setValue('price', product.price || 0); // Agregado
+        setValue('pricebs', product.pricebs || 0); // Agregado
     };
 
     const handleUpdateProduct = async (data: any) => {
@@ -92,7 +95,7 @@ function ManagePro() {
         <>
             <Modal radius='lg' size={isMobile ? '100%' : '80%'} opened={opened} onClose={closeModal} withCloseButton={false}>
                 <Group mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr', gap: '10px', width: '100%' }}>
-                    <Title order={1}>Lista de productos</Title>
+                    <Title order={3}>Lista de productos</Title>
                     <TextInput
                         radius="lg"
                         placeholder="Buscar producto"
@@ -108,7 +111,7 @@ function ManagePro() {
                     </div>
                 ) : (
                     <ScrollArea type="never" style={{ height: 300, maxWidth: '100%' }}>
-                        <Table striped highlightOnHover withBorder withColumnBorders>
+                        <Table>
                             <thead style={{ background: '#0c2a85' }}>
                                 <tr>
                                     <th>
@@ -137,15 +140,51 @@ function ManagePro() {
                     </ScrollArea>
                 )}
             </Modal>
-
             <Modal radius='lg' size={isMobile ? '100%' : '80%'} opened={productModalOpen} onClose={() => { setProductModalOpen(false); setOpened(true); }} withCloseButton={false}>
                 {selectedProduct && (
                     <form onSubmit={handleSubmit(handleUpdateProduct)}>
-
-                        <Title order={1} ta='center'>{selectedProduct.name}</Title>
-                        <Title order={3} ta='center'>Precio Base: {selectedProduct.price}</Title>
-
+                        <Title mt={5} order={1}>{selectedProduct.name}</Title>
+                        <Title mt={15} order={5}></Title>
+                        <Text  fw={500} fz="xl">Productos en el inventario: {selectedProduct.price}</Text>
                         <Group mt={15} mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '10px', width: '100%' }}>
+                            <Controller
+                                control={control}
+                                name="price"
+                                render={({ field }) => (
+                                    <NumberInput
+                                        {...field}
+                                        label="Precio Base"
+                                        min={0}
+                                        step={0.01}
+                                        precision={3}
+                                        error={errors.price ? "Este campo es obligatorio." : null}
+                                    />
+                                )}
+                                rules={{
+                                    required: "Este campo es obligatorio.",
+                                    validate: (value) => value > 0 || "El precio base debe ser mayor a 0.",
+                                }}
+                            />
+                            
+                            <Controller
+                                control={control}
+                                name="pricebs"
+                                render={({ field }) => (
+                                    <NumberInput
+                                        {...field}
+                                        label="Precio Base (bs)"
+                                        min={0}
+                                        step={0.01}
+                                        precision={3}
+                                        error={errors.pricebs ? "Este campo es obligatorio." : null}
+                                    />
+                                )}
+                                rules={{
+                                    required: "Este campo es obligatorio.",
+                                    validate: (value) => value > 0 || "El precio base en bolivianos debe ser mayor a 0.",
+                                }}
+                            />
+
                             <Controller
                                 control={control}
                                 name="price_oro"
@@ -155,7 +194,7 @@ function ManagePro() {
                                         label="Precio Oro"
                                         min={Number(selectedProduct?.price) || 0}
                                         step={0.01}
-                                        precision={2}
+                                        precision={3}
                                         error={errors.price_oro ? "El precio oro no puede ser menor que el precio base." : null}
                                     />
                                 )}
@@ -177,7 +216,7 @@ function ManagePro() {
                                         label="Precio Plata"
                                         min={Number(selectedProduct?.price_oro) || 0}
                                         step={0.01}
-                                        precision={2}
+                                        precision={3}
                                         error={errors.price_plata ? "El precio plata no puede ser menor que el precio oro." : null}
                                     />
                                 )}
@@ -199,7 +238,7 @@ function ManagePro() {
                                         label="Precio Bronce"
                                         min={Number(selectedProduct?.price_plata) || 0}
                                         step={0.01}
-                                        precision={2}
+                                        precision={3}
                                         error={errors.price_bronce ? "El precio bronce no puede ser menor que el precio plata." : null}
                                     />
                                 )}
@@ -225,7 +264,6 @@ function ManagePro() {
                     </form>
                 )}
             </Modal>
-
             <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver Productos</Button>
         </>
     );
