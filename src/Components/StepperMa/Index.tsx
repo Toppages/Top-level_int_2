@@ -39,6 +39,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     const [copied, setCopied] = useState(false);
 
     const [adminBalance, setAdminBalance] = useState<{ saldo: number; inventarioSaldo: number } | null>(null);
+
     useEffect(() => {
         const fetchBalance = async () => {
             try {
@@ -74,6 +75,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         setTimeout(() => setCopied(false), 2000);
     };
     const [, setCaptureId] = useState<string | null>(null);
+    
     useEffect(() => {
         if (opened) {
             setQuantity(1);

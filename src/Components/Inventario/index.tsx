@@ -65,7 +65,7 @@ function Inventario() {
     ));
 
     const totalPages = Math.ceil(filteredLogs.length / elementsPerPage);
-
+   
     return (
         <>
             <Title ta="center" order={2}>Movimientos pin central</Title>
