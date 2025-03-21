@@ -139,18 +139,18 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
             <div>
                 {userData && userData.role === 'master' && (
                     <>
-                        <Title ta="center" c='#0c2a85' order={6}>
-                            Saldo Correracional: {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
+                        <Title  c='#0c2a85' order={6}>
+                            Saldo Total: {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
                         </Title>
                         {!(totalSaldos && userData) ? (
                             <Loader color="indigo" variant="bars" />
                         ) : (
-                            <Group ml={10} >
+                            <Group>
                                 <Title  c="#0c2a85" order={6}>
-                                    Saldo De trabajo: {`${(userData.saldo - totalSaldos.totalSaldoAdmins - totalSaldos.totalSaldoClientes).toFixed(2)} USD`}
+                                    Saldo Propio: {`${(userData.saldo - totalSaldos.totalSaldoAdmins - totalSaldos.totalSaldoClientes).toFixed(2)} USD`}
                                 </Title>
 
-                                <ActionIcon ml={-15} color="indigo" size="xs" onClick={() => setOpened(true)}>
+                                <ActionIcon ml={-17} color="indigo" size="xs" onClick={() => setOpened(true)}>
                                     <IconInfoCircle size={26} />
                                 </ActionIcon>
                             </Group>

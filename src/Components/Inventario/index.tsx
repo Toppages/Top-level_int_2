@@ -17,7 +17,7 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
     const [error, setError] = useState<string | null>(null);
     const [pins, setPins] = useState<Pin[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 7;
+    const itemsPerPage = 6;
     const [selectedProducts, setSelectedProducts] = useState<string[]>(['Free Fire 100 Diamantes + 10 Bono']);
 
     const handleMarkAllUsed = async () => {
@@ -143,12 +143,17 @@ const Inventario: React.FC<{ user: any }> = ({ user }) => {
                 ))}
             </Group>
 
-            <Group position='apart'>
+            <Group     style={{
+                            display: 'grid',
+                            gridTemplateColumns: ' 2.6fr 3fr ',
+                            gap: '10px',
+                            width: '100%',
+                        }} >
                 <Pagination
                     total={Math.ceil(filteredPins.length / itemsPerPage)}
                     radius="md"
                     mt={15}
-                    size="lg"
+                    size="md"
                     page={currentPage}
                     onChange={setCurrentPage}
                     styles={(theme) => ({

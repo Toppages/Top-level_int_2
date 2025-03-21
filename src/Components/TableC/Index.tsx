@@ -33,7 +33,7 @@ const TableC: React.FC<TableMProps> = ({ user }) => {
 
     return (
         <>
-            <StepperRed opened={opened} onClose={() => setOpened(false)} products={productsInSelectedGroup} />
+            <StepperRed user={user} opened={opened} onClose={() => setOpened(false)} products={productsInSelectedGroup} />
 
             {loading ? <Loader color="indigo" size="xl" variant="dots" style={{ margin: 'auto', display: 'block' }} /> :
                 <Table striped highlightOnHover>

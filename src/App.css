@@ -1,39 +1,14 @@
-@media (min-width: 1200px) {
-  .carousel-image {
-    max-height: 600px;
-  }
-}
-
-@media (max-width: 1199px) and (min-width: 768px) {
-  .carousel-image {
-    max-height: 600px;
-  }
-}
-
-@media (max-width: 767px) {
-  .carousel-image {
-    max-height: 400px;
-  }
-}
-
 
 body {
+  /* background: rgb(0,0,0);
+  background:linear-gradient(9deg, rgba(2,0,36,1) 0%, rgba(12,42,133,1) 100%);
+   */
   background: #EEEEEE;
   margin: 0;
   padding: 0;
-  height: 95vh;
+  height: 100%;
 }
 
-.lazy-load {
-  opacity: 0;
-  transform: translateY(20px); 
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.lazy-load.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 .button {
   background: #0c2a85;

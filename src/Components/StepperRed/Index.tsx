@@ -13,28 +13,43 @@ import {
     TextInput,
 } from '@mantine/core';
 import { IconEye } from '@tabler/icons-react';
-
-interface Product {
-    code: string;
-    name: string;
-    price: number;
-}
+import { fetchUserData } from "../../utils/utils";
+import { Product } from '../../types/types';
 
 interface StepperMaProps {
     opened: boolean;
     onClose: () => void;
     products: Product[];
+    user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
+
 }
 
-const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => {
+const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user }) => {
     const [activeStep, setActiveStep] = useState<number>(0);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [capturedPins, setCapturedPins] = useState<string[]>([]);
     const [playerId, setPlayerId] = useState<string>('');
     const [isValidId, setIsValidId] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
     const [accountName, setAccountName] = useState<string>('');
+    const [recargaInfo, setRecargaInfo] = useState<{ alerta: string; mensaje: string; Nickname?: string } | null>(null);
+    const [isProcessing, setIsProcessing] = useState<boolean>(false);
+    const [saleResponse, setSaleResponse] = useState<any>(null);
+    const [userData, setUserData] = useState(user);
+    const getPriceForUser = (product: Product, user: { rango: string } | null) => {
+        const userRango = user ? user.rango : 'default';
+
+        switch (userRango) {
+            case 'oro':
+                return product.price_oro;
+            case 'plata':
+                return product.price_plata;
+            case 'bronce':
+                return product.price_bronce;
+            default:
+                return product.price;
+        }
+    };
 
     useEffect(() => {
         if (opened) {
@@ -46,7 +61,6 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
 
     const resetState = () => {
         setSelectedProduct(null);
-        setCapturedPins([]);
         setPlayerId('');
         setIsValidId(false);
         setErrorMessage('');
@@ -87,13 +101,90 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
     };
 
     const handleFinishClick = () => {
-        setActiveStep(3);
-        setTimeout(() => {
-            onClose();
-            setActiveStep(0);
-            resetState();
-        }, 2000);
+
+        onClose();
+        setActiveStep(0);
+        resetState();
     };
+
+    const handleNextStep = async () => {
+        if (!selectedProduct || !playerId) {
+            setErrorMessage("Debe seleccionar un producto y un ID de jugador válido.");
+            return;
+        }
+
+        setIsProcessing(true);
+
+        try {
+            const pinResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products/${selectedProduct.code}/pin`);
+            const pinData = pinResponse.data.pin;
+
+            if (!pinData || !pinData.pin_id) {
+                setErrorMessage("Error al obtener el PIN del producto.");
+                setIsProcessing(false);
+                return;
+            }
+
+            const recargaResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/recarga/${playerId}/${pinData.pin_id}`);
+
+            if (recargaResponse.status !== 200) {
+                setErrorMessage("Error al procesar la recarga.");
+                setIsProcessing(false);
+                return;
+            }
+
+            setRecargaInfo(recargaResponse.data);
+
+            const saleData = {
+                user: user ? {
+                    id: user._id,
+                    handle: user.handle,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    saldo: userData ? userData.saldo : 0
+                } : null,
+                playerId,
+                nickname: accountName,
+                quantity: 1,
+                price: getPriceForUser(selectedProduct, user),
+                product: selectedProduct.code,
+                productName: selectedProduct.name,
+                totalPrice: getPriceForUser(selectedProduct, user),
+                totalOriginalPrice: selectedProduct.price,
+                moneydisp: user ? user.saldo : 0,
+                status: "completado",
+                order_id: `ORD-${Date.now()}`,
+                pins: [
+                    {
+                        serial: pinData.pin_id,
+                        key: pinData.pin || "DEFAULT_KEY",
+                        usado: false,
+                        productName: selectedProduct.name
+                    }
+                ]
+            };
+
+            const saleResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData);
+
+            if (saleResponse.status === 201) {
+                setSaleResponse(saleResponse.data);  // Guardamos la respuesta de la venta
+                setActiveStep(2);
+            } else {
+                setErrorMessage("Error al registrar la venta.");
+            }
+        } catch (error) {
+            setErrorMessage("Ocurrió un error en el proceso.");
+        }
+
+        setIsProcessing(false);
+    };
+
+    useEffect(() => {
+        fetchUserData(setUserData);
+        const intervalId = setInterval(() => fetchUserData(setUserData), 5000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     return (
         <Modal opened={opened} onClose={onClose} withCloseButton={false} size="xl">
@@ -106,18 +197,32 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
                         {products.length > 0 ? (
                             <Table striped highlightOnHover>
-                                <thead>
+
+                                <thead style={{ background: '#0c2a85' }}>
                                     <tr>
-                                        <th>Producto</th>
-                                        <th>Precio</th>
-                                        <th>Acción</th>
+                                        <th>
+                                            <Text c='white' ta={'center'}>
+                                                Producto
+                                            </Text>
+                                        </th>
+                                        <th >
+                                            <Text c='white' ta={'center'}>
+                                                Precio
+                                            </Text>
+                                        </th>
+                                        <th>
+                                            <Text c='white' ta={'center'}>
+                                            </Text>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {products.map(product => (
                                         <tr key={product.code}>
                                             <td>{product.name}</td>
-                                            <td>{product.price}USD</td>
+                                            <td style={{ fontSize: '12px', textAlign: 'center' }}>
+                                                {getPriceForUser(product, user)} USD
+                                            </td>
                                             <td>
                                                 <ActionIcon
                                                     onClick={() => {
@@ -149,11 +254,20 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
                         onChange={(e) => handleIdChange(e.target.value)}
                         error={errorMessage}
                     />
+
+                    {selectedProduct && (
+                        <div style={{ marginTop: '10px', display: 'none', padding: '10px', border: '1px solid #ddd' }}>
+                            <Text><strong>Producto Seleccionado:</strong> {selectedProduct.name}</Text>
+                            <Text><strong>Precio:</strong> {selectedProduct.price} USD</Text>
+                        </div>
+                    )}
+
                     {accountName && isValidId && (
                         <Text align="center" mt="sm" style={{ fontWeight: 'bold', color: '#28a745' }}>
                             Nombre de cuenta validado: {accountName}
                         </Text>
                     )}
+
                     <Group position="center" mt="xl">
                         <Button variant="default" onClick={() => setActiveStep(0)}>
                             Atrás
@@ -165,45 +279,53 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products }) => 
                         >
                             {isAuthorizing ? "Validando..." : "Confirmar ID"}
                         </Button>
-
                         <Button
-                            onClick={() => setActiveStep(2)}
+                            onClick={handleNextStep}
+                            disabled={isProcessing}
                             style={{ display: isValidId ? 'inline-block' : 'none', background: '#0c2a85' }}
                         >
-                            Siguiente
+                            {isProcessing ? "Procesando..." : "Siguiente"}
                         </Button>
+
+
                     </Group>
                 </Stepper.Step>
 
-                <Stepper.Step label="Finalización" description="Detalles del producto y jugador">
-                    <div>
-                        <Title order={3} align="center">Detalles de los PINs Capturados</Title>
-                        <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
-                        {capturedPins.length > 0 ? (
-                            <Table striped highlightOnHover>
-                                <thead>
-                                    <tr>
-                                        <th>Claves</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {capturedPins.map((key, index) => (
-                                        <tr key={index}>
-                                            <td>{key}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
+                <Stepper.Step label="Finalización" description="Detalles de la venta">
+                    <div style={{ textAlign: "center" }}>
+                        {saleResponse ? (
+                            <>
+                                <Text size="lg" weight={700} color="green">
+                                    Recarga exitosa
+                                </Text>
+                                <Text size="md">
+                                    <strong>Id de la orden:</strong> {saleResponse.sale.saleId}
+                                </Text>
+                                <Text size="md">
+                                    <strong>Producto:</strong> {saleResponse.sale.productName}
+                                </Text>
+
+                                <Text size="md">
+                                    <strong>Jugador:</strong> {saleResponse.sale.nickname} ({saleResponse.sale.playerId})
+                                </Text>
+                                <Text size="md">
+                                    <strong>Precio Total:</strong> {saleResponse.sale.totalPrice} USD
+                                </Text>
+
+                            </>
                         ) : (
-                            <Text>No se han capturado PINs aún.</Text>
+                            <Text size="md">Cargando detalles de la venta...</Text>
                         )}
                     </div>
+
                     <Group position="center" mt="xl">
                         <Button onClick={handleFinishClick} style={{ background: '#0c2a85' }}>
                             Finalizar
                         </Button>
                     </Group>
                 </Stepper.Step>
+
+
             </Stepper>
         </Modal>
     );

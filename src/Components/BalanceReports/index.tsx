@@ -152,7 +152,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                     <Group
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: isMobile ? '1fr' : ' 1.2fr 1fr 1fr',
+                            gridTemplateColumns: isMobile ? '1fr' : ' 1fr 1fr 1fr',
                             gap: '10px',
                             width: '100%',
                         }}
@@ -339,7 +339,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
             )}
 
             {filteredTransactions.length > 0 && (
-                <Table mt={15} striped highlightOnHover withBorder withColumnBorders>
+                <Table mt={10} striped highlightOnHover withBorder withColumnBorders>
                     <thead style={{ background: '#0c2a85' }}>
                         <tr>
                             <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>

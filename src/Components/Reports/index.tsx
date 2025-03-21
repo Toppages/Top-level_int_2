@@ -183,7 +183,7 @@ function Reports({ user }: ReportsProps) {
 
       </Modal>
 
-      <Title ta="center" weight={700} mb="xl" order={2}>Reportes de Retiros</Title>
+      <Title ta="center" weight={700} mb="lg" order={2}>Reportes de Retiros</Title>
 
       {(userRole === 'cliente' || userRole === 'vendedor') && (
         <>
@@ -273,7 +273,7 @@ function Reports({ user }: ReportsProps) {
               value={selectedDate}
               onChange={handleDateChange}
             />
-            <Group position={isMobile ? 'center' : 'apart'} mt={25}>
+            <Group position={isMobile ? 'center' : 'apart'} mt={20}>
               
               <Button
                 style={{ background: '#0c2a85', color: 'white' }}
@@ -307,7 +307,7 @@ function Reports({ user }: ReportsProps) {
       <Pagination
         total={totalPages}
         radius="md"
-        mt={15}
+        mt={10}
         size="lg"
         page={currentPage}
         onChange={handlePageChange}
@@ -331,7 +331,7 @@ function Reports({ user }: ReportsProps) {
 
 <ScrollArea>
 
-        <Table mt={15} striped highlightOnHover withBorder withColumnBorders>
+        <Table mt={10} striped highlightOnHover withBorder withColumnBorders>
           <thead style={{ background: '#0c2a85' }}>
             <tr>
               <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>

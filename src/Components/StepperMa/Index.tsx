@@ -27,7 +27,7 @@ interface StepperMaProps {
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
     user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
-}
+} 
 
 const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -62,6 +62,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         const intervalId = setInterval(() => fetchUserData(setUserData), 5000);
         return () => clearInterval(intervalId);
     }, []);
+    
     const getPriceForUser = (product: Product, user: { rango: string } | null) => {
         const userRango = user ? user.rango : 'default';
 
@@ -80,30 +81,28 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
     const handleAuthorize = async () => {
         if (!selectedProduct) {
-            console.error("Producto no seleccionado.");
             return;
         }
-    
+
         if (quantity < 1 || quantity > 10) {
-            console.error("La cantidad debe estar entre 1 y 10.");
             return;
         }
-    
+
         setIsAuthorizing(true);
-    
+
         const apiKey = import.meta.env.VITE_API_KEY;
         const apiSecret = import.meta.env.VITE_API_SECRET;
-    
+
         if (!apiKey || !apiSecret) {
             setIsAuthorizing(false);
             return;
         }
-    
+
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
         const url = 'https://pincentral.baul.pro/api/pins/authorize';
         const route = "/api/pins/authorize";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
-    
+
         const body = {
             product: selectedProduct.code,
             quantity: quantity,
@@ -111,12 +110,12 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             client_name: "Juan Pérez",
             client_email: "juanperez@email.com"
         };
-    
+
         const jsonBody = JSON.stringify(body);
         const hmacData = `POST${routeForHmac}${date}${jsonBody}`;
         const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
         const authorizationHeader = `${apiKey}:${hmacSignature}`;
-    
+
         try {
             const response = await axios.post(url, body, {
                 headers: {
@@ -125,11 +124,11 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                     'Authorization': authorizationHeader
                 }
             });
-    
+
             if (response.status === 200 && response.data.status === "authorized") {
                 const captureResponse = await handleCapture(response.data.id);
                 if (captureResponse.length > 0) {
-                    sendSaleToBackend(captureResponse);
+                    (captureResponse);
                     setActiveStep(2);
                 }
             } else {
@@ -141,7 +140,12 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
             setIsAuthorizing(false);
         }
     };
-    
+
+    useEffect(() => {
+        if (selectedProduct) {
+            setActiveStep(1);
+        }
+    }, [selectedProduct]);
 
     const handleCapture = async (playerId: string) => {
         if (!playerId || !selectedProduct) {
@@ -185,8 +189,20 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
             if (response.status === 200 && response.data.status === "captured") {
                 setCaptureId(response.data.id);
-                setCapturedPins(response.data.pins.map((pin: { key: string }) => pin.key));
-                return response.data.pins.map((pin: { key: string }) => pin.key);
+                const capturedPins = response.data.pins.map((pin: { key: string }) => pin.key);
+                setCapturedPins(capturedPins);
+
+                try {
+                    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/products/add-pins`, {
+                        code: selectedProduct.code,
+                        pins: capturedPins
+                    });
+                    console.log("Pines enviados al backend exitosamente.");
+                } catch (error) {
+                    console.error("Error al enviar los pines al backend:", error);
+                }
+
+                return capturedPins;
             } else {
                 console.error("Error en la solicitud de captura:");
             }
@@ -199,51 +215,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         return [];
     };
 
-    const sendSaleToBackend = async (pins: string[]) => {
-        try {
-            const userPrice = selectedProduct ? getPriceForUser(selectedProduct, user) : 0;
-            const originalPrice = selectedProduct ? selectedProduct.price : userPrice;
-            const totalPrice = Number(userPrice) * quantity;
-            const totalOriginalPrice = Number(originalPrice) * quantity;
-
-            const saleData = {
-                quantity,
-                product: selectedProduct?.code,
-                productName: selectedProduct?.name,
-                price: userPrice,
-                totalPrice: totalPrice.toFixed(2),
-                totalOriginalPrice: totalOriginalPrice.toFixed(2),
-                status: "captured",
-                order_id: moment().format("YYYYMMDD_HHmmss"),
-                user: user ? {
-                    id: user._id,
-                    handle: user.handle,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    saldo: userData ? userData.saldo : 0
-                } : null,
-                pins: pins.map(pin => ({ serial: "", key: pin }))
-            };
-
-            console.log("Enviando venta:", saleData);
-
-            const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.status === 201) {
-                console.log("Venta registrada con éxito en el backend");
-                setCapturedPins(pins);
-            } else {
-                console.error("Error al registrar la venta en el backend");
-            }
-        } catch (error) {
-            console.error("Error al enviar la venta al backend:", error);
-        }
-    };
 
     const handleFinishClick = () => {
         onClose();
@@ -260,12 +231,16 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     };
     return (
         <Modal opened={opened} onClose={handleModalClose} withCloseButton={false} size="xl">
-            <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} allowNextStepsSelect={false} breakpoint="sm">
+            <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} breakpoint="sm">
+
                 <Stepper.Step label="Productos" description="Selecciona un producto">
                     <div>
                         <Title align="center" order={3} style={{ fontWeight: 700, color: '#333' }}>
                             Selecciona un Producto
                         </Title>
+                        <Text align="right" size="sm" color="dimmed">
+                            Saldo disponible: {userData ? userData.saldo.toFixed(2) : '0.00'} USD
+                        </Text>
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
                         {products.length > 0 ? (
                             <Table striped highlightOnHover>
@@ -294,7 +269,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                 <tbody>
                                     {products
                                         .slice()
-                                        .sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
+                                        .sort((a, b) => a.price - b.price)
                                         .map(product => (
                                             <tr key={product.code}>
                                                 <td style={tableTextStyle}>
@@ -308,7 +283,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                                     <ActionIcon
                                                         onClick={() => {
                                                             setSelectedProduct(product);
-                                                            setActiveStep(1);
                                                         }}
                                                         style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
                                                         size="lg"
@@ -316,6 +290,8 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                                     >
                                                         <IconShoppingBag size={26} />
                                                     </ActionIcon>
+
+
                                                 </td>
                                             </tr>
                                         ))}
@@ -326,9 +302,10 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                         )}
                     </div>
                 </Stepper.Step>
+
                 <Stepper.Step label="Confirmar" description="Ingresa cantidad de Pines">
-                    {selectedProduct && user && (
-                        <>
+                    {selectedProduct && (
+                        <div>
                             <NumberInput
                                 min={1}
                                 max={10}
@@ -370,7 +347,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                     Saldo disponible: {userData ? userData.saldo.toFixed(2) : '0.00'} USD
                                 </Text>
                             </Group>
-
                             <Group position="center" mt="xl">
                                 <Button
                                     onClick={handleAuthorize}
@@ -386,10 +362,11 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                     {isAuthorizing ? 'Generando...' : 'Generar'}
                                 </Button>
                             </Group>
-
-                        </>
+                        </div>
                     )}
                 </Stepper.Step>
+
+
 
                 <Stepper.Step label="Finalización" description="Detalles de la compra">
                     <div>

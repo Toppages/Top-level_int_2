@@ -53,8 +53,8 @@ function ManagePro() {
         setValue('price_oro', product.price_oro || 0);
         setValue('price_plata', product.price_plata || 0);
         setValue('price_bronce', product.price_bronce || 0);
-        setValue('price', product.price || 0); // Agregado
-        setValue('pricebs', product.pricebs || 0); // Agregado
+        setValue('price', product.price || 0); 
+        setValue('pricebs', product.pricebs || 0);
     };
 
     const handleUpdateProduct = async (data: any) => {
@@ -141,11 +141,12 @@ function ManagePro() {
                 )}
             </Modal>
             <Modal radius='lg' size={isMobile ? '100%' : '80%'} opened={productModalOpen} onClose={() => { setProductModalOpen(false); setOpened(true); }} withCloseButton={false}>
+
                 {selectedProduct && (
                     <form onSubmit={handleSubmit(handleUpdateProduct)}>
                         <Title mt={5} order={1}>{selectedProduct.name}</Title>
                         <Title mt={15} order={5}></Title>
-                        <Text  fw={500} fz="xl">Productos en el inventario: {selectedProduct.price}</Text>
+                        <Text fw={500} fz="xl">Productos en el inventario: {selectedProduct.price}</Text>
                         <Group mt={15} mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '10px', width: '100%' }}>
                             <Controller
                                 control={control}
@@ -165,7 +166,7 @@ function ManagePro() {
                                     validate: (value) => value > 0 || "El precio base debe ser mayor a 0.",
                                 }}
                             />
-                            
+
                             <Controller
                                 control={control}
                                 name="pricebs"
@@ -191,11 +192,12 @@ function ManagePro() {
                                 render={({ field }) => (
                                     <NumberInput
                                         {...field}
-                                        label="Precio Oro"
+                                        label={<span style={{ color: '#FFD700' }}>Precio Oro</span>}
                                         min={Number(selectedProduct?.price) || 0}
                                         step={0.01}
                                         precision={3}
                                         error={errors.price_oro ? "El precio oro no puede ser menor que el precio base." : null}
+                                        style={{ color: '#FFD700' }} // Cambiar color del texto en el input
                                     />
                                 )}
                                 rules={{
@@ -207,13 +209,14 @@ function ManagePro() {
                                 }}
                             />
 
+
                             <Controller
                                 control={control}
                                 name="price_plata"
                                 render={({ field }) => (
                                     <NumberInput
                                         {...field}
-                                        label="Precio Plata"
+                                        label={<span style={{ color: '#C0C0C0' }}>Precio Plata</span>}
                                         min={Number(selectedProduct?.price_oro) || 0}
                                         step={0.01}
                                         precision={3}
@@ -235,7 +238,7 @@ function ManagePro() {
                                 render={({ field }) => (
                                     <NumberInput
                                         {...field}
-                                        label="Precio Bronce"
+                                        label={<span style={{ color: '#cd7f32' }}>Precio Bronce</span>}
                                         min={Number(selectedProduct?.price_plata) || 0}
                                         step={0.01}
                                         precision={3}
