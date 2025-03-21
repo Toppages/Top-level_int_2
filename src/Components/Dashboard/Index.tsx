@@ -396,7 +396,7 @@ function Dashboard({ user }: DashboardProps) {
                                 </Text>
                                 <Text c='green' mt={5} weight={700} mb="sm">
 
-                                    {dayData.totalPrice.toFixed(2)} USD
+                                    {dayData.totalPrice.toFixed(3)} USD
                                 </Text>
                             </Group>
                         </Card>

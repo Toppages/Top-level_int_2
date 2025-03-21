@@ -61,6 +61,7 @@ export interface ReportSummary {
 }
 
 export interface Product {
+    inventario: any;
     limit: any;
     _id: string;
     product_group: string;

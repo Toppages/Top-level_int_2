@@ -27,7 +27,7 @@ interface StepperMaProps {
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
     user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
-} 
+}
 
 const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -37,6 +37,29 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     const isMobile = useMediaQuery('(max-width: 1000px)');
     const [userData, setUserData] = useState(user);
     const [copied, setCopied] = useState(false);
+
+    const [adminBalance, setAdminBalance] = useState<{ saldo: number; inventarioSaldo: number } | null>(null);
+    useEffect(() => {
+        const fetchBalance = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/balance`);
+                const data = await response.json();
+                if (response.ok) {
+                    setAdminBalance({
+                        saldo: data.saldo,
+                        inventarioSaldo: data.inventarioSaldo,
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching balance:', error);
+            }
+        };
+
+        fetchBalance();
+
+        const intervalId = setInterval(fetchBalance, 5000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     const copyPin = (pin: string) => {
         navigator.clipboard.writeText(pin);
@@ -62,7 +85,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         const intervalId = setInterval(() => fetchUserData(setUserData), 5000);
         return () => clearInterval(intervalId);
     }, []);
-    
+
     const getPriceForUser = (product: Product, user: { rango: string } | null) => {
         const userRango = user ? user.rango : 'default';
 
@@ -239,7 +262,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                             Selecciona un Producto
                         </Title>
                         <Text align="right" size="sm" color="dimmed">
-                            Saldo disponible: {userData ? userData.saldo.toFixed(2) : '0.00'} USD
+                            PIN CENTRAL:  {adminBalance ? `${adminBalance.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
                         </Text>
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
                         {products.length > 0 ? (
@@ -274,7 +297,9 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                             <tr key={product.code}>
                                                 <td style={tableTextStyle}>
                                                     {product.name.replace(/free fire\s*-\s*/gi, '').replace(/free fire/gi, '')}
+                                                    <span style={{ marginLeft: '10px' }}>({product.inventario.length} en stock)</span>
                                                 </td>
+
                                                 <td style={{ fontSize: '12px', textAlign: 'center' }}>
                                                     {getPriceForUser(product, user)} USD
                                                 </td>
@@ -302,7 +327,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                         )}
                     </div>
                 </Stepper.Step>
-
                 <Stepper.Step label="Confirmar" description="Ingresa cantidad de Pines">
                     {selectedProduct && (
                         <div>
@@ -344,21 +368,24 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
                             <Group position="apart" style={{ marginTop: '10px' }}>
                                 <Text align="right" size="sm" color="dimmed">
-                                    Saldo disponible: {userData ? userData.saldo.toFixed(2) : '0.00'} USD
+                                    PIN CENTRAL: {adminBalance ? `${adminBalance.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
                                 </Text>
+                                <Text align="right" size="sm" color="dimmed">
+  Saldo de Usuario: {userData ? `${userData.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
+</Text>
+
                             </Group>
                             <Group position="center" mt="xl">
                                 <Button
                                     onClick={handleAuthorize}
                                     style={{
-                                        background: (userData?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 'gray' : '#0c2a85',
-                                        cursor: (userData?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 'not-allowed' : 'pointer',
-                                        opacity: (userData?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 0.6 : 1,
+                                        background: (adminBalance?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 'gray' : '#0c2a85',
+                                        cursor: (adminBalance?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 'not-allowed' : 'pointer',
+                                        opacity: (adminBalance?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity) ? 0.6 : 1,
                                     }}
                                     loading={isAuthorizing}
-                                    disabled={(userData?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity)}
+                                    disabled={(adminBalance?.saldo ?? 0) < (Number(getPriceForUser(selectedProduct, user)) * quantity)}
                                 >
-
                                     {isAuthorizing ? 'Generando...' : 'Generar'}
                                 </Button>
                             </Group>

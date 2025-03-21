@@ -177,7 +177,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
             const saleResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData);
 
             if (saleResponse.status === 201) {
-                setSaleResponse(saleResponse.data);  // Guardamos la respuesta de la venta
+                setSaleResponse(saleResponse.data);  
                 setActiveStep(2);
             } else {
                 setErrorMessage("Error al registrar la venta.");
@@ -359,20 +359,20 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                                 <Card>
 
                                     <Text size="lg" weight={700} color="green">
-                                        Recarga exitosa
+                                     🎉🎉   Recarga exitosa   🎉🎉  
                                     </Text>
                                     <Text size="md">
-                                        <strong>Id de la orden:</strong> {saleResponse.sale.saleId}
+                                        <strong>Id:</strong> {saleResponse.sale.saleId}
                                     </Text>
                                     <Text size="md">
                                         <strong>Producto:</strong> {saleResponse.sale.productName}
                                     </Text>
-
                                     <Text size="md">
                                         <strong>Jugador:</strong> {saleResponse.sale.nickname} ({saleResponse.sale.playerId})
                                     </Text>
+
                                     <Text size="md">
-                                        <strong>Precio Total:</strong> {saleResponse.sale.totalPrice} USD
+                                        <strong>Precio Total:</strong> {saleResponse.sale.created_at}
                                     </Text>
                                 </Card>
 

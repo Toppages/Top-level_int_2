@@ -28,6 +28,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
     const [opened, setOpened] = useState(false);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [adminBalance, setAdminBalance] = useState<{ saldo: number; inventarioSaldo: number } | null>(null);
+
     useEffect(() => {
         const fetchBalance = async () => {
             try {
@@ -49,6 +50,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
         const intervalId = setInterval(fetchBalance, 5000);
         return () => clearInterval(intervalId);
     }, []);
+    
     const [totalSaldos, setTotalSaldos] = useState<{
         totalSaldoAdmins: number;
         totalSaldoClientes: number;
