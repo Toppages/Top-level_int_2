@@ -11,6 +11,7 @@ import {
     ActionIcon,
     Text,
     TextInput,
+    Card,
 } from '@mantine/core';
 import { IconEye } from '@tabler/icons-react';
 import { fetchUserData } from "../../utils/utils";
@@ -20,7 +21,9 @@ interface StepperMaProps {
     opened: boolean;
     onClose: () => void;
     products: Product[];
-    user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
+    user: {
+        purchaseLimits: any; _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string;
+    } | null;
 
 }
 
@@ -36,6 +39,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [saleResponse, setSaleResponse] = useState<any>(null);
     const [userData, setUserData] = useState(user);
+
     const getPriceForUser = (product: Product, user: { rango: string } | null) => {
         const userRango = user ? user.rango : 'default';
 
@@ -53,6 +57,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
 
     useEffect(() => {
         if (opened) {
+            fetchUserData(setUserData);
             setActiveStep(0);
         } else {
             resetState();
@@ -135,6 +140,9 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
 
             setRecargaInfo(recargaResponse.data);
 
+            const purchaseLimit = user?.purchaseLimits?.[selectedProduct.code];
+            const limit = purchaseLimit ? purchaseLimit.limit : 0;
+
             const saleData = {
                 user: user ? {
                     id: user._id,
@@ -162,7 +170,8 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         usado: false,
                         productName: selectedProduct.name
                     }
-                ]
+                ],
+                purchaseLimit: limit  // Enviar el límite de compra
             };
 
             const saleResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData);
@@ -180,15 +189,19 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
         setIsProcessing(false);
     };
 
+
     useEffect(() => {
-        fetchUserData(setUserData);
-        const intervalId = setInterval(() => fetchUserData(setUserData), 5000);
+        const intervalId = setInterval(() => {
+            fetchUserData(setUserData);
+        }, 5000);
+
         return () => clearInterval(intervalId);
     }, []);
 
     return (
         <Modal opened={opened} onClose={onClose} withCloseButton={false} size="xl">
             <Stepper active={activeStep} color="#0c2a85" allowNextStepsSelect={false} onStepClick={setActiveStep} breakpoint="sm">
+
                 <Stepper.Step label="Detalles del Producto" description="Selecciona un producto">
                     <div>
                         <Title align="center" order={3} style={{ fontWeight: 700, color: '#333' }}>
@@ -196,8 +209,8 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         </Title>
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
                         {products.length > 0 ? (
-                            <Table striped highlightOnHover>
 
+                            <Table striped highlightOnHover>
                                 <thead style={{ background: '#0c2a85' }}>
                                     <tr>
                                         <th>
@@ -205,9 +218,9 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                                                 Producto
                                             </Text>
                                         </th>
-                                        <th >
+                                        <th>
                                             <Text c='white' ta={'center'}>
-                                                Precio
+                                                {user?.role === 'vendedor' ? 'Límite de hoy' : 'Precio'}
                                             </Text>
                                         </th>
                                         <th>
@@ -217,29 +230,77 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {products.map(product => (
-                                        <tr key={product.code}>
-                                            <td>{product.name}</td>
-                                            <td style={{ fontSize: '12px', textAlign: 'center' }}>
-                                                {getPriceForUser(product, user)} USD
-                                            </td>
-                                            <td>
-                                                <ActionIcon
-                                                    onClick={() => {
-                                                        setSelectedProduct(product);
-                                                        setActiveStep(1);
-                                                    }}
-                                                    style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
-                                                    size="lg"
-                                                    variant="filled"
-                                                >
-                                                    <IconEye size={26} />
-                                                </ActionIcon>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {products.map(product => {
+                                        const productPrice = getPriceForUser(product, user);
+                                        const isLimitZero = user?.purchaseLimits?.[product.code]?.limit === 0;
+                                        const isPriceGreaterThanBalance = productPrice > (user?.saldo || 0);
+
+                                        const isDisabled = isLimitZero || isPriceGreaterThanBalance;
+
+                                        if (user?.role === 'vendedor') {
+                                            const purchaseLimit = user?.purchaseLimits?.[product.code];
+                                            const limit = purchaseLimit ? purchaseLimit.limit : 'No disponible';
+
+                                            return (
+                                                <tr key={product.code}>
+                                                    <td>{product.name}</td>
+                                                    <td style={{ fontSize: '12px', textAlign: 'center' }}>
+                                                        {limit}
+                                                    </td>
+                                                    <td>
+                                                        <ActionIcon
+                                                            onClick={() => {
+                                                                setSelectedProduct(product);
+                                                                setActiveStep(1);
+                                                            }}
+                                                            style={{
+                                                                background: isDisabled ? '#d3d3d3' : '#0c2a85',
+                                                                color: isDisabled ? '#a0a0a0' : 'white',
+                                                                marginLeft: '10px'
+                                                            }}
+                                                            size="lg"
+                                                            variant="filled"
+                                                            disabled={isDisabled}
+                                                        >
+                                                            <IconEye size={26} />
+                                                        </ActionIcon>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        } else {
+                                            return (
+                                                <tr key={product.code}>
+                                                    <td>{product.name}</td>
+                                                    <td style={{ fontSize: '12px', textAlign: 'center' }}>
+                                                        {productPrice} USD
+                                                    </td>
+                                                    <td>
+                                                        <ActionIcon
+                                                            onClick={() => {
+                                                                setSelectedProduct(product);
+                                                                setActiveStep(1);
+                                                            }}
+                                                            style={{
+                                                                background: isDisabled ? '#d3d3d3' : '#0c2a85',
+                                                                color: isDisabled ? '#a0a0a0' : 'white',
+                                                                marginLeft: '10px'
+                                                            }}
+                                                            size="lg"
+                                                            variant="filled"
+                                                            disabled={isDisabled}
+                                                        >
+                                                            <IconEye size={26} />
+                                                        </ActionIcon>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        }
+                                    })}
                                 </tbody>
                             </Table>
+
+
+
                         ) : (
                             <p>No hay productos disponibles para este grupo.</p>
                         )}
@@ -295,22 +356,25 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                     <div style={{ textAlign: "center" }}>
                         {saleResponse ? (
                             <>
-                                <Text size="lg" weight={700} color="green">
-                                    Recarga exitosa
-                                </Text>
-                                <Text size="md">
-                                    <strong>Id de la orden:</strong> {saleResponse.sale.saleId}
-                                </Text>
-                                <Text size="md">
-                                    <strong>Producto:</strong> {saleResponse.sale.productName}
-                                </Text>
+                                <Card>
 
-                                <Text size="md">
-                                    <strong>Jugador:</strong> {saleResponse.sale.nickname} ({saleResponse.sale.playerId})
-                                </Text>
-                                <Text size="md">
-                                    <strong>Precio Total:</strong> {saleResponse.sale.totalPrice} USD
-                                </Text>
+                                    <Text size="lg" weight={700} color="green">
+                                        Recarga exitosa
+                                    </Text>
+                                    <Text size="md">
+                                        <strong>Id de la orden:</strong> {saleResponse.sale.saleId}
+                                    </Text>
+                                    <Text size="md">
+                                        <strong>Producto:</strong> {saleResponse.sale.productName}
+                                    </Text>
+
+                                    <Text size="md">
+                                        <strong>Jugador:</strong> {saleResponse.sale.nickname} ({saleResponse.sale.playerId})
+                                    </Text>
+                                    <Text size="md">
+                                        <strong>Precio Total:</strong> {saleResponse.sale.totalPrice} USD
+                                    </Text>
+                                </Card>
 
                             </>
                         ) : (
