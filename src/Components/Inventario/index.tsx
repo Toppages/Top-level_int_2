@@ -1,253 +1,125 @@
-import { useState, useEffect } from 'react';
-import { Table, Text, Title, Pagination, ActionIcon, Checkbox, Group, Button } from '@mantine/core';
-import axios from 'axios';
-import { IconCheckbox, IconCopy, IconDownload } from '@tabler/icons-react';
-import * as XLSX from 'xlsx';
-import { toast } from 'sonner';
+import { DatePicker } from '@mantine/dates';
+import { IconCalendarWeek } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
+import { Table, Title, Loader, Pagination } from '@mantine/core';
 
-interface Pin {
-    serial: string;
-    key: string;
-    usado: boolean;
-    productName: string;
-    _id: string;
+interface Log {
+    logId: number;
+    product_code: string;
+    product_name: string;
+    quantity: number;
+    total_amount: number;
+    date: string;
 }
 
-const Inventario: React.FC<{ user: any }> = ({ user }) => {
-    const [error, setError] = useState<string | null>(null);
-    const [pins, setPins] = useState<Pin[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6;
-    const [selectedProducts, setSelectedProducts] = useState<string[]>(['Free Fire 100 Diamantes + 10 Bono']);
-
-    const handleMarkAllUsed = async () => {
-        try {
-            const updateRequests = filteredPins.map(pin =>
-                axios.put(`${import.meta.env.VITE_API_BASE_URL}/sales/user/${user.handle}/pins/${pin.key}`, { usado: true })
-            );
-
-            await Promise.all(updateRequests);
-
-            fetchUnusedPins(); 
-            toast.success('Todos los pines filtrados han sido marcados como usados');
-        } catch (error) {
-            setError('Hubo un error al actualizar los pines.');
-            console.error(error);
-        }
-    };
-
-    const defaultProducts = [
-        'Free Fire 100 Diamantes + 10 Bono',
-        'Free Fire - 310 Diamantes + 31 Bono',
-        'Free Fire 520 Diamantes + 52 Bono',
-        'Free Fire - 1060 Diamantes + 106 Bono',
-        'Free Fire - 2.180 Diamantes + 218 Bono',
-        'Free Fire - 5.600 Diamantes + 560 Bono',
-    ];
+function Inventario() {
+    const [logs, setLogs] = useState<Log[]>([]);
+    const [filteredLogs, setFilteredLogs] = useState<Log[]>([]);
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [page, setPage] = useState<number>(1); 
+    const elementsPerPage = 8; 
 
     useEffect(() => {
-        if (user?.handle) {
-            fetchUnusedPins();
-        }
-    }, [user]);
+        setIsLoading(true);
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/inventory/logs`)
+            .then((response) => response.json())
+            .then((data) => {
+                setLogs(data);
+                setFilteredLogs(data);
+                setIsLoading(false); 
+            })
+            .catch((error) => {
+                console.error('Error al obtener los logs:', error);
+                setIsLoading(false); 
+            });
+    }, []);
 
-    const fetchUnusedPins = async () => {
-        try {
-            const response = await axios.get<{ unusedPins: Pin[] }>(
-                `${import.meta.env.VITE_API_BASE_URL}/sales/user/${user.handle}/unused-pins`
-            );
-            setPins(response.data.unusedPins || []);
-        } catch (error) {
-            setError('Hubo un error al obtener los pines.');
-            console.error(error);
-        }
-    };
-
-    const handleCheckboxClick = async (pinId: string) => {
-        try {
-            setPins(prevPins =>
-                prevPins.map(pin => (pin.key === pinId ? { ...pin, usado: true } : pin))
-            );
-
-            await axios.put(`${import.meta.env.VITE_API_BASE_URL}/sales/user/${user.handle}/pins/${pinId}`, { usado: true });
-            fetchUnusedPins();
-            toast.success('Pin marcado como usado');
-        } catch (error) {
-            setError('Hubo un error al actualizar el estado del pin.');
-            console.error(error);
-        }
-    };
-
-    const handleCopyClick = (key: string) => {
-        navigator.clipboard.writeText(key).catch(() => {
-            console.error('Error al copiar el texto');
-        });
-        toast.success('Pin copiado al portapapeles');
-    };
-
-    const handleCopyAll = () => {
-        const allPins = filteredPins.map(pin => pin.key).join('\n');
-        navigator.clipboard.writeText(allPins).catch(() => {
-            console.error('Error al copiar todos los pines');
-        });
-        toast.success('Todos los pines copiados al portapapeles');
-    };
-
-    const handleDownload = () => {
-        const filteredPinsForDownload = filteredPins.map(pin => ({
-            Pines: pin.key,
-        }));
-
-        const ws = XLSX.utils.json_to_sheet(filteredPinsForDownload);
-
-        ws['!cols'] = [
-            { wpx: 400 },
-        ];
-
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Pines');
-
-        const fileName = selectedProducts.length ? `reportees_de_pines_${selectedProducts.join('_')}.xlsx` : 'reportees_de_pines.xlsx';
-        XLSX.writeFile(wb, fileName);
-
-        toast.success('Descarga exitosa');
-    };
-
-    const handleProductCheckboxChange = (productName: string) => {
-        if (productName === 'Free Fire 100 Diamantes + 10 Bono') {
-            setSelectedProducts(['Free Fire 100 Diamantes + 10 Bono']);
+    useEffect(() => {
+        if (selectedDate) {
+            const filtered = logs.filter((log) => {
+                const logDate = new Date(log.date);
+                return logDate.toDateString() === selectedDate.toDateString();
+            });
+            setFilteredLogs(filtered);
         } else {
-            setSelectedProducts([productName]);
+            setFilteredLogs(logs);
         }
-    };
 
-    const filteredPins = selectedProducts.length
-        ? pins.filter(pin => selectedProducts.includes(pin.productName))
-        : pins;
+        setPage(1);
+    }, [selectedDate, logs]);
 
-    const paginatedPins = filteredPins.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const startIndex = (page - 1) * elementsPerPage;
+    const currentLogs = filteredLogs.slice(startIndex, startIndex + elementsPerPage);
+
+    const rows = currentLogs.map((log) => (
+        <tr key={log.logId}>
+            <td style={{ textAlign: 'center' }}>{log.logId}</td>
+            <td style={{ textAlign: 'center' }}>
+                {new Date(log.date).toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+            </td>
+            <td style={{ textAlign: 'center' }}>{log.product_name}</td>
+            <td style={{ textAlign: 'center' }}>{log.quantity}</td>
+            <td style={{ textAlign: 'center' }}>{log.total_amount.toFixed(3)} USD</td>
+        </tr>
+    ));
+
+    const totalPages = Math.ceil(filteredLogs.length / elementsPerPage);
 
     return (
         <>
-            <Title ta="center" weight={700} mb="sm" order={2}>Pines No Usados</Title>
-
-            <Group position='center'>
-                {defaultProducts.map(name => (
-                    <Checkbox
-                        key={name}
-                        label={name}
-                        color="rgba(12, 42, 133, 1)"
-                        checked={selectedProducts.includes(name)}
-                        onChange={() => handleProductCheckboxChange(name)}
-                    />
-                ))}
-            </Group>
-
-            <Group     style={{
-                            display: 'grid',
-                            gridTemplateColumns: ' 2.6fr 3fr ',
-                            gap: '10px',
-                            width: '100%',
-                        }} >
-                <Pagination
-                    total={Math.ceil(filteredPins.length / itemsPerPage)}
-                    radius="md"
-                    mt={15}
-                    size="md"
-                    page={currentPage}
-                    onChange={setCurrentPage}
-                    styles={(theme) => ({
-                        item: {
-                            '&[data-active]': {
-                                backgroundImage: theme.fn.gradient({ from: '#0c2a85', to: '#0c2a85' }),
-                            },
+            <Title ta="center" order={2}>Movimientos pin central</Title>
+            <DatePicker
+                radius="md"
+                size="lg"
+                icon={<IconCalendarWeek />}
+                label="Seleccionar fecha"
+                value={selectedDate}
+                onChange={setSelectedDate}
+                placeholder="Selecciona una fecha"
+            />
+            <Pagination
+                mt={15}
+                total={totalPages}
+                page={page}
+                radius="md"
+                size="lg"
+                onChange={setPage}
+                withControls
+                styles={(theme) => ({
+                    item: {
+                        '&[data-active]': {
+                            backgroundImage: theme.fn.gradient({ from: '#0c2a85', to: '#0c2a85' }),
                         },
-                    })}
-                />
-
-                {filteredPins.length > 0 && (
-                    <Group>
-                        <Button
-                            style={{ background: '#0c2a85', color: 'white' }}
-                            leftIcon={<IconCopy />}
-                            radius="md"
-                            size="sm"
-                            color="indigo"
-                            variant="filled"
-                            onClick={handleCopyAll}>
-                            Copiar todo
-                        </Button>
-
-                        <Button
-                            style={{ background: '#0c2a85', color: 'white' }}
-                            leftIcon={<IconDownload />}
-                            radius="md"
-                            size="sm"
-                            color="indigo"
-                            variant="filled"
-                            onClick={handleDownload}>
-                            Descargar
-                        </Button>
-
-                        <Button
-                            style={{ background: '#0c2a85', color: 'white' }}
-                            leftIcon={<IconCheckbox />}
-                            radius="md"
-                            size="sm"
-                            color="indigo"
-                            variant="filled"
-                            onClick={handleMarkAllUsed}>
-                            Marca todos usados
-                        </Button>
-                    </Group>
-                )}
-            </Group>
-
-            {filteredPins.length === 0 && !error && (
-                <Text color="gray" ta="center" size="lg">No hay pines no usados disponibles</Text>
-            )}
-
-            {filteredPins.length > 0 && (
-                <Table mt={15} striped highlightOnHover withBorder withColumnBorders>
+                    },
+                })}
+            />
+            {isLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                    <Loader size="xl" />
+                </div>
+            ) : (
+                <Table mt={10} striped highlightOnHover withBorder withColumnBorders>
                     <thead style={{ background: '#0c2a85' }}>
                         <tr>
-                            <th style={{ textAlign: 'center', color: 'white' }}>
-                                Productos ({filteredPins.length})
-                            </th>
-                            <th style={{ textAlign: 'center', color: 'white' }}>Copiar</th>
-                            <th style={{ textAlign: 'center', color: 'white' }}>Marcar usado</th>
+                            <th style={{ textAlign: 'center', color: 'white' }}>ID</th>
+                            <th style={{ textAlign: 'center', color: 'white' }}>Fecha</th>
+                            <th style={{ textAlign: 'center', color: 'white' }}>Nombre del Producto</th>
+                            <th style={{ textAlign: 'center', color: 'white' }}>Cantidad</th>
+                            <th style={{ textAlign: 'center', color: 'white' }}>Monto Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedPins.map((pin, index) => (
-                            <tr key={index}>
-                                <td style={{ textAlign: 'center' }}>{pin.key}</td>
-                                <td align='center'>
-                                    <ActionIcon
-                                        mr={25}
-                                        style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
-                                        onClick={() => handleCopyClick(pin.key)}
-                                    >
-                                        <IconCopy size={18} />
-                                    </ActionIcon>
-                                </td>
-                                <td align='center'>
-                                    <ActionIcon
-                                        style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
-                                        onClick={() => handleCheckboxClick(pin.key)}
-                                    >
-                                        <IconCheckbox size={23} />
-                                    </ActionIcon>
-                                </td>
+                        {rows.length > 0 ? rows : (
+                            <tr>
+                                <td colSpan={5} style={{ textAlign: 'center' }}>No hay disponibles para esta fecha.</td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </Table>
             )}
-
-            {error && <Text color="red" ta="center" size="lg">{error}</Text>}
         </>
     );
-};
+}
 
 export default Inventario;

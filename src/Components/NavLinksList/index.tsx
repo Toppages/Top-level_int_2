@@ -9,7 +9,6 @@ import { Stack, Image, Divider, Title, NavLink, Group, Loader, Text, ActionIcon,
 import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX, IconInfoCircle } from "@tabler/icons-react";
 
 
-
 const getSaldoColor = (rango: string) => {
     switch (rango) {
         case 'ultrap':
@@ -28,19 +27,41 @@ const getSaldoColor = (rango: string) => {
 function NavLinks({ active, setActiveLink }: NavLinksProps) {
     const [opened, setOpened] = useState(false);
     const [userData, setUserData] = useState<UserData | null>(null);
+    const [adminBalance, setAdminBalance] = useState<{ saldo: number; inventarioSaldo: number } | null>(null);
+    useEffect(() => {
+        const fetchBalance = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/admin/balance`);
+                const data = await response.json();
+                if (response.ok) {
+                    setAdminBalance({
+                        saldo: data.saldo,
+                        inventarioSaldo: data.inventarioSaldo,
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching balance:', error);
+            }
+        };
     
+        fetchBalance();
+    
+        const intervalId = setInterval(fetchBalance, 5000);
+        return () => clearInterval(intervalId);
+    }, []);
     const [totalSaldos, setTotalSaldos] = useState<{
         totalSaldoAdmins: number;
         totalSaldoClientes: number;
         admins: { handle: string; correo: string; saldo: number }[]; 
         clientes: { handle: string; correo: string; saldo: number }[];
     } | null>(null);
+
     const data = [
-        { icon: IconGauge, label: 'CONTROL DE RETIROS' },
-        { icon: IconUsers, label: userData?.role === 'vendedor' ? 'GENERAR PINES' : 'COMPRA DE PINES' },
-        { icon: IconReport, label: 'REPORTES DE RETIROS' },
-        { icon: IconWallet, label: 'BALANCE' },
-        { icon: IconArchive, label: 'INVENTARIO' },
+        { icon: IconGauge, label: 'CONTROL DE VENTAS' },
+        { icon: IconUsers, label:  'RECARGA DIRECTA' },
+        { icon: IconReport, label: 'CONTROL DE VENTAS' },
+        { icon: IconWallet, label: 'REPORTES DE INGRESO' },
+        { icon: IconArchive, label: 'MOVIMIENTO PIN CENTRAL' },
     ];
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width: 1000px)");
@@ -140,14 +161,14 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 {userData && userData.role === 'master' && (
                     <>
                         <Title  c='#0c2a85' order={6}>
-                            Saldo Total: {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
+                            PIN CENTRAL:  {adminBalance ? `${adminBalance.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
                         </Title>
                         {!(totalSaldos && userData) ? (
                             <Loader color="indigo" variant="bars" />
                         ) : (
                             <Group>
                                 <Title  c="#0c2a85" order={6}>
-                                    Saldo Propio: {`${(userData.saldo - totalSaldos.totalSaldoAdmins - totalSaldos.totalSaldoClientes).toFixed(2)} USD`}
+                                INVENTARIO:  {adminBalance ? `${adminBalance.inventarioSaldo.toFixed(3)} USD` : 'Saldo no disponible'}
                                 </Title>
 
                                 <ActionIcon ml={-17} color="indigo" size="xs" onClick={() => setOpened(true)}>
