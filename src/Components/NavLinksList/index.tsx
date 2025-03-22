@@ -63,7 +63,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
         { icon: IconUsers, label:  'RECARGA DIRECTA' },
         { icon: IconReport, label: 'CONTROL DE VENTAS' },
         { icon: IconWallet, label: 'REPORTES DE INGRESO' },
-        { icon: IconArchive, label: 'MOVIMIENTO PIN CENTRAL' },
+        { icon: IconArchive, label: 'PIN CENTRAL' },
     ];
     const navigate = useNavigate();
     const isMobile = useMediaQuery("(max-width: 1000px)");

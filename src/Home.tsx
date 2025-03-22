@@ -19,6 +19,7 @@ interface HomeProps {
     email: string;
     handle: string;
     role: string;
+    purchaseLimits: any;
     saldo: number;
     rango: string;
   } | null;
@@ -43,7 +44,7 @@ function Home({ navOpen, activeLink, setActiveLink, user }: HomeProps) {
       case 3:
         return <BalanceReports user={user} />;
       case 4:
-        return <Inventario user={user} />;
+        return <Inventario  />;
       default:
         return <Dashboard user={user} />;
     }

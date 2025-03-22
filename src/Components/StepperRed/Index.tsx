@@ -177,7 +177,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
             const saleResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData);
 
             if (saleResponse.status === 201) {
-                setSaleResponse(saleResponse.data);  
+                setSaleResponse(saleResponse.data);
                 setActiveStep(2);
             } else {
                 setErrorMessage("Error al registrar la venta.");
@@ -357,9 +357,8 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         {saleResponse ? (
                             <>
                                 <Card>
-
                                     <Text size="lg" weight={700} color="green">
-                                     🎉🎉   Recarga exitosa   🎉🎉  
+                                        🎉🎉   Recarga exitosa   🎉🎉
                                     </Text>
                                     <Text size="md">
                                         <strong>Id:</strong> {saleResponse.sale.saleId}
@@ -370,12 +369,23 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                                     <Text size="md">
                                         <strong>Jugador:</strong> {saleResponse.sale.nickname} ({saleResponse.sale.playerId})
                                     </Text>
-
                                     <Text size="md">
-                                        <strong>Precio Total:</strong> {saleResponse.sale.created_at}
+                                        <strong>Fecha:</strong> {`${new Date(saleResponse.sale.created_at).toISOString().split('T')[0]} ${new Date(saleResponse.sale.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
                                     </Text>
-                                </Card>
 
+                                    {recargaInfo && (
+                                        <div style={{ display: 'none', marginTop: '10px' }}>
+                                            <Text size="sm" color="blue">
+                                                <strong>Detalles de la Recarga:</strong>
+                                            </Text>
+                                            <Text size="sm">Alerta: {recargaInfo.alerta}</Text>
+                                            <Text size="sm">Mensaje: {recargaInfo.mensaje}</Text>
+                                            {recargaInfo.Nickname && (
+                                                <Text size="sm">Nickname: {recargaInfo.Nickname}</Text>
+                                            )}
+                                        </div>
+                                    )}
+                                </Card>
                             </>
                         ) : (
                             <Text size="md">Cargando detalles de la venta...</Text>

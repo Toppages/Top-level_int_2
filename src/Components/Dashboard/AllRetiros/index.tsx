@@ -5,6 +5,7 @@ import { Modal, Tabs, Button, Group, Select, Title, Text, Card, ScrollArea } fro
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
 
+import GananciasT from '../GananciasT/Index';
 function AllRetiros() {
     const [opened, setOpened] = useState(false);
     const [users, setUsers] = useState<{ value: string; label: string; group: string }[]>([]);
@@ -518,7 +519,7 @@ function AllRetiros() {
 
     return (
         <>
-            <Modal size='lg' opened={opened} withCloseButton={false} onClose={() => setOpened(false)} title="Selecciona un usuario">
+            <Modal size='lg' opened={opened} onClose={() => setOpened(false)} title="Selecciona un usuario">
 
                 <Tabs value={activeTab} onTabChange={setActiveTab}>
                     <Tabs.List>
@@ -613,7 +614,7 @@ function AllRetiros() {
                     </Tabs.Panel>
 
                     <Tabs.Panel value="second">
-                        Ganancia
+                        <GananciasT/>
                     </Tabs.Panel>
 
                 </Tabs>
