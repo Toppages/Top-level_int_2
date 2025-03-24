@@ -27,9 +27,12 @@ interface StepperMaProps {
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
     user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
+    setModalStepOpened: React.Dispatch<React.SetStateAction<boolean>>; // Prop para controlar el estado del modal
 }
 
-const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep, user }) => {
+
+
+const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, activeStep, setActiveStep,setModalStepOpened , user }) => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [quantity, setQuantity] = useState<number>(1);
     const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
@@ -75,7 +78,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
         setTimeout(() => setCopied(false), 2000);
     };
     const [, setCaptureId] = useState<string | null>(null);
-    
+
     useEffect(() => {
         if (opened) {
             setQuantity(1);
@@ -239,13 +242,15 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
 
         return [];
     };
-
-
     const handleFinishClick = () => {
-        onClose();
+        onClose(); 
         setActiveStep(0);
         setCapturedPins([]);
+        setModalStepOpened(false);
+        window.location.reload(); 
     };
+    
+      
 
     const tableTextStyle = {
         fontSize: isMobile ? '14px' : '14px',
@@ -256,7 +261,7 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
     };
     return (
         <Modal opened={opened} onClose={handleModalClose} withCloseButton={false} size="xl">
-            <Stepper active={activeStep} color="#0c2a85" onStepClick={setActiveStep} breakpoint="sm">
+            <Stepper allowNextStepsSelect={false} active={activeStep} color="#0c2a85" onStepClick={setActiveStep} breakpoint="sm">
 
                 <Stepper.Step label="Productos" description="Selecciona un producto">
                     <div>
@@ -372,9 +377,9 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                 <Text align="right" size="sm" color="dimmed">
                                     PIN CENTRAL: {adminBalance ? `${adminBalance.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
                                 </Text>
-                                <Text align="right" size="sm" color="dimmed">
-  Saldo de Usuario: {userData ? `${userData.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
-</Text>
+                                <Text align="right" style={{ display: 'none' }} size="sm" color="dimmed">
+                                    Saldo de Usuario: {userData ? `${userData.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
+                                </Text>
 
                             </Group>
                             <Group position="center" mt="xl">

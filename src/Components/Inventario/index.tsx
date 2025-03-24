@@ -79,11 +79,11 @@ function Inventario() {
                 placeholder="Selecciona una fecha"
             />
             <Pagination
-                mt={15}
+                mt={10}
                 total={totalPages}
                 page={page}
                 radius="md"
-                size="lg"
+                size="md"
                 onChange={setPage}
                 withControls
                 styles={(theme) => ({
@@ -99,7 +99,7 @@ function Inventario() {
                     <Loader size="xl" />
                 </div>
             ) : (
-                <Table mt={10} striped highlightOnHover withBorder withColumnBorders>
+                <Table mt={5} striped highlightOnHover withBorder withColumnBorders>
                     <thead style={{ background: '#0c2a85' }}>
                         <tr>
                             <th style={{ textAlign: 'center', color: 'white' }}>ID</th>

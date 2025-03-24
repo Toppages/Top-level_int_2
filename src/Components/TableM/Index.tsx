@@ -7,9 +7,10 @@ import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
 
 interface TableMProps {
   user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
+  setModalStepOpened: React.Dispatch<React.SetStateAction<boolean>>; // Prop para controlar el estado del modal de StepperMa
 }
 
-const TableM: React.FC<TableMProps> = ({ user }) => {
+const TableM: React.FC<TableMProps> = ({ user, setModalStepOpened }) => {
   const [opened, setOpened] = useState<boolean>(false);
   const [activeStep, setActiveStep] = useState<number>(0);
   const [fetchedProducts, setFetchedProducts] = useState<Product[]>([]);
@@ -38,6 +39,7 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
     setSelectedProductGroup(group);
     setOpened(true);
     setActiveStep(0);
+    setModalStepOpened(true);
   };
 
   const productsInSelectedGroup = selectedProductGroup
@@ -57,7 +59,10 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
         activeStep={activeStep}
         setActiveStep={setActiveStep}
         user={user}
+        setModalStepOpened={setModalStepOpened}  // Asegúrate de pasar la prop
       />
+
+
 
       {loading ? (
         <Loader color="indigo" size="xl" variant="dots" style={{ margin: 'auto', display: 'block' }} />
@@ -66,7 +71,7 @@ const TableM: React.FC<TableMProps> = ({ user }) => {
           <Table striped highlightOnHover>
             <thead style={{ background: '#0c2a85' }}>
               <tr>
-              <th style={{ textAlign: 'center', color: 'white' }}>Juegos Disponibles</th>
+                <th style={{ textAlign: 'center', color: 'white' }}>Juegos Disponibles</th>
                 <th>
                   <Input
                     radius="md"

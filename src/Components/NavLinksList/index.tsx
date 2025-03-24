@@ -148,16 +148,24 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 <div style={{ width: 150, marginLeft: 'auto', marginRight: 'auto' }}>
                     <Image mt={-50} src={Logo} alt="Panda" />
                 </div>
-                {data.map((item, index) => (
-                    <NavLinkItem
-                        key={index}
-                        index={index}
-                        active={active}
-                        label={item.label}
-                        icon={item.icon}
-                        onClick={() => setActiveLink(index)}
-                    />
-                ))}
+                {data.map((item, index) => {
+                    if (item.label === 'REPORTES DE INGRESO' && userData?.role === 'vendedor') {
+                        return null;
+                    }
+                    if (item.label === 'PIN CENTRAL' && userData?.role !== 'master') {
+                        return null;
+                    }
+                    return (
+                        <NavLinkItem
+                            key={index}
+                            index={index}
+                            active={active}
+                            label={item.label}
+                            icon={item.icon}
+                            onClick={() => setActiveLink(index)}
+                        />
+                    );
+                })}
             </div>
             <div>
                 {userData && userData.role === 'master' && (

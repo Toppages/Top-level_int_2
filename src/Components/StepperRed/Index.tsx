@@ -110,6 +110,11 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
         onClose();
         setActiveStep(0);
         resetState();
+        window.location.reload();
+    };
+    const handleClose = () => {
+        window.location.reload();  // Recarga la página
+        onClose();
     };
 
     const handleNextStep = async () => {
@@ -199,7 +204,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
     }, []);
 
     return (
-        <Modal opened={opened} onClose={onClose} withCloseButton={false} size="xl">
+        <Modal opened={opened} onClose={handleClose} withCloseButton={false} size="xl">
             <Stepper active={activeStep} color="#0c2a85" allowNextStepsSelect={false} onStepClick={setActiveStep} breakpoint="sm">
 
                 <Stepper.Step label="Detalles del Producto" description="Selecciona un producto">

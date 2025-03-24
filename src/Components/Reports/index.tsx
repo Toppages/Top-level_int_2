@@ -1,9 +1,9 @@
 import * as XLSX from 'xlsx';
 import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from '@mantine/hooks';
-import { useState, useEffect } from 'react';
-import { IconCopy, IconReload, IconEye, IconDownload, IconCalendarWeek, IconUser } from '@tabler/icons-react';
-import { fetchUserRole, fetchReports, formatDate, handlePinClick, copyToClipboard } from '../../utils/utils';
+import { useState, useEffect, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from 'react';
+import { IconReload, IconEye, IconDownload, IconCalendarWeek, IconUser } from '@tabler/icons-react';
+import { fetchUserRole, fetchReports, formatDate, handlePinClick } from '../../utils/utils';
 import { Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Pagination, Divider, Select, Button } from '@mantine/core';
 
 interface ReportsProps {
@@ -14,7 +14,7 @@ function Reports({ user }: ReportsProps) {
 
   const exportToExcel = (data: any[]) => {
     const filteredData = data.map((report) => {
-      const { _id, product, order_id, productName, status, pins, saleId, __v, user, created_at, quantity, totalPrice, moneydisp, ...cleanedReport } = report;
+      const { _id, product, order_id, productName, status, pins, saleId, __v, user, created_at, totalPrice, moneydisp, ...cleanedReport } = report;
 
       const formattedDate = new Date(report.created_at);
       const formattedDateStr = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours().toString().padStart(2, '0')}:${formattedDate.getMinutes().toString().padStart(2, '0')}`;
@@ -22,7 +22,6 @@ function Reports({ user }: ReportsProps) {
       cleanedReport['Fecha'] = formattedDateStr;
       cleanedReport['ID'] = report.saleId;
       cleanedReport['Producto'] = report.productName;
-      cleanedReport['Cantidad'] = report.quantity;
       cleanedReport['Precio total'] = report.totalPrice;
       cleanedReport['Saldo Actual'] = report.moneydisp;
 
@@ -52,7 +51,7 @@ function Reports({ user }: ReportsProps) {
   const [allReports, setAllReports] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pinsModalOpened, setPinsModalOpened] = useState(false);
-  const [pines, setPines] = useState<any[]>([]);
+  const [, setPines] = useState<any[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
@@ -118,70 +117,60 @@ function Reports({ user }: ReportsProps) {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-  const copyAllPins = () => {
-    const allPinKeys = pines.map(pin => pin.key).join('\n');
-    copyToClipboard(allPinKeys, true);
-  };
+
 
   return (
 
     <>
-      <Modal radius="lg" withCloseButton={false} opened={pinsModalOpened} onClose={() => setPinsModalOpened(false)}>
-        {isMobile && selectedReport && (
-          <>
-            <Title ta="center" order={4}>{selectedReport.saleId}: {selectedReport.productName}</Title>
-            <Group mt='md' position="apart" mb="md">
-              <Title order={4}>Cantidad:</Title>
-              <Title order={4}>{selectedReport.quantity}</Title>
-            </Group>
-            <Group mt='md' position="apart" mb="md">
-              <Title order={4}>Total:</Title>
-              <Title order={4}>{selectedReport.totalPrice} USD</Title>
-            </Group>
-            <Group mt='md' position="apart" mb="md">
-              <Title order={4}>Fecha:</Title>
-              <Title order={4}> {formatDate(selectedReport.created_at)}</Title>
-            </Group>
-            <Group mt='md' position="apart" mb="md">
-              <Title order={4}>Saldo Disponible</Title>
-              <Title order={4}>{selectedReport.moneydisp} USD</Title>
-            </Group>
-            {userRole !== 'cliente' && userRole !== 'vendedor' && (
-              <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
-            )}
-            <Divider my="sm" size='md' variant="dashed" />
-          </>
-        )}
-        <ScrollArea style={{ height: '350px', width: '100%' }}>
-          <Table striped highlightOnHover withColumnBorders>
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'center' }}><Title order={3}>Pines</Title></th>
-                <th style={{ textAlign: 'center' }}>
-                  <ActionIcon radius="md" size="lg" color="blue" variant="filled" onClick={copyAllPins}>
-                    <IconCopy size={23} />
-                  </ActionIcon>
+    <Modal radius="lg" withCloseButton={false} opened={pinsModalOpened} onClose={() => setPinsModalOpened(false)}>
+  {isMobile && selectedReport && (
+    <>
+      <Title ta="center" order={4}>{selectedReport.saleId}: {selectedReport.productName}</Title>
+      
+      <Group mt='md' position="apart" mb="md">
+        <Title order={4}>Total:</Title>
+        <Title order={4}>{selectedReport.totalPrice} USD</Title>
+      </Group>
+      <Group mt='md' position="apart" mb="md">
+        <Title order={4}>Fecha:</Title>
+        <Title order={4}>{formatDate(selectedReport.created_at)}</Title>
+      </Group>
+      <Group mt='md' position="apart" mb="md">
+        <Title order={4}>Saldo Disponible:</Title>
+        <Title order={4}>{selectedReport.moneydisp} USD</Title>
+      </Group>
 
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {pines.map((pin, index) => (
-                <tr key={index}>
-                  <td style={{ textAlign: 'center' }}>{pin.key}</td>
-                  <td style={{ display: 'flex', justifyContent: 'center' }} >
-                    <ActionIcon radius="md" size="lg" color="green" variant="filled" onClick={() => copyToClipboard(pin.key)}>
-                      <IconCopy size={23} />
-                    </ActionIcon>
+      {userRole !== 'cliente' && userRole !== 'vendedor' && (
+        <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
+      )}
+      <Divider my="sm" size='md' variant="dashed" />
+    </>
+  )}
 
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </ScrollArea>
+  <Table striped highlightOnHover>
+    <thead>
+      <tr>
+        <th style={{ textAlign: 'center' }}><Title order={3}>ID: {selectedReport?.playerId}</Title></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style={{ textAlign: 'center' }}>{selectedReport?.nickname}</td>
+      </tr>
+      {userRole !== 'cliente' && userRole !== 'vendedor' && userRole !== 'admin' && (
+  <tbody>
+    {selectedReport?.pins?.map((pin: { serial: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }, index: Key | null | undefined) => (
+      <tr key={index}>
+        <td style={{ textAlign: 'center' }}>{pin.serial}</td>
+      </tr>
+    ))}
+  </tbody>
+)}
 
-      </Modal>
+    </tbody>
+  </Table>
+</Modal>
+
 
       <Title ta="center" weight={700} mb="lg" order={2}>Reportes de Ventas</Title>
 
@@ -220,7 +209,7 @@ function Reports({ user }: ReportsProps) {
                 Descargar
               </Button>
 
-            
+
             </Group>
           </Group>
         </>
@@ -274,7 +263,7 @@ function Reports({ user }: ReportsProps) {
               onChange={handleDateChange}
             />
             <Group position={isMobile ? 'center' : 'apart'} mt={20}>
-              
+
               <Button
                 style={{ background: '#0c2a85', color: 'white' }}
                 leftIcon={<IconReload />}
@@ -286,7 +275,7 @@ function Reports({ user }: ReportsProps) {
               >
                 Recargar
               </Button>
-                            
+
               <Button
                 style={{ background: '#0c2a85', color: 'white' }}
                 leftIcon={<IconDownload />}
@@ -298,7 +287,7 @@ function Reports({ user }: ReportsProps) {
               >
                 Recargar
               </Button>
-             
+
             </Group>
           </Group>
         </>
@@ -329,91 +318,83 @@ function Reports({ user }: ReportsProps) {
 
       {filteredReports.length > 0 && (
 
-<ScrollArea>
+        <ScrollArea>
 
-        <Table mt={10} striped highlightOnHover withBorder withColumnBorders>
-          <thead style={{ background: '#0c2a85' }}>
-            <tr>
-              <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
-              {!isMobile && (
-                <>
-                  <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
-                </>
-              )}
-              <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Producto</Title></th>
-              {!isMobile && (
-                <>
-                  <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Cantidad</Title></th>
-                </>
-              )}
-              {userRole !== 'vendedor' && (
-                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio total</Title></th>
-              )}
-              {!isMobile && userRole !== 'vendedor' && (
-                <>
-                  <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Saldo Actual</Title></th>
-                </>
-              )}
-              {!isMobile && userRole !== 'cliente' && userRole !== 'vendedor' && (
-                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Usuario</Title></th>
-              )}
-              <th style={{ textAlign: 'center', color: 'white' }}>
-                <Title order={4}>{isMobile ? 'Info' : 'Pins'}</Title>
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {paginatedReports.map((report) => (
-              <tr key={report.transactionId}>
-                <td style={{ textAlign: 'center' }}>{report.saleId}</td>
+          <Table mt={10} striped highlightOnHover withBorder withColumnBorders>
+            <thead style={{ background: '#0c2a85' }}>
+              <tr>
+                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
                 {!isMobile && (
                   <>
-                    <td style={{ textAlign: 'center' }}>
-                      {new Date(report.created_at).toLocaleString('es-ES', {
-                        year: 'numeric',
-                        month: 'numeric',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </td>
-
+                    <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
                   </>
                 )}
-                <td style={{ textAlign: 'center' }}>{report.productName}</td>
-                {!isMobile && (
-                  <>
-                    <td style={{ textAlign: 'center' }}>{report.quantity}</td>
-                  </>
-                )}
+                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Producto</Title></th>
+               
                 {userRole !== 'vendedor' && (
-                  <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>
+                  <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio total</Title></th>
                 )}
                 {!isMobile && userRole !== 'vendedor' && (
                   <>
-                    <td style={{ textAlign: 'center' }}>{report.moneydisp}  USD</td>
+                    <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Saldo Actual</Title></th>
                   </>
                 )}
                 {!isMobile && userRole !== 'cliente' && userRole !== 'vendedor' && (
-                  <td style={{ textAlign: 'center' }}>{report.user.handle}</td>
+                  <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Usuario</Title></th>
                 )}
-                <td style={{ display: 'flex', justifyContent: 'center' }}>
-                  <ActionIcon
-                    style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
-                    color="indigo"
-                    size='sm'
-                    variant="filled"
-                    onClick={() => handlePinClick(report, setPines, setPinsModalOpened, setSelectedReport)}
-                  >
-                    <IconEye size={23} />
-                  </ActionIcon>
-                </td>
+                <th style={{ textAlign: 'center', color: 'white' }}>
+                  <Title order={4}>{isMobile ? 'Info' : 'Pins'}</Title>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
-</ScrollArea>
+            </thead>
+
+            <tbody>
+              {paginatedReports.map((report) => (
+                <tr key={report.transactionId}>
+                  <td style={{ textAlign: 'center' }}>{report.saleId}</td>
+                  {!isMobile && (
+                    <>
+                      <td style={{ textAlign: 'center' }}>
+                        {new Date(report.created_at).toLocaleString('es-ES', {
+                          year: 'numeric',
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </td>
+
+                    </>
+                  )}
+                  <td style={{ textAlign: 'center' }}>{report.productName}</td>
+                 
+                  {userRole !== 'vendedor' && (
+                    <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>
+                  )}
+                  {!isMobile && userRole !== 'vendedor' && (
+                    <>
+                      <td style={{ textAlign: 'center' }}>{report.moneydisp}  USD</td>
+                    </>
+                  )}
+                  {!isMobile && userRole !== 'cliente' && userRole !== 'vendedor' && (
+                    <td style={{ textAlign: 'center' }}>{report.user.handle}</td>
+                  )}
+                  <td style={{ display: 'flex', justifyContent: 'center' }}>
+                    <ActionIcon
+                      style={{ background: '#0c2a85', color: 'white', marginLeft: '10px' }}
+                      color="indigo"
+                      size='sm'
+                      variant="filled"
+                      onClick={() => handlePinClick(report, setPines, setPinsModalOpened, setSelectedReport)}
+                    >
+                      <IconEye size={23} />
+                    </ActionIcon>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </ScrollArea>
       )}
     </>
   );

@@ -1,4 +1,3 @@
-import Pines from "./Pines";
 import axios from "axios";
 import AdminBR from "./AdminBR";
 import ManagePro from "./ManagePro";
@@ -12,11 +11,10 @@ import LimitesmyVend from "./LimitesmyVend/Index";
 import LimitVendedores from "./LimitVendedores/Index";
 import AdmincargoReports from "./AdmincargoReports";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
-// import EditUser from "./EditUser";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
-import { IconCalendarWeek, IconTicket, IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
+import { IconCalendarWeek, IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
 import { Group, ScrollArea, Select, Tabs, Text, Title, Card, Badge, Loader } from "@mantine/core";
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
 import AdministrartInventario from "./AdministrartInventario/Index";
@@ -278,23 +276,20 @@ function Dashboard({ user }: DashboardProps) {
                     return saleDate >= startDate && saleDate <= endDate;
                 });
             }
-
             const productTotals = getTotalPriceByProductName(filteredSales);
             const pinsCountByProductName = getPinsCountByProductName(filteredSales);
-            setSales(filteredSales.map((sale: any) => {
-                return {
-                    ...sale,
-                    pinsCount: pinsCountByProductName[sale.productName] || 0,
-                };
-            }));
-
 
             setProductTotals(productTotals);
 
-            setTotalPrice(filteredSales.reduce((acc: any, sale: { totalPrice: any; }) => acc + sale.totalPrice, 0));
-            setSales(filteredSales);
+            setSales(filteredSales.map((sale: any) => ({
+                ...sale,
+                pinsCount: pinsCountByProductName[sale.productName] || 0,
+            })));
+
+            setTotalPrice(filteredSales.reduce((acc: any, sale: { totalPrice: any }) => acc + sale.totalPrice, 0));
+
         } catch (err) {
-            setError('Hubo un problema al obtener los Retiro.');
+            setError('No hay Ventas disponibles en este periodo de tiempo');
         }
     };
 
@@ -460,6 +455,7 @@ function Dashboard({ user }: DashboardProps) {
                             <Text mt={5} weight={700} mb="sm">
                                 <strong>{sale.created_at ? new Date(sale.created_at).toLocaleDateString() : "Fecha no disponible"}:</strong> {sale.totalPrice.toFixed(2)} USD
                             </Text>
+
                             <Text c='green' mt={5} weight={700} mb="sm">
 
                                 {sale.totalPrice.toFixed(2)} USD
@@ -474,37 +470,51 @@ function Dashboard({ user }: DashboardProps) {
         return <div>{breakdown}</div>;
     };
 
-    const ProductList = ({ productTotals, pinsCountByProduct }: any) => {
+    const ProductList = ({ productTotals, pinsCountByProduct, userRole }: any) => {
         return (
-            <>
-                <div>
-                    {Object.entries(productTotals).map(([productName, totalPrice]) => (
-                        <div key={productName}>
-                            <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
-                                <Group position="apart">
-                                    <Text mt={5} weight={700} mb="sm">
-                                        {productName}
-                                    </Text>
-                                    {/* Mostrar los pines solo si hay más de 0 */}
-                                    {pinsCountByProduct[productName] > 0 && (
-                                        <Text c='blue' mt={5} weight={700} mb="sm">
-                                            {pinsCountByProduct[productName]} Pines
-                                        </Text>
-                                    )}
+            <div>
+                {Object.entries(productTotals).map(([productName, totalPrice]) => (
+                    <div key={productName}>
+                        <Card mb={15} shadow="sm" p="lg" radius="md" withBorder>
+                            <Group position="apart">
+                                <Text mt={5} weight={700} mb="sm">
+                                    {productName}
+                                </Text>
 
-                                    <Text c='green' mt={5} weight={700} mb="sm">
+                                {pinsCountByProduct[productName] > 0 && (
+                                    <Text c="blue" mt={5} weight={700} mb="sm">
+                                        {pinsCountByProduct[productName]} Pines
+                                    </Text>
+                                )}
+
+                                {userRole !== "vendedor" && (
+                                    <Text c="green" mt={5} weight={700} mb="sm">
                                         {(totalPrice as number).toFixed(2)} USD
                                     </Text>
-                                </Group>
-                            </Card>
-                        </div>
-                    ))}
-                </div>
-            </>
+                                )}
+                            </Group>
+                        </Card>
+                    </div>
+                ))}
+            </div>
         );
     };
 
-    const RangeSelect = ({ selectedRange, setSelectedRange }: any) => {
+    const RangeSelect = ({ selectedRange, setSelectedRange, userRole }: { selectedRange: string, setSelectedRange: (value: string) => void, userRole: string }) => {
+        const options = [
+            { value: "general", label: "General (todos los Retiro)" },
+            { value: "hoy", label: "Día de hoy" },
+            { value: "semana", label: "Esta semana" },
+            { value: "mes", label: "Este mes" },
+            { value: "año", label: "Este año" },
+            { value: "custom", label: "Elegir día" },
+            { value: "rangoDia", label: "Rango del día" },
+        ];
+    
+        const filteredOptions = userRole === "vendedor"
+            ? options.filter(option => !["semana", "mes", "año"].includes(option.value))
+            : options;
+    
         return (
             <Select
                 label="Selecciona el rango de fecha"
@@ -516,15 +526,7 @@ function Dashboard({ user }: DashboardProps) {
                 transitionTimingFunction="ease"
                 value={selectedRange}
                 onChange={(value) => setSelectedRange(value || "general")}
-                data={[
-                    { value: "general", label: "General (todos los Retiro)" },
-                    { value: "hoy", label: "Día de hoy" },
-                    { value: "semana", label: "Esta semana" },
-                    { value: "mes", label: "Este mes" },
-                    { value: "año", label: "Este año" },
-                    { value: "custom", label: "Elegir día" },
-                    { value: "rangoDia", label: "Rango del día" },
-                ]}
+                data={filteredOptions}
                 styles={() => ({
                     item: {
                         '&[data-selected]': {
@@ -538,7 +540,7 @@ function Dashboard({ user }: DashboardProps) {
             />
         );
     };
-
+    
     useEffect(() => {
         const handleResize = () => setWindowHeight(window.innerHeight);
         window.addEventListener('resize', handleResize);
@@ -548,162 +550,151 @@ function Dashboard({ user }: DashboardProps) {
     return (
         <>
             <div style={{ width: '100%', overflowX: 'hidden' }}>
-                {(userRole === "vendedor") && (
-                    <Tabs defaultValue="Pines">
 
-                        <Tabs.List>
-                            <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
+                <Tabs defaultValue="Retiro">
 
-                        </Tabs.List>
-
+                    <Tabs.List>
+                        <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
+                        {(userRole === "master" || userRole === "admin") && (
 
 
-                        <Tabs.Panel value="Pines" pt="xs">
-                            <Pines user={user} />
+                            <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
+                        )}
+                    </Tabs.List>
 
-                        </Tabs.Panel>
+                    <Tabs.Panel value="control" pt="xs">
 
+                        {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
 
-                    </Tabs>
-                )}
-                {(userRole !== "vendedor") && (
+                        {(userRole === "master") && (
+                            <>
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    General
+                                </Title>
+                                <Group>
 
+                                    <AllRetiros />
+                                    <Registrar />
+                                    <ManagePro />
+                                    <AdminBR />
+                                    <AdministrartInventario navOpen={false} setActiveLink={function (): void {
 
-                    <Tabs defaultValue="Retiro">
+                                    }} user={null} />
+                                    {/* <EditUser/> */}
+                                    <DeleteUser />
+                                </Group>
+                                <Group>
+                                    <div>
 
-                        <Tabs.List>
-                            <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
-                            <Tabs.Tab value="Pines" icon={<IconTicket size={18} />}>Pines</Tabs.Tab>
-                            {(userRole === "master" || userRole === "admin") && (
+                                        <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                            Clientes
+                                        </Title>
+                                        <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
+                                    </div>
+                                    <div>
 
+                                        <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                            Administradores
+                                        </Title>
+                                        <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
+                                    </div>
+                                    <div>
 
-                                <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
-                            )}
-                        </Tabs.List>
+                                        <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                            Vendedores
+                                        </Title>
+                                        <LimitVendedores />
+                                    </div>
+                                </Group>
+                            </>
+                        )}
+                        {(userRole === "admin") && (
+                            <>
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    General
+                                </Title>
+                                <AdmincargoReports user={user} />
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    Clientes
+                                </Title>
+                                <EditmyClients user={user} onBalanceUpdate={onBalanceUpdate} />
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    Vendedores
+                                </Title>
+                                <LimitesmyVend user={user} />
+                            </>
+                        )}
 
-                        <Tabs.Panel value="control" pt="xs">
+                    </Tabs.Panel>
 
-                            {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
+                    <Tabs.Panel value="Retiro" pt="xs">
+                        <div>
+                        {userRole && <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} userRole={userRole} />}
 
-                            {(userRole === "master") && (
-                                <>
-                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                        General
-                                    </Title>
-                                    <Group>
+                            <ScrollArea style={{ height: maxHeight - 130 }} type='always'>
+                                {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
+                                {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
 
-                                        <AllRetiros />
-                                        <Registrar />
-                                        <ManagePro />
-                                        <AdminBR />
-                                        <AdministrartInventario navOpen={false} setActiveLink={function (): void {
-                                           
-                                        } } user={null} />
-                                        {/* <EditUser/> */}
-                                        <DeleteUser />
-                                    </Group>
-                                    <Group>
-                                        <div>
+                                {sales.length > 0 && totalPrice > 0 ? (
+                                    <div>
 
-                                            <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                                Clientes
+                                        <Card
+                                            mt={15}
+                                            mb={45}
+                                            mr={10}
+                                            ml={10}
+                                            style={{
+                                                boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                                transition: "all 0.3s ease",
+                                                transform: "scale(1)",
+                                            }}
+                                            radius="md"
+                                        >
+                                            <Title mt={5} ta="center" weight={700} mb='md' order={2}>
+                                                TOTAL DE VENTAS: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
                                             </Title>
-                                            <EditClient user={user} onBalanceUpdate={onBalanceUpdate} />
-                                        </div>
-                                        <div>
 
-                                            <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                                Administradores
-                                            </Title>
-                                            <EditAdmins user={user} onBalanceUpdate={onBalanceUpdate} />
-                                        </div>
-                                        <div>
+                                            {userRole !== "vendedor" && (
 
-                                            <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                                Vendedores
-                                            </Title>
-                                            <LimitVendedores />
-                                        </div>
-                                    </Group>
-                                </>
-                            )}
-                            {(userRole === "admin") && (
-                                <>
-                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                        General
-                                    </Title>
-                                    <AdmincargoReports user={user} />
-                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                        Clientes
-                                    </Title>
-                                    <EditmyClients user={user} onBalanceUpdate={onBalanceUpdate} />
-                                    <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                        Vendedores
-                                    </Title>
-                                    <LimitesmyVend user={user} />
-                                </>
-                            )}
-
-                        </Tabs.Panel>
-
-                        <Tabs.Panel value="Retiro" pt="xs">
-                            <div>
-                                <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} />
-
-                                <ScrollArea style={{ height: maxHeight - 130 }} type='always'>
-                                    {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
-                                    {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
-
-                                    {sales.length > 0 ? (
-                                        <div>
-
-                                            <Card
-                                                mt={15}
-                                                mb={45}
-                                                mr={10}
-                                                ml={10}
-                                                style={{
-                                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                                                    transition: "all 0.3s ease",
-                                                    transform: "scale(1)",
-                                                }}
-                                                radius="md"
-                                            >
-                                                <Title mt={5} ta="center" weight={700} mb="sm" order={2}>
-                                                    TOTAL DE RETIRO: {selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" ? totalSales : sales.length}
-                                                </Title>
                                                 <Title mt={5} weight={700} mb='md' order={5}>
-                                                    Monto total de retiros {totalPrice.toFixed(2)} USD
+                                                    Monto total de retiros: {totalPrice.toFixed(2)} USD
                                                 </Title>
+                                            )}
 
 
-                                                <SalesBarChart sales={sales} selectedRange={selectedRange} />
+                                            <SalesBarChart sales={sales} selectedRange={selectedRange} />
 
 
-                                            </Card>
+                                        </Card>
 
-                                            <Card
-                                                mt={15}
-                                                mb={45}
-                                                mr={10}
-                                                ml={10}
-                                                style={{
-                                                    boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
-                                                    transition: "all 0.3s ease",
-                                                    transform: "scale(1)",
-                                                }}
-                                                radius="md"
-                                            >
-                                                <Badge variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Gastos por Producto </Badge>
-                                                <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
-                                                <ProductList
-                                                    productTotals={productTotals}
-                                                    pinsCountByProduct={getPinsCountByProductName(sales)}
-                                                />
+                                        <Card
+                                            mt={15}
+                                            mb={45}
+                                            mr={10}
+                                            ml={10}
+                                            style={{
+                                                boxShadow: "0px 6px 20px rgba(0, 0, 0, 0.2)",
+                                                transition: "all 0.3s ease",
+                                                transform: "scale(1)",
+                                            }}
+                                            radius="md"
+                                        >
+                                            
+                                        {userRole !== "vendedor" && (
 
-                                            </Card>
+                                            <Badge variant="gradient" gradient={{ from: '#0c2a85', to: '#0c2a85' }} >Gastos por Producto </Badge>
+                                        )}
+                                            <Title mt={5} weight={700} mb="sm" order={4}>Productos</Title>
+                                            <ProductList
+                                                productTotals={productTotals}
+                                                pinsCountByProduct={getPinsCountByProductName(sales)}
+                                                userRole={userRole}
+                                            />
 
-                                            {(selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" || selectedRange === "rango de día") && (
+
+                                        </Card>
+                                        {userRole !== "vendedor" && (
+                                            (selectedRange === "semana" || selectedRange === "mes" || selectedRange === "año" || selectedRange === "rangoDia") && (
                                                 <Card
                                                     mt={15}
                                                     mb={45}
@@ -718,27 +709,20 @@ function Dashboard({ user }: DashboardProps) {
                                                 >
                                                     <SalesBreakdown sales={sales} selectedRange={selectedRange} />
                                                 </Card>
-                                            )}
+                                            )
+                                        )}
 
 
-                                        </div>
-                                    ) : (
-                                        <p>{error ? error : 'No hay Retiros disponibles.'}</p>
-                                    )}
-                                </ScrollArea>
-                            </div>
-                        </Tabs.Panel>
 
-                        <Tabs.Panel value="Pines" pt="xs">
-                            <Pines user={user} />
+                                    </div>
+                                ) : (
+                                    <p>{error ? error : 'No hay Retiros disponibles.'}</p>
+                                )}
+                            </ScrollArea>
+                        </div>
+                    </Tabs.Panel>
 
-                        </Tabs.Panel>
-
-
-                    </Tabs>
-                )
-
-                }
+                </Tabs>
 
             </div>
         </>
