@@ -124,6 +124,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
         }
     
         setIsProcessing(true);
+        setErrorMessage(""); 
     
         try {
             const pinResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products/${selectedProduct.code}/pin`);
@@ -139,23 +140,23 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                 params: {
                     GameAccountId: playerId,
                     'hpws-pin': pinData.pin_id,
-                    'product-code': selectedProduct.code 
+                    'product-code': selectedProduct.code
                 }
             });
     
             if (scrapeResponse.status !== 200 || !scrapeResponse.data.success) {
-                if (scrapeResponse.data.message === 'El PIN ya fue utilizado.') {
-                    setErrorMessage("Este PIN ya fue utilizado.");
-                    setIsProcessing(false);
-                    return;
-                }
-                
-                await axios.post(`${import.meta.env.VITE_API_BASE_URL}/products/add-pins-without-deduction`, {
-                    code: selectedProduct.code,
-                    pins: [{ pin_id: pinData.pin_id }]
-                });
+                const errorMsg = scrapeResponse.data.message || "Ocurrió un error en el proceso.";
     
-                setErrorMessage("Ocurrió un error, pero el PIN se ha agregado al inventario sin deducción de saldo.");
+                if (errorMsg.includes("PIN ya ha sido utilizado")) {
+                    setErrorMessage("Este PIN ya fue utilizado. Intenta con otro.");
+                } else {
+                    setErrorMessage(errorMsg);
+                    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/products/add-pins-without-deduction`, {
+                        code: selectedProduct.code,
+                        pins: [{ pin_id: pinData?.pin_id || "DEFAULT_PIN_ID" }]
+                    });
+                }
+    
                 setIsProcessing(false);
                 return;
             }
@@ -205,7 +206,12 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                 setErrorMessage("Error al registrar la venta.");
             }
         } catch (error) {
-            setErrorMessage("Ocurrió un error en el proceso.");
+            const errorMsg = axios.isAxiosError(error) && error.response?.data?.message
+                ? error.response.data.message
+                : "Ocurrió un error en el proceso.";
+    
+            setErrorMessage(errorMsg);
+
         }
     
         setIsProcessing(false);

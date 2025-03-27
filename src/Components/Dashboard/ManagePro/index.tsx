@@ -13,7 +13,7 @@ const exportToExcel = (products: Product[]) => {
             name: product.name,
             pin_id: item.pin_id
         }));
-    }).flat(); 
+    }).flat();
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -36,7 +36,7 @@ function ManagePro() {
             price_oro: selectedProduct?.price_oro || 0,
             price_plata: selectedProduct?.price_plata || 0,
             price_bronce: selectedProduct?.price_bronce || 0,
-            price: selectedProduct?.price || 0, 
+            price: selectedProduct?.price || 0,
             pricebs: selectedProduct?.pricebs || 0,
         }
     });
@@ -68,7 +68,7 @@ function ManagePro() {
         setValue('price_oro', product.price_oro || 0);
         setValue('price_plata', product.price_plata || 0);
         setValue('price_bronce', product.price_bronce || 0);
-        setValue('price', product.price || 0); 
+        setValue('price', product.price || 0);
         setValue('pricebs', product.pricebs || 0);
     };
 
@@ -118,14 +118,15 @@ function ManagePro() {
                         value={searchQuery}
                         onChange={(e) => handleSearchChange(e.currentTarget.value)}
                     />
-                      <Button
-                variant="outline"
-                color="blue"
-                onClick={() => exportToExcel(filteredProducts)} 
-            >
-                Descargar Inventarios
-            </Button>
                 </Group>
+                <Button
+                    mb={10}
+                    style={{ background: '#0c2a85' }}
+                    fullWidth
+                    onClick={() => exportToExcel(filteredProducts)}
+                >
+                    Descargar Inventarios
+                </Button>
 
                 {loading ? (
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
@@ -168,7 +169,7 @@ function ManagePro() {
                     <form onSubmit={handleSubmit(handleUpdateProduct)}>
                         <Title mt={5} order={1}>{selectedProduct.name}</Title>
                         <Title mt={15} order={5}></Title>
-                        <Text fw={500} fz="xl">Productos en el inventario: {selectedProduct.price}</Text>
+                        <Text fw={500} fz="xl">Productos en el inventario: {selectedProduct.inventario.length}</Text>
                         <Group mt={15} mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '10px', width: '100%' }}>
                             <Controller
                                 control={control}
@@ -219,7 +220,7 @@ function ManagePro() {
                                         step={0.01}
                                         precision={3}
                                         error={errors.price_oro ? "El precio oro no puede ser menor que el precio base." : null}
-                                        style={{ color: '#FFD700' }} 
+                                        style={{ color: '#FFD700' }}
                                     />
                                 )}
                                 rules={{
