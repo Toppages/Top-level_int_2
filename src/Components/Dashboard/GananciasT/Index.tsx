@@ -131,7 +131,6 @@ function GananciasT() {
         </tr>
     ));
 
-    // Totalización de las ganancias
     const totalGanancia = Object.values(groupedSales).reduce((total: number, sale: any) => {
         return total + (sale.totalPrice - (sale.price * sale.quantity));
     }, 0);

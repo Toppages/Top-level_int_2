@@ -33,8 +33,8 @@ function AdministrarInventario({ user }: HomeProps) {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
-
   const [, setModalStepOpened] = useState(false);
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);

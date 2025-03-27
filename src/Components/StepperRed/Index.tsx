@@ -113,7 +113,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
         window.location.reload();
     };
     const handleClose = () => {
-        window.location.reload();  // Recarga la página
+        window.location.reload();
         onClose();
     };
 
@@ -122,32 +122,49 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
             setErrorMessage("Debe seleccionar un producto y un ID de jugador válido.");
             return;
         }
-
+    
         setIsProcessing(true);
-
+    
         try {
             const pinResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products/${selectedProduct.code}/pin`);
             const pinData = pinResponse.data.pin;
-
+    
             if (!pinData || !pinData.pin_id) {
                 setErrorMessage("Error al obtener el PIN del producto.");
                 setIsProcessing(false);
                 return;
             }
-
-            const recargaResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/recarga/${playerId}/${pinData.pin_id}`);
-
-            if (recargaResponse.status !== 200) {
-                setErrorMessage("Error al procesar la recarga.");
+    
+            const scrapeResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/scrape`, {
+                params: {
+                    GameAccountId: playerId,
+                    'hpws-pin': pinData.pin_id,
+                    'product-code': selectedProduct.code 
+                }
+            });
+    
+            if (scrapeResponse.status !== 200 || !scrapeResponse.data.success) {
+                if (scrapeResponse.data.message === 'El PIN ya fue utilizado.') {
+                    setErrorMessage("Este PIN ya fue utilizado.");
+                    setIsProcessing(false);
+                    return;
+                }
+                
+                await axios.post(`${import.meta.env.VITE_API_BASE_URL}/products/add-pins-without-deduction`, {
+                    code: selectedProduct.code,
+                    pins: [{ pin_id: pinData.pin_id }]
+                });
+    
+                setErrorMessage("Ocurrió un error, pero el PIN se ha agregado al inventario sin deducción de saldo.");
                 setIsProcessing(false);
                 return;
             }
-
-            setRecargaInfo(recargaResponse.data);
-
+    
+            setRecargaInfo(scrapeResponse.data);
+    
             const purchaseLimit = user?.purchaseLimits?.[selectedProduct.code];
             const limit = purchaseLimit ? purchaseLimit.limit : 0;
-
+    
             const saleData = {
                 user: user ? {
                     id: user._id,
@@ -176,11 +193,11 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         productName: selectedProduct.name
                     }
                 ],
-                purchaseLimit: limit  // Enviar el límite de compra
+                purchaseLimit: limit
             };
-
+    
             const saleResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData);
-
+    
             if (saleResponse.status === 201) {
                 setSaleResponse(saleResponse.data);
                 setActiveStep(2);
@@ -190,11 +207,11 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
         } catch (error) {
             setErrorMessage("Ocurrió un error en el proceso.");
         }
-
+    
         setIsProcessing(false);
     };
-
-
+    
+    
     useEffect(() => {
         const intervalId = setInterval(() => {
             fetchUserData(setUserData);
@@ -350,7 +367,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                             disabled={isProcessing}
                             style={{ display: isValidId ? 'inline-block' : 'none', background: '#0c2a85' }}
                         >
-                            {isProcessing ? "Procesando..." : "Siguiente"}
+                            {isProcessing ? "Procesando..." : "Procesar"}
                         </Button>
 
 

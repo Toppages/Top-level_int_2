@@ -27,7 +27,7 @@ interface StepperMaProps {
     activeStep: number;
     setActiveStep: React.Dispatch<React.SetStateAction<number>>;
     user: { _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; } | null;
-    setModalStepOpened: React.Dispatch<React.SetStateAction<boolean>>; // Prop para controlar el estado del modal
+    setModalStepOpened: React.Dispatch<React.SetStateAction<boolean>>; 
 }
 
 

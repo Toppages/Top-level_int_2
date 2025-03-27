@@ -11,13 +11,13 @@ import LimitesmyVend from "./LimitesmyVend/Index";
 import LimitVendedores from "./LimitVendedores/Index";
 import AdmincargoReports from "./AdmincargoReports";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
+import AdministrartInventario from "./AdministrartInventario/Index";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
 import { IconCalendarWeek, IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
 import { Group, ScrollArea, Select, Tabs, Text, Title, Card, Badge, Loader } from "@mantine/core";
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
-import AdministrartInventario from "./AdministrartInventario/Index";
 
 interface DashboardProps {
     user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
@@ -631,7 +631,7 @@ function Dashboard({ user }: DashboardProps) {
                         <div>
                         {userRole && <RangeSelect selectedRange={selectedRange} setSelectedRange={setSelectedRange} userRole={userRole} />}
 
-                            <ScrollArea style={{ height: maxHeight - 130 }} type='always'>
+                            <ScrollArea style={{ height: maxHeight - 150 }} type='always'>
                                 {selectedRange === "custom" && <DatePicker label="Selecciona un día" value={selectedDate} onChange={handleDateChange} />}
                                 {selectedRange === "rangoDia" && <DateRangePicker label="Selecciona el rango del día" placeholder="Pick dates range" value={selectedrDate} onChange={(date) => setSelecterdDate(date)} />}
 

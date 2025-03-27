@@ -3,11 +3,11 @@ import StepperMa from '../StepperMa/Index';
 import { Product } from '../../types/types';
 import { IconSearch, IconEye } from '@tabler/icons-react';
 import { fetchProductsFromAPI, handleSearchChange } from '../../utils/utils';
-import { ActionIcon, Table, Loader, Input, ScrollArea } from '@mantine/core';
+import { ActionIcon, Table, Loader, Input } from '@mantine/core';
 
 interface TableMProps {
   user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
-  setModalStepOpened: React.Dispatch<React.SetStateAction<boolean>>; // Prop para controlar el estado del modal de StepperMa
+  setModalStepOpened: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const TableM: React.FC<TableMProps> = ({ user, setModalStepOpened }) => {
@@ -16,7 +16,6 @@ const TableM: React.FC<TableMProps> = ({ user, setModalStepOpened }) => {
   const [fetchedProducts, setFetchedProducts] = useState<Product[]>([]);
   const [selectedProductGroup, setSelectedProductGroup] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
@@ -25,7 +24,6 @@ const TableM: React.FC<TableMProps> = ({ user, setModalStepOpened }) => {
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowHeight(window.innerHeight);
     };
 
     window.addEventListener('resize', handleResize);
@@ -59,7 +57,7 @@ const TableM: React.FC<TableMProps> = ({ user, setModalStepOpened }) => {
         activeStep={activeStep}
         setActiveStep={setActiveStep}
         user={user}
-        setModalStepOpened={setModalStepOpened}  // Asegúrate de pasar la prop
+        setModalStepOpened={setModalStepOpened}
       />
 
 
@@ -67,55 +65,53 @@ const TableM: React.FC<TableMProps> = ({ user, setModalStepOpened }) => {
       {loading ? (
         <Loader color="indigo" size="xl" variant="dots" style={{ margin: 'auto', display: 'block' }} />
       ) : (
-        <ScrollArea style={{ height: windowHeight - 90 }} type="never">
-          <Table striped highlightOnHover>
-            <thead style={{ background: '#0c2a85' }}>
-              <tr>
-                <th style={{ textAlign: 'center', color: 'white' }}>Juegos Disponibles</th>
-                <th>
-                  <Input
-                    radius="md"
-                    style={{
-                      display: 'none',
-                    }}
-                    size="md"
-                    icon={<IconSearch />}
-                    placeholder="Buscar Juego"
-                    value={searchQuery}
-                    onChange={(e: { target: { value: any; }; }) => {
-                      const query = e.target.value;
-                      setSearchQuery(query);
-                      handleSearchChange(query, fetchedProducts, setFetchedProducts);
-                    }}
-                  />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredGroups.length > 0 ? (
-                filteredGroups.map((group, index) => (
-                  <tr key={index}>
-                    <td style={{ textAlign: 'center' }}>{group}</td>
-                    <td style={{ display: 'flex', justifyContent: 'center' }}>
-                      <ActionIcon
-                        onClick={() => openModalForGroup(group)}
-                        style={{ background: '#0c2a85', color: 'white' }}
-                        size="lg"
-                        variant="filled"
-                      >
-                        <IconEye size={26} />
-                      </ActionIcon>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={2} style={{ textAlign: 'center' }}>No se encontraron juegos disponibles.</td>
+        <Table striped highlightOnHover>
+          <thead style={{ background: '#0c2a85' }}>
+            <tr>
+              <th style={{ textAlign: 'center', color: 'white' }}>Juegos Disponibles</th>
+              <th>
+                <Input
+                  radius="md"
+                  style={{
+                    display: 'none',
+                  }}
+                  size="md"
+                  icon={<IconSearch />}
+                  placeholder="Buscar Juego"
+                  value={searchQuery}
+                  onChange={(e: { target: { value: any; }; }) => {
+                    const query = e.target.value;
+                    setSearchQuery(query);
+                    handleSearchChange(query, fetchedProducts, setFetchedProducts);
+                  }}
+                />
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredGroups.length > 0 ? (
+              filteredGroups.map((group, index) => (
+                <tr key={index}>
+                  <td style={{ textAlign: 'center' }}>{group}</td>
+                  <td style={{ display: 'flex', justifyContent: 'center' }}>
+                    <ActionIcon
+                      onClick={() => openModalForGroup(group)}
+                      style={{ background: '#0c2a85', color: 'white' }}
+                      size="lg"
+                      variant="filled"
+                    >
+                      <IconEye size={26} />
+                    </ActionIcon>
+                  </td>
                 </tr>
-              )}
-            </tbody>
-          </Table>
-        </ScrollArea>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={2} style={{ textAlign: 'center' }}>No se encontraron juegos disponibles.</td>
+              </tr>
+            )}
+          </tbody>
+        </Table>
       )}
     </>
   );

@@ -208,8 +208,8 @@ export const updateProductAPI = async (product: Product) => {
               'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-              price: product.price,           // Agregar el precio base
-              pricebs: product.pricebs,       // Agregar el preciobs
+              price: product.price,           
+              pricebs: product.pricebs,     
               price_oro: product.price_oro,
               price_plata: product.price_plata,
               price_bronce: product.price_bronce,

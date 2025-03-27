@@ -5,7 +5,22 @@ import { useState, useEffect } from 'react';
 import { IconAdjustments, IconSearch } from '@tabler/icons-react';
 import { fetchProductsFromAPI, updateProductAPI } from '../../../utils/utils';
 import { Table, Button, Modal, ScrollArea, ActionIcon, Title, Group, Loader, Text, TextInput, Switch, NumberInput } from '@mantine/core';
+import * as XLSX from 'xlsx';
 
+const exportToExcel = (products: Product[]) => {
+    const data = products.map((product) => {
+        return product.inventario.map((item: { pin_id: any; }) => ({
+            name: product.name,
+            pin_id: item.pin_id
+        }));
+    }).flat(); 
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Inventarios");
+
+    XLSX.writeFile(wb, "Inventarios_Productos.xlsx");
+};
 function ManagePro() {
     const [opened, setOpened] = useState(false);
     const [productModalOpen, setProductModalOpen] = useState(false);
@@ -21,8 +36,8 @@ function ManagePro() {
             price_oro: selectedProduct?.price_oro || 0,
             price_plata: selectedProduct?.price_plata || 0,
             price_bronce: selectedProduct?.price_bronce || 0,
-            price: selectedProduct?.price || 0,  // Agregado
-            pricebs: selectedProduct?.pricebs || 0, // Agregado
+            price: selectedProduct?.price || 0, 
+            pricebs: selectedProduct?.pricebs || 0,
         }
     });
 
@@ -103,6 +118,13 @@ function ManagePro() {
                         value={searchQuery}
                         onChange={(e) => handleSearchChange(e.currentTarget.value)}
                     />
+                      <Button
+                variant="outline"
+                color="blue"
+                onClick={() => exportToExcel(filteredProducts)} 
+            >
+                Descargar Inventarios
+            </Button>
                 </Group>
 
                 {loading ? (
@@ -197,7 +219,7 @@ function ManagePro() {
                                         step={0.01}
                                         precision={3}
                                         error={errors.price_oro ? "El precio oro no puede ser menor que el precio base." : null}
-                                        style={{ color: '#FFD700' }} // Cambiar color del texto en el input
+                                        style={{ color: '#FFD700' }} 
                                     />
                                 )}
                                 rules={{
