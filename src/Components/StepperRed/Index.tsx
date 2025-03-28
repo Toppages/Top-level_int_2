@@ -122,31 +122,31 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
             setErrorMessage("Debe seleccionar un producto y un ID de jugador válido.");
             return;
         }
-    
+
         setIsProcessing(true);
-        setErrorMessage(""); 
-    
+        setErrorMessage("");
+
         try {
             const pinResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products/${selectedProduct.code}/pin`);
             const pinData = pinResponse.data.pin;
-    
+
             if (!pinData || !pinData.pin_id) {
                 setErrorMessage("Error al obtener el PIN del producto.");
                 setIsProcessing(false);
                 return;
             }
-    
-            const scrapeResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/scrape`, {
+
+            const scrapeResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/redimir`, {
                 params: {
                     GameAccountId: playerId,
                     'hpws-pin': pinData.pin_id,
                     'product-code': selectedProduct.code
                 }
             });
-    
+
             if (scrapeResponse.status !== 200 || !scrapeResponse.data.success) {
                 const errorMsg = scrapeResponse.data.message || "Ocurrió un error en el proceso.";
-    
+
                 if (errorMsg.includes("PIN ya ha sido utilizado")) {
                     setErrorMessage("Este PIN ya fue utilizado. Intenta con otro.");
                 } else {
@@ -156,16 +156,16 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         pins: [{ pin_id: pinData?.pin_id || "DEFAULT_PIN_ID" }]
                     });
                 }
-    
+
                 setIsProcessing(false);
                 return;
             }
-    
+
             setRecargaInfo(scrapeResponse.data);
-    
+
             const purchaseLimit = user?.purchaseLimits?.[selectedProduct.code];
             const limit = purchaseLimit ? purchaseLimit.limit : 0;
-    
+
             const saleData = {
                 user: user ? {
                     id: user._id,
@@ -196,9 +196,9 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                 ],
                 purchaseLimit: limit
             };
-    
+
             const saleResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData);
-    
+
             if (saleResponse.status === 201) {
                 setSaleResponse(saleResponse.data);
                 setActiveStep(2);
@@ -209,15 +209,15 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
             const errorMsg = axios.isAxiosError(error) && error.response?.data?.message
                 ? error.response.data.message
                 : "Ocurrió un error en el proceso.";
-    
+
             setErrorMessage(errorMsg);
 
         }
-    
+
         setIsProcessing(false);
     };
-    
-    
+
+
     useEffect(() => {
         const intervalId = setInterval(() => {
             fetchUserData(setUserData);
