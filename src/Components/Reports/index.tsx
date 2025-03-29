@@ -1,9 +1,9 @@
 import * as XLSX from 'xlsx';
 import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from '@mantine/hooks';
-import { useState, useEffect, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from 'react';
+import { useState, useEffect } from 'react';
 import { IconReload, IconEye, IconDownload, IconCalendarWeek, IconUser } from '@tabler/icons-react';
-import { fetchUserRole, fetchReports, formatDate, handlePinClick } from '../../utils/utils';
+import { fetchUserRole, fetchReports, handlePinClick, formatDate } from '../../utils/utils';
 import { Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Pagination, Divider, Select, Button } from '@mantine/core';
 
 interface ReportsProps {
@@ -122,54 +122,69 @@ function Reports({ user }: ReportsProps) {
   return (
 
     <>
-    <Modal radius="lg" withCloseButton={false} opened={pinsModalOpened} onClose={() => setPinsModalOpened(false)}>
-  {isMobile && selectedReport && (
-    <>
-      <Title ta="center" order={4}>{selectedReport.saleId}: {selectedReport.productName}</Title>
-      
-      <Group mt='md' position="apart" mb="md">
-        <Title order={4}>Total:</Title>
-        <Title order={4}>{selectedReport.totalPrice} USD</Title>
-      </Group>
-      <Group mt='md' position="apart" mb="md">
-        <Title order={4}>Fecha:</Title>
-        <Title order={4}>{formatDate(selectedReport.created_at)}</Title>
-      </Group>
-      <Group mt='md' position="apart" mb="md">
-        <Title order={4}>Saldo Disponible:</Title>
-        <Title order={4}>{selectedReport.moneydisp} USD</Title>
-      </Group>
+      <Modal radius="lg" withCloseButton={false} opened={pinsModalOpened} onClose={() => setPinsModalOpened(false)}>
+        <Title ta="center" order={3}>Detalles de la Venta</Title>
+        {isMobile && selectedReport && (
+          <>
+            <Title ta="center" order={4}>{selectedReport.saleId}: {selectedReport.productName}</Title>
 
-      {userRole !== 'cliente' && userRole !== 'vendedor' && (
-        <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
-      )}
-      <Divider my="sm" size='md' variant="dashed" />
-    </>
-  )}
+            <Group mt='md' position="apart" mb="md">
+              <Title order={4}>Total:</Title>
+              <Title order={4}>{selectedReport.totalPrice} USD</Title>
+            </Group>
+            <Group mt='md' position="apart" mb="md">
+              <Title order={4}>Fecha:</Title>
+              <Title order={4}>{formatDate(selectedReport.created_at)}</Title>
+            </Group>
+            <Group mt='md' position="apart" mb="md">
+              <Title order={4}>Saldo Disponible:</Title>
+              <Title order={4}>{selectedReport.moneydisp} USD</Title>
+            </Group>
 
-  <Table striped highlightOnHover>
-    <thead>
-      <tr>
-        <th style={{ textAlign: 'center' }}><Title order={3}>ID: {selectedReport?.playerId}</Title></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td style={{ textAlign: 'center' }}>{selectedReport?.nickname}</td>
-      </tr>
-      {userRole !== 'cliente' && userRole !== 'vendedor' && userRole !== 'admin' && (
-  <tbody>
-    {selectedReport?.pins?.map((pin: { serial: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; }, index: Key | null | undefined) => (
-      <tr key={index}>
-        <td style={{ textAlign: 'center' }}>{pin.serial}</td>
-      </tr>
-    ))}
-  </tbody>
-)}
+            {userRole !== 'cliente' && userRole !== 'vendedor' && (
+              <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
+            )}
+            <Divider my="sm" size='md' variant="dashed" />
+          </>
+        )}
+        <Table striped highlightOnHover>
+          <tbody>
+            <tr>
+              <td style={{ fontWeight: 'bold', textAlign: 'right' }}>ID:</td>
+              <td style={{ textAlign: 'left' }}>{selectedReport?.playerId}</td>
+            </tr>
+            <tr>
+              <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Nickname:</td>
+              <td style={{ textAlign: 'left' }}>{selectedReport?.nickname}</td>
+            </tr>
+            {userRole !== 'cliente' && userRole !== 'vendedor' && userRole !== 'admin' && (
+              <>
+                <tr>
+                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Serial:</td>
+                  <td style={{ textAlign: 'left' }}>{selectedReport?.pins?.map((pin: { serial: any; }) => pin.serial).join(', ')}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Teléfono:</td>
+                  <td style={{ textAlign: 'left' }}>{selectedReport?.phone}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Banco:</td>
+                  <td style={{ textAlign: 'left' }}>{selectedReport?.bank}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Referencia:</td>
+                  <td style={{ textAlign: 'left' }}>{selectedReport?.reference}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Fecha de Pago:</td>
+                  <td style={{ textAlign: 'left' }}>{selectedReport?.fechaPago}</td>
+                </tr>
+              </>
+            )}
+          </tbody>
+        </Table>
+      </Modal>
 
-    </tbody>
-  </Table>
-</Modal>
 
 
       <Title ta="center" weight={700} mb="lg" order={2}>Reportes de Ventas</Title>
@@ -330,7 +345,7 @@ function Reports({ user }: ReportsProps) {
                   </>
                 )}
                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Producto</Title></th>
-               
+
                 {userRole !== 'vendedor' && (
                   <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio total</Title></th>
                 )}
@@ -367,7 +382,7 @@ function Reports({ user }: ReportsProps) {
                     </>
                   )}
                   <td style={{ textAlign: 'center' }}>{report.productName}</td>
-                 
+
                   {userRole !== 'vendedor' && (
                     <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>
                   )}
