@@ -3,7 +3,7 @@ import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from '@mantine/hooks';
 import { useState, useEffect } from 'react';
 import { IconReload, IconEye, IconDownload, IconCalendarWeek, IconUser } from '@tabler/icons-react';
-import { fetchUserRole, fetchReports, handlePinClick, formatDate } from '../../utils/utils';
+import { fetchUserRole, fetchReports, handlePinClick, formatDateTime } from '../../utils/utils';
 import { Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Pagination, Divider, Select, Button } from '@mantine/core';
 
 interface ReportsProps {
@@ -127,19 +127,24 @@ function Reports({ user }: ReportsProps) {
         {isMobile && selectedReport && (
           <>
             <Title ta="center" order={4}>{selectedReport.saleId}: {selectedReport.productName}</Title>
+            {userRole !== 'vendedor' && (
 
-            <Group mt='md' position="apart" mb="md">
-              <Title order={4}>Total:</Title>
-              <Title order={4}>{selectedReport.totalPrice} USD</Title>
-            </Group>
+              <Group mt='md' position="apart" mb="md">
+                <Title order={4}>Total:</Title>
+                <Title order={4}>{selectedReport.totalPrice} USD</Title>
+              </Group>
+            )}
             <Group mt='md' position="apart" mb="md">
               <Title order={4}>Fecha:</Title>
-              <Title order={4}>{formatDate(selectedReport.created_at)}</Title>
+              <Title order={4}>{formatDateTime(selectedReport.created_at)}</Title>
             </Group>
-            <Group mt='md' position="apart" mb="md">
-              <Title order={4}>Saldo Disponible:</Title>
-              <Title order={4}>{selectedReport.moneydisp} USD</Title>
-            </Group>
+
+            {userRole !== 'vendedor' && (
+              <Group mt='md' position="apart" mb="md">
+                <Title order={4}>Saldo Disponible:</Title>
+                <Title order={4}>{selectedReport.moneydisp} USD</Title>
+              </Group>
+            )}
 
             {userRole !== 'cliente' && userRole !== 'vendedor' && (
               <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
@@ -149,42 +154,53 @@ function Reports({ user }: ReportsProps) {
         )}
         <Table striped highlightOnHover>
           <tbody>
-            <tr>
-              <td style={{ fontWeight: 'bold', textAlign: 'right' }}>ID:</td>
-              <td style={{ textAlign: 'left' }}>{selectedReport?.playerId}</td>
-            </tr>
-            <tr>
-              <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Nickname:</td>
-              <td style={{ textAlign: 'left' }}>{selectedReport?.nickname}</td>
-            </tr>
-            {userRole !== 'cliente' && userRole !== 'vendedor' && userRole !== 'admin' && (
-              <>
-                <tr>
-                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Serial:</td>
-                  <td style={{ textAlign: 'left' }}>{selectedReport?.pins?.map((pin: { serial: any; }) => pin.serial).join(', ')}</td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Teléfono:</td>
-                  <td style={{ textAlign: 'left' }}>{selectedReport?.phone}</td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Banco:</td>
-                  <td style={{ textAlign: 'left' }}>{selectedReport?.bank}</td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Referencia:</td>
-                  <td style={{ textAlign: 'left' }}>{selectedReport?.reference}</td>
-                </tr>
-                <tr>
-                  <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Fecha de Pago:</td>
-                  <td style={{ textAlign: 'left' }}>{selectedReport?.fechaPago}</td>
-                </tr>
-              </>
+            {selectedReport?.playerId && (
+              <tr>
+                <td style={{ fontWeight: 'bold', textAlign: 'right' }}>ID:</td>
+                <td style={{ textAlign: 'left' }}>{selectedReport.playerId}</td>
+              </tr>
             )}
+            {selectedReport?.nickname && (
+              <tr>
+                <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Nickname:</td>
+                <td style={{ textAlign: 'left' }}>{selectedReport.nickname}</td>
+              </tr>
+            )}
+            {selectedReport?.pins?.length > 0 && (
+              <tr>
+                <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Pin:</td>
+                <td style={{ textAlign: 'left' }}>{selectedReport.pins.map((pin: { serial: any; }) => pin.serial).join(', ')}</td>
+              </tr>
+            )}
+
+            {selectedReport?.phone && (
+              <tr>
+                <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Teléfono:</td>
+                <td style={{ textAlign: 'left' }}>{selectedReport.phone}</td>
+              </tr>
+            )}
+            {selectedReport?.bank && (
+              <tr>
+                <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Banco:</td>
+                <td style={{ textAlign: 'left' }}>{selectedReport.bank}</td>
+              </tr>
+            )}
+            {selectedReport?.reference && (
+              <tr>
+                <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Referencia:</td>
+                <td style={{ textAlign: 'left' }}>{selectedReport.reference}</td>
+              </tr>
+            )}
+            {selectedReport?.fechaPago && (
+              <tr>
+                <td style={{ fontWeight: 'bold', textAlign: 'right' }}>Fecha de Pago:</td>
+                <td style={{ textAlign: 'left' }}>{selectedReport.fechaPago}</td>
+              </tr>
+            )}
+
           </tbody>
         </Table>
       </Modal>
-
 
 
       <Title ta="center" weight={700} mb="lg" order={2}>Reportes de Ventas</Title>

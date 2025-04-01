@@ -98,10 +98,18 @@ export const fetchTransactions = async (
   }
 };
 
-export const formatDate = (dateString: string) => {
+export const formatDateTime = (dateString: string) => {
+  if (!dateString) return "";
   const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES');
+  return date.toLocaleString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
+
 
 export const handlePinClick = (
   report: any,
