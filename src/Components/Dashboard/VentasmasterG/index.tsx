@@ -1,10 +1,12 @@
 import axios from 'axios';
+import SalesPDF from './SalesPDF';  
 import { Report } from '../../../types/types';
 import { useMediaQuery } from "@mantine/hooks";
+import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useEffect, useState } from 'react';
+import { IconCalendarSearch ,IconFileTypePdf } from '@tabler/icons-react';
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
-import { Select, ScrollArea, Card, Group, Title, Text, MultiSelect, Divider, Badge } from '@mantine/core';
-import { IconCalendarSearch } from '@tabler/icons-react';
+import { Select, ScrollArea, Card, Group, Title, Text, MultiSelect, Divider, Badge, Button } from '@mantine/core';
 
 function VentasmasterG() {
 
@@ -30,7 +32,18 @@ function VentasmasterG() {
 
 
     }, []);
+    const productOrder = [
+        "Free Fire 100 Diamantes + 10 Bono",
+        "Free Fire - 310 Diamantes + 31 Bono",
+        "Free Fire 520 Diamantes + 52 Bono",
+        "Free Fire - 1060 Diamantes + 106 Bono",
+        "Free Fire - 2.180 Diamantes + 218 Bono",
+        "Free Fire - 5.600 Diamantes + 560 Bono"
+    ];
 
+    const sortedProductSummary = Array.from(productSummary.entries()).sort((a, b) => {
+        return productOrder.indexOf(a[0]) - productOrder.indexOf(b[0]);
+    });
     useEffect(() => {
         setTotalVentas(filteredSales.length);
         setPrecioTotalVentas(filteredSales.reduce((sum, sale) => sum + sale.totalPrice, 0));
@@ -141,9 +154,28 @@ function VentasmasterG() {
     return (
         <>
             {error && <p style={{ color: 'red' }}>{error}</p>}
+
             <ScrollArea style={{ height: maxHeight - 50 }}>
                 <Title mt={5} order={3}> Resumen de Ventas</Title>
+                <Group position='apart'>
+
                 <Text fz="lg" c="gray" fw={500}>Visualiza y filtra las ventas de productos</Text>
+            {filteredSales.length > 0 && (
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <PDFDownloadLink
+                        document={<SalesPDF filteredSales={filteredSales} totalVentas={totalVentas} precioTotalVentas={precioTotalVentas} />}
+                        fileName="ventas top level.pdf"
+                        style={{ textDecoration: 'none' }}
+                    >
+                        {({ loading }) => (
+                            <Button leftIcon={<IconFileTypePdf/>} style={{ background: '#0c2a85', color: 'white' }} size="md">
+                                {loading ? 'Generando PDF...' : 'Descargar PDF'}
+                            </Button>
+                        )}
+                    </PDFDownloadLink>
+                </div>
+            )}
+                </Group>
                 <MultiSelect
                     label={<Text fz="lg" c="black" fw={500}>Selecciona usuarios</Text>}
                     placeholder="Elige usuarios"
@@ -237,15 +269,16 @@ function VentasmasterG() {
                             </Card>
 
                             <Title mt={15} order={4}>Resumen de productos:</Title>
-                            {Array.from(productSummary.entries()).map(([productName, { count, totalPrice }]) => (
-                                <Card shadow="sm" p="lg" radius="md" withBorder key={productName}>
-                                    <Group position="apart">
-                                        <Title order={5}>{productName}</Title>
-                                        <Text fz="xl" c="#0c2a85" fw={700}>{count} Ventas</Text>
-                                        <Text fz="xl" c="green" fw={700}>${totalPrice.toFixed(2)}</Text>
-                                    </Group>
-                                </Card>
-                            ))}
+                            {sortedProductSummary.map(([productName, { count, totalPrice }]) => (
+    <Card shadow="sm" p="lg" radius="md" withBorder key={productName}>
+        <Group position="apart">
+            <Title order={5}>{productName}</Title>
+            <Text fz="xl" c="#0c2a85" fw={700}>{count} Ventas</Text>
+            <Text fz="xl" c="green" fw={700}>${totalPrice.toFixed(2)}</Text>
+        </Group>
+    </Card>
+))}
+
                         </>
                     )}
                 </div>
@@ -279,17 +312,19 @@ function VentasmasterG() {
                     </Group>
                     <Divider my={10} />
                     <Title order={6} mt={10}>Resumen por producto:</Title>
-                    {Object.entries(resumenPorProducto).map(([product, data]) => (
-                        <Card key={product} shadow="xs" p="md" radius="md" withBorder mt={10}>
-                            <Group position="apart">
-                                <Text fz="md">{product}</Text>
-                                <Group>
-                                    <Text fz="xl" c="#0c2a85" fw={700}>{data.count} <strong>Ventas</strong> </Text>
-                                    <Text fz="xl" c="green" fw={700}> ${data.totalPrice.toFixed(2)}</Text>
-                                </Group>
-                            </Group>
-                        </Card>
-                    ))}
+                    {Object.entries(resumenPorProducto)
+    .sort(([productA], [productB]) => productOrder.indexOf(productA) - productOrder.indexOf(productB))
+    .map(([product, data]) => (
+        <Card key={product} shadow="xs" p="md" radius="md" withBorder mt={10}>
+            <Group position="apart">
+                <Text fz="md">{product}</Text>
+                <Group>
+                    <Text fz="xl" c="#0c2a85" fw={700}>{data.count} <strong>Ventas</strong></Text>
+                    <Text fz="xl" c="green" fw={700}> ${data.totalPrice.toFixed(2)}</Text>
+                </Group>
+            </Group>
+        </Card>
+    ))}
                 </Card>
             );
         })}
