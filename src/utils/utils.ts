@@ -110,7 +110,6 @@ export const formatDateTime = (dateString: string) => {
   });
 };
 
-
 export const handlePinClick = (
   report: any,
   setPines: React.Dispatch<React.SetStateAction<any[]>>,

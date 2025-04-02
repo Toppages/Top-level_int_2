@@ -46,9 +46,7 @@ export interface Report {
     status: string;
     order_id: string;
     pins: Pin[];
-    created_at: {
-        $date: string;
-    };
+    created_at: Date;
     saleId: number;
     __v: number;
 }
