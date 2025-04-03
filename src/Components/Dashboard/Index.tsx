@@ -8,6 +8,7 @@ import AllRetiros from "./AllRetiros";
 import EditmyClients from "./EditmyClients/Index";
 import LimitesmyVend from "./LimitesmyVend/Index";
 import VentasmasterG from "./VentasmasterG";
+import VentaAdminClientes from "./VentaAdminClientes";
 import LimitVendedores from "./LimitVendedores/Index";
 import AdmincargoReports from "./AdmincargoReports";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
@@ -55,9 +56,17 @@ function Dashboard({ user }: DashboardProps) {
                             <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
                         )}
                     </Tabs.List>
+
                     <Tabs.Panel value="Retiro" pt="xs">
-                        <VentasmasterG />
-                    </Tabs.Panel>
+    {userRole === "master" ? (
+        <VentasmasterG />
+    ) : (
+        user && <VentaAdminClientes userHandle={user.handle} />
+    )}
+</Tabs.Panel>
+
+
+
                     <Tabs.Panel value="control" pt="xs">
 
                         {userRole === "master" && user && <UserCountsDisplay token={localStorage.getItem("token")} />}
