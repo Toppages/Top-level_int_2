@@ -8,6 +8,7 @@ import AllRetiros from "./AllRetiros";
 import EditmyClients from "./EditmyClients/Index";
 import LimitesmyVend from "./LimitesmyVend/Index";
 import VentasmasterG from "./VentasmasterG";
+import VentaVendedores from "./VentaVendedores";
 import VentaAdminClientes from "./VentaAdminClientes";
 import LimitVendedores from "./LimitVendedores/Index";
 import AdmincargoReports from "./AdmincargoReports";
@@ -60,10 +61,13 @@ function Dashboard({ user }: DashboardProps) {
                     <Tabs.Panel value="Retiro" pt="xs">
     {userRole === "master" ? (
         <VentasmasterG />
+    ) : userRole === "vendedor" ? (
+        user && <VentaVendedores userHandle={user.handle} />
     ) : (
         user && <VentaAdminClientes userHandle={user.handle} />
     )}
 </Tabs.Panel>
+
 
 
 
