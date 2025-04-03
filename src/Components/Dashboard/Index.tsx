@@ -1,5 +1,4 @@
 import AdminBR from "./AdminBR";
-import ManagePro from "./ManagePro";
 import Registrar from "./Registrar/Index";
 import EditAdmins from "./EditAdmins/Index";
 import EditClient from "./EditClient/Index";
@@ -14,9 +13,10 @@ import LimitVendedores from "./LimitVendedores/Index";
 import AdmincargoReports from "./AdmincargoReports";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
 import AdministrartInventario from "./AdministrartInventario/Index";
+import Generardesdepincentral from "./Generardesdepincentral/Index";
+import { Group, Tabs, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
-import { Group, Tabs, Title } from "@mantine/core";
 interface DashboardProps {
     user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
 }
@@ -51,25 +51,22 @@ function Dashboard({ user }: DashboardProps) {
 
                     <Tabs.List>
                         <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
-                        {(userRole === "master" || userRole === "admin") && (
-
-
+                        {(userRole === "master" || userRole === "admin" || (user?.rango === "oro" && userRole === "cliente")) && (
                             <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
                         )}
+
                     </Tabs.List>
 
+
                     <Tabs.Panel value="Retiro" pt="xs">
-    {userRole === "master" ? (
-        <VentasmasterG />
-    ) : userRole === "vendedor" ? (
-        user && <VentaVendedores userHandle={user.handle} />
-    ) : (
-        user && <VentaAdminClientes userHandle={user.handle} />
-    )}
-</Tabs.Panel>
-
-
-
+                        {userRole === "master" ? (
+                            <VentasmasterG />
+                        ) : userRole === "vendedor" ? (
+                            user && <VentaVendedores userHandle={user.handle} />
+                        ) : (
+                            user && <VentaAdminClientes userHandle={user.handle} />
+                        )}
+                    </Tabs.Panel>
 
                     <Tabs.Panel value="control" pt="xs">
 
@@ -84,12 +81,11 @@ function Dashboard({ user }: DashboardProps) {
 
                                     <AllRetiros />
                                     <Registrar />
-                                    <ManagePro />
                                     <AdminBR />
                                     <AdministrartInventario navOpen={false} setActiveLink={function (): void {
 
                                     }} user={null} />
-                                    {/* <EditUser/> */}
+                                    <Generardesdepincentral />
                                     <DeleteUser />
                                 </Group>
                                 <Group>
@@ -133,7 +129,19 @@ function Dashboard({ user }: DashboardProps) {
                                 <LimitesmyVend user={user} />
                             </>
                         )}
+                        {(userRole === "cliente") && (
+                            <>
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    General
+                                </Title>
+                                <AdmincargoReports user={user} />
 
+                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
+                                    Vendedores
+                                </Title>
+                                <LimitesmyVend user={user} />
+                            </>
+                        )}
                     </Tabs.Panel>
 
 

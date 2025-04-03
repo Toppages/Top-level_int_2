@@ -3,7 +3,7 @@ import { IconMessageCircle, IconPhoto } from '@tabler/icons-react';
 import { Modal, Button, Group, Tabs, Select, TextInput } from '@mantine/core';
 import TableM from '../../TableM/Index';
 import axios from 'axios';
-
+import ManagePro from '../ManagePro';
 import { Product } from '../../../types/types';
 import { toast } from 'sonner';
 
@@ -90,9 +90,12 @@ function AdministrarInventario({ user }: HomeProps) {
   };
   return (
     <>
-      <Modal opened={opened} onClose={handleCloseModals} withCloseButton={false}>
-      <Tabs defaultValue="Central">
+      <Modal opened={opened} onClose={handleCloseModals} title="Administrar Inventario" size="lg">
+      <Tabs defaultValue="Productos">
           <Tabs.List>
+            <Tabs.Tab value="Productos" icon={<IconMessageCircle size={14} />}>
+            Productos en el sistema
+            </Tabs.Tab>
             <Tabs.Tab value="Central" icon={<IconPhoto size={14} />}>
               Pin Central
             </Tabs.Tab>
@@ -150,6 +153,10 @@ function AdministrarInventario({ user }: HomeProps) {
               Agregar
             </Button>
 
+          </Tabs.Panel>
+
+          <Tabs.Panel value="Productos" pt="xs">
+         <ManagePro/>
           </Tabs.Panel>
         </Tabs>
       </Modal>

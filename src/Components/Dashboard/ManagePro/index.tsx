@@ -22,7 +22,6 @@ const exportToExcel = (products: Product[]) => {
     XLSX.writeFile(wb, "Inventarios_Productos.xlsx");
 };
 function ManagePro() {
-    const [opened, setOpened] = useState(false);
     const [productModalOpen, setProductModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const isMobile = useMediaQuery('(max-width: 1000px)');
@@ -42,10 +41,9 @@ function ManagePro() {
     });
 
     useEffect(() => {
-        if (opened) {
-            fetchProductsFromAPI(setProducts, setLoading);
-        }
-    }, [opened]);
+        fetchProductsFromAPI(setProducts, setLoading);
+    }, []);
+
 
     useEffect(() => {
         const sortedProducts = [...products].sort((a, b) => Number(a.price) - Number(b.price));
@@ -63,7 +61,6 @@ function ManagePro() {
 
     const openProductModal = (product: Product) => {
         setSelectedProduct(product);
-        setOpened(false);
         setProductModalOpen(true);
         setValue('price_oro', product.price_oro || 0);
         setValue('price_plata', product.price_plata || 0);
@@ -77,14 +74,9 @@ function ManagePro() {
             const updatedProduct = { ...selectedProduct, ...data };
             await updateProductAPI(updatedProduct);
             setProductModalOpen(false);
-            setOpened(true);
         }
     };
 
-    const closeModal = () => {
-        setSearchQuery('');
-        setOpened(false);
-    };
 
     const rows = filteredProducts.map((product) => (
         <tr key={product._id}>
@@ -108,62 +100,59 @@ function ManagePro() {
 
     return (
         <>
-            <Modal radius='lg' size={isMobile ? '100%' : '80%'} opened={opened} onClose={closeModal} withCloseButton={false}>
-                <Group mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr', gap: '10px', width: '100%' }}>
-                    <Title order={3}>Lista de productos</Title>
-                    <TextInput
-                        radius="lg"
-                        placeholder="Buscar producto"
-                        icon={<IconSearch />}
-                        value={searchQuery}
-                        onChange={(e) => handleSearchChange(e.currentTarget.value)}
-                    />
-                </Group>
-                <Button
-                    mb={10}
-                    style={{ background: '#0c2a85' }}
-                    fullWidth
-                    onClick={() => exportToExcel(filteredProducts)}
-                >
-                    Descargar Inventarios
-                </Button>
+            <Group mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 2fr', gap: '10px', width: '100%' }}>
+                <Title order={3}>Lista de productos</Title>
+                <TextInput
+                    radius="lg"
+                    placeholder="Buscar producto"
+                    icon={<IconSearch />}
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.currentTarget.value)}
+                />
+            </Group>
+            <Button
+                mb={10}
+                style={{ background: '#0c2a85' }}
+                fullWidth
+                onClick={() => exportToExcel(filteredProducts)}
+            >
+                Descargar Inventarios
+            </Button>
 
-                {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                        <Loader color="indigo" size="xl" variant="bars" />
-                    </div>
-                ) : (
-                    <ScrollArea type="never" style={{ height: 300, maxWidth: '100%' }}>
-                        <Table>
-                            <thead style={{ background: '#0c2a85' }}>
-                                <tr>
-                                    <th>
-                                        <Text c='white' ta={'center'}>
-                                            Nombre
-                                        </Text>
-                                    </th>
-                                    <th>
-                                        <Text c='white' ta={'center'}>
-                                            Precio
-                                        </Text>
-                                    </th>
-                                    {!isMobile && (
-                                        <>
-                                            <th> <Text c='white' ta={'center'}>Precio Oro</Text></th>
-                                            <th> <Text c='white' ta={'center'}>Precio Plata</Text></th>
-                                            <th> <Text c='white' ta={'center'}>Precio Bronce</Text></th>
-                                            <th> <Text c='white' ta={'center'}>Disponible</Text></th>
-                                        </>
-                                    )}
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>{rows}</tbody>
-                        </Table>
-                    </ScrollArea>
-                )}
-            </Modal>
-            <Modal radius='lg' size={isMobile ? '100%' : '80%'} opened={productModalOpen} onClose={() => { setProductModalOpen(false); setOpened(true); }} withCloseButton={false}>
+            {loading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                    <Loader color="indigo" size="xl" variant="bars" />
+                </div>
+            ) : (
+
+                <Table>
+                    <thead style={{ background: '#0c2a85' }}>
+                        <tr>
+                            <th>
+                                <Text c='white' ta={'center'}>
+                                    Nombre
+                                </Text>
+                            </th>
+                            <th>
+                                <Text c='white' ta={'center'}>
+                                    Precio
+                                </Text>
+                            </th>
+                            {!isMobile && (
+                                <>
+                                    <th> <Text c='white' ta={'center'}>Precio Oro</Text></th>
+                                    <th> <Text c='white' ta={'center'}>Precio Plata</Text></th>
+                                    <th> <Text c='white' ta={'center'}>Precio Bronce</Text></th>
+                                    <th> <Text c='white' ta={'center'}>Disponible</Text></th>
+                                </>
+                            )}
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>{rows}</tbody>
+                </Table>
+            )}
+            <Modal radius='lg' size={isMobile ? '100%' : '80%'} opened={productModalOpen} onClose={() => { setProductModalOpen(false); }} withCloseButton={false}>
 
                 {selectedProduct && (
                     <form onSubmit={handleSubmit(handleUpdateProduct)}>
@@ -290,7 +279,6 @@ function ManagePro() {
                     </form>
                 )}
             </Modal>
-            <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver Productos</Button>
         </>
     );
 }
