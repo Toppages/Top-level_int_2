@@ -1,10 +1,10 @@
 import axios from 'axios';
-import SalesPDF from './SalesPDF';  
+import SalesPDF from './SalesPDF';
 import { Report } from '../../../types/types';
 import { useMediaQuery } from "@mantine/hooks";
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import { useEffect, useState } from 'react';
-import { IconCalendarSearch ,IconFileTypePdf } from '@tabler/icons-react';
+import { IconCalendarSearch, IconFileTypePdf } from '@tabler/icons-react';
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
 import { Select, ScrollArea, Card, Group, Title, Text, MultiSelect, Divider, Badge, Button } from '@mantine/core';
 
@@ -154,184 +154,187 @@ function VentasmasterG() {
     return (
         <>
             {error && <p style={{ color: 'red' }}>{error}</p>}
+            {filteredSales.length === 0 ? (
+                <p>No hay ventas registradas.</p>
+            ) : (
+                <ScrollArea style={{ height: maxHeight - 50 }}>
+                    <Title mt={5} order={3}> Resumen de Ventas</Title>
+                    <Group position='apart'>
 
-            <ScrollArea style={{ height: maxHeight - 50 }}>
-                <Title mt={5} order={3}> Resumen de Ventas</Title>
-                <Group position='apart'>
-
-                <Text fz="lg" c="gray" fw={500}>Visualiza y filtra las ventas de productos</Text>
-            {filteredSales.length > 0 && (
-                <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                    <PDFDownloadLink
-                        document={<SalesPDF filteredSales={filteredSales} totalVentas={totalVentas} precioTotalVentas={precioTotalVentas} />}
-                        fileName="ventas top level.pdf"
-                        style={{ textDecoration: 'none' }}
-                    >
-                        {({ loading }) => (
-                            <Button leftIcon={<IconFileTypePdf/>} style={{ background: '#0c2a85', color: 'white' }} size="md">
-                                {loading ? 'Generando PDF...' : 'Descargar PDF'}
-                            </Button>
+                        <Text fz="lg" c="gray" fw={500}>Visualiza y filtra las ventas de productos</Text>
+                        {filteredSales.length > 0 && (
+                            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                                <PDFDownloadLink
+                                    document={<SalesPDF filteredSales={filteredSales} totalVentas={totalVentas} precioTotalVentas={precioTotalVentas} />}
+                                    fileName="ventas top level.pdf"
+                                    style={{ textDecoration: 'none' }}
+                                >
+                                    {({ loading }) => (
+                                        <Button leftIcon={<IconFileTypePdf />} style={{ background: '#0c2a85', color: 'white' }} size="md">
+                                            {loading ? 'Generando PDF...' : 'Descargar PDF'}
+                                        </Button>
+                                    )}
+                                </PDFDownloadLink>
+                            </div>
                         )}
-                    </PDFDownloadLink>
-                </div>
-            )}
-                </Group>
-                <MultiSelect
-                    label={<Text fz="lg" c="black" fw={500}>Selecciona usuarios</Text>}
-                    placeholder="Elige usuarios"
-                    data={users}
-                    searchable
-                    value={selectedUsers}
-                    onChange={setSelectedUsers}
-                    radius="md"
-                    size="md"
-                />
+                    </Group>
+                    <MultiSelect
+                        label={<Text fz="lg" c="black" fw={500}>Selecciona usuarios</Text>}
+                        placeholder="Elige usuarios"
+                        data={users}
+                        searchable
+                        value={selectedUsers}
+                        onChange={setSelectedUsers}
+                        radius="md"
+                        size="md"
+                    />
 
-                <Select
-                    label={<Text fz="lg" c="black" fw={500}>Selecciona un filtro de fecha</Text>}
-                    placeholder="Elige una opción"
-                    radius="md"
-                    mb={10}
-                    size="md"
-                    icon={<IconCalendarSearch color='#0c2a85' stroke={2} />}
-                    data={[
-                        { value: 'all', label: 'Todas las ventas' },
-                        { value: 'today', label: 'Hoy' },
-                        { value: 'specific', label: 'Día en específico' },
-                        { value: 'range', label: 'Rango de días' },
-                    ]}
-                    value={selectedDateFilter}
-                    onChange={(value) => setSelectedDateFilter(value ?? 'all')}
-                    transition="pop-top-left"
-                    transitionDuration={80}
-                    transitionTimingFunction="ease"
-                    styles={() => ({
-                        item: {
-                            '&[data-selected]': {
-                                '&, &:hover': {
-                                    backgroundColor: '#0c2a85',
-                                    color: 'white',
+                    <Select
+                        label={<Text fz="lg" c="black" fw={500}>Selecciona un filtro de fecha</Text>}
+                        placeholder="Elige una opción"
+                        radius="md"
+                        mb={10}
+                        size="md"
+                        icon={<IconCalendarSearch color='#0c2a85' stroke={2} />}
+                        data={[
+                            { value: 'all', label: 'Todas las ventas' },
+                            { value: 'today', label: 'Hoy' },
+                            { value: 'specific', label: 'Día en específico' },
+                            { value: 'range', label: 'Rango de días' },
+                        ]}
+                        value={selectedDateFilter}
+                        onChange={(value) => setSelectedDateFilter(value ?? 'all')}
+                        transition="pop-top-left"
+                        transitionDuration={80}
+                        transitionTimingFunction="ease"
+                        styles={() => ({
+                            item: {
+                                '&[data-selected]': {
+                                    '&, &:hover': {
+                                        backgroundColor: '#0c2a85',
+                                        color: 'white',
+                                    },
                                 },
                             },
-                        },
-                    })}
-                />
-
-                {selectedDateFilter === 'specific' && (
-                    <DatePicker
-                        placeholder="Selecciona una fecha"
-                        label="Fecha específica"
-                        value={selectedDate}
-                        radius="md"
-                        size="md"
-                        mb={10}
-                        dropdownType="modal"
-                        onChange={setSelectedDate}
+                        })}
                     />
-                )}
 
-                {selectedDateFilter === 'range' && (
-                    <DateRangePicker
-                        label="Rango de fechas"
-                        placeholder="Selecciona el rango"
-                        value={selectedDateRange}
-                        onChange={setSelectedDateRange}
-                        radius="md"
-                        mb={10}
-                        dropdownType="modal"
-                        size="md"
-                    />
-                )}
+                    {selectedDateFilter === 'specific' && (
+                        <DatePicker
+                            placeholder="Selecciona una fecha"
+                            label="Fecha específica"
+                            value={selectedDate}
+                            radius="md"
+                            size="md"
+                            mb={10}
+                            dropdownType="modal"
+                            onChange={setSelectedDate}
+                        />
+                    )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    {filteredSales.length === 0 ? (
-                        <p>No hay ventas para mostrar.</p>
-                    ) : (
-                        <>
-                            <Card
-                                style={{
-                                    background: "linear-gradient(9deg, rgba(2,0,36,1) 0%, rgba(12,42,133,1) 100%)",
-                                }}
-                                shadow="sm"
-                                p="lg"
-                                radius="md"
-                                withBorder
-                            >
+                    {selectedDateFilter === 'range' && (
+                        <DateRangePicker
+                            label="Rango de fechas"
+                            placeholder="Selecciona el rango"
+                            value={selectedDateRange}
+                            onChange={setSelectedDateRange}
+                            radius="md"
+                            mb={10}
+                            dropdownType="modal"
+                            size="md"
+                        />
+                    )}
 
-                                <Group position="apart">
-                                    <Title c='white' order={4}>Total de Ventas</Title>
-                                    <Group>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        {filteredSales.length === 0 ? (
+                            <p>No hay ventas para mostrar.</p>
+                        ) : (
+                            <>
+                                <Card
+                                    style={{
+                                        background: "linear-gradient(9deg, rgba(2,0,36,1) 0%, rgba(12,42,133,1) 100%)",
+                                    }}
+                                    shadow="sm"
+                                    p="lg"
+                                    radius="md"
+                                    withBorder
+                                >
 
-                                        <Text fz="xl" c='white' fw={700}>{totalVentas} ventas</Text>
-                                        <Text fz="xl" c="green" fw={700}>${precioTotalVentas.toFixed(2)}</Text>
+                                    <Group position="apart">
+                                        <Title c='white' order={4}>Total de Ventas</Title>
+                                        <Group>
+
+                                            <Text fz="xl" c='white' fw={700}>{totalVentas} ventas</Text>
+                                            <Text fz="xl" c="green" fw={700}>${precioTotalVentas.toFixed(2)}</Text>
+                                        </Group>
                                     </Group>
-                                </Group>
-                            </Card>
+                                </Card>
 
-                            <Title mt={15} order={4}>Resumen de productos:</Title>
-                            {sortedProductSummary.map(([productName, { count, totalPrice }]) => (
-    <Card shadow="sm" p="lg" radius="md" withBorder key={productName}>
-        <Group position="apart">
-            <Title order={5}>{productName}</Title>
-            <Text fz="xl" c="#0c2a85" fw={700}>{count} Ventas</Text>
-            <Text fz="xl" c="green" fw={700}>${totalPrice.toFixed(2)}</Text>
-        </Group>
-    </Card>
-))}
+                                <Title mt={15} order={4}>Resumen de productos:</Title>
+                                {sortedProductSummary.map(([productName, { count, totalPrice }]) => (
+                                    <Card shadow="sm" p="lg" radius="md" withBorder key={productName}>
+                                        <Group position="apart">
+                                            <Title order={5}>{productName}</Title>
+                                            <Text fz="xl" c="#0c2a85" fw={700}>{count} Ventas</Text>
+                                            <Text fz="xl" c="green" fw={700}>${totalPrice.toFixed(2)}</Text>
+                                        </Group>
+                                    </Card>
+                                ))}
 
+                            </>
+                        )}
+                    </div>
+                    {(selectedUsers.length === 0 || (selectedUsers.length > 1 && !selectedUsers.includes('all'))) && (
+                        <>
+                            <Title mt={15} order={4}>Ventas por usuario:</Title>
+                            {users.slice(1).map(user => {
+                                const ventasUsuario = filteredSales.filter(sale => sale.user?.handle === user.value);
+
+                                if (ventasUsuario.length === 0) return null;
+
+                                const resumenPorProducto = ventasUsuario.reduce((acc: Record<string, { count: number; totalPrice: number }>, sale) => {
+                                    if (!acc[sale.productName]) {
+                                        acc[sale.productName] = { count: 0, totalPrice: 0 };
+                                    }
+                                    acc[sale.productName].count += 1;
+                                    acc[sale.productName].totalPrice += sale.totalPrice;
+                                    return acc;
+                                }, {} as Record<string, { count: number; totalPrice: number }>);
+
+                                const totalUsuario = ventasUsuario.reduce((sum, sale) => sum + sale.totalPrice, 0);
+
+                                return (
+                                    <Card mt={10} shadow="sm" p="lg" radius="md" withBorder key={user.value}>
+                                        <Group position="apart">
+                                            <Title order={5}>{user.label}</Title>
+                                            <Group>
+                                                <Badge fz="md" color="gray">Total de ventas: {ventasUsuario.length}</Badge>
+                                                <Text fz="xl" c="green" fw={700}>${totalUsuario.toFixed(2)}</Text>
+                                            </Group>
+                                        </Group>
+                                        <Divider my={10} />
+                                        <Title order={6} mt={10}>Resumen por producto:</Title>
+                                        {Object.entries(resumenPorProducto)
+                                            .sort(([productA], [productB]) => productOrder.indexOf(productA) - productOrder.indexOf(productB))
+                                            .map(([product, data]) => (
+                                                <Card key={product} shadow="xs" p="md" radius="md" withBorder mt={10}>
+                                                    <Group position="apart">
+                                                        <Text fz="md">{product}</Text>
+                                                        <Group>
+                                                            <Text fz="xl" c="#0c2a85" fw={700}>{data.count} <strong>Ventas</strong></Text>
+                                                            <Text fz="xl" c="green" fw={700}> ${data.totalPrice.toFixed(2)}</Text>
+                                                        </Group>
+                                                    </Group>
+                                                </Card>
+                                            ))}
+                                    </Card>
+                                );
+                            })}
                         </>
                     )}
-                </div>
-                {(selectedUsers.length === 0 || (selectedUsers.length > 1 && !selectedUsers.includes('all'))) && (
-    <>
-        <Title mt={15} order={4}>Ventas por usuario:</Title>
-        {users.slice(1).map(user => { 
-            const ventasUsuario = filteredSales.filter(sale => sale.user?.handle === user.value);
 
-            if (ventasUsuario.length === 0) return null;
-
-            const resumenPorProducto = ventasUsuario.reduce((acc: Record<string, { count: number; totalPrice: number }>, sale) => {
-                if (!acc[sale.productName]) {
-                    acc[sale.productName] = { count: 0, totalPrice: 0 };
-                }
-                acc[sale.productName].count += 1;
-                acc[sale.productName].totalPrice += sale.totalPrice;
-                return acc;
-            }, {} as Record<string, { count: number; totalPrice: number }>);
-
-            const totalUsuario = ventasUsuario.reduce((sum, sale) => sum + sale.totalPrice, 0);
-
-            return (
-                <Card mt={10} shadow="sm" p="lg" radius="md" withBorder key={user.value}>
-                    <Group position="apart">
-                        <Title order={5}>{user.label}</Title>
-                        <Group>
-                            <Badge fz="md" color="gray">Total de ventas: {ventasUsuario.length}</Badge>
-                            <Text fz="xl" c="green" fw={700}>${totalUsuario.toFixed(2)}</Text>
-                        </Group>
-                    </Group>
-                    <Divider my={10} />
-                    <Title order={6} mt={10}>Resumen por producto:</Title>
-                    {Object.entries(resumenPorProducto)
-    .sort(([productA], [productB]) => productOrder.indexOf(productA) - productOrder.indexOf(productB))
-    .map(([product, data]) => (
-        <Card key={product} shadow="xs" p="md" radius="md" withBorder mt={10}>
-            <Group position="apart">
-                <Text fz="md">{product}</Text>
-                <Group>
-                    <Text fz="xl" c="#0c2a85" fw={700}>{data.count} <strong>Ventas</strong></Text>
-                    <Text fz="xl" c="green" fw={700}> ${data.totalPrice.toFixed(2)}</Text>
-                </Group>
-            </Group>
-        </Card>
-    ))}
-                </Card>
-            );
-        })}
-    </>
-)}
-
-            </ScrollArea>
+                </ScrollArea>
+            )}
         </>
     );
 }

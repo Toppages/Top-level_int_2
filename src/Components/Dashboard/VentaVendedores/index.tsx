@@ -145,127 +145,131 @@ function VentaVendedores({ userHandle }: VentaAdminClientesProps) {
     return (
         <>
             {error && <p style={{ color: 'red' }}>{error}</p>}
+            {filteredSales.length === 0 ? (
+                <p>No hay ventas registradas.</p>
+            ) : (
+                <ScrollArea style={{ height: maxHeight - 50 }}>
+                    <Title mt={5} order={3}> Resumen de Ventas</Title>
+                    <Group position='apart'>
 
-            <ScrollArea style={{ height: maxHeight - 50 }}>
-                <Title mt={5} order={3}> Resumen de Ventas</Title>
-                <Group position='apart'>
-
-                    <Text fz="lg" c="gray" fw={500}>Visualiza y filtra las ventas de productos</Text>
-                    {filteredSales.length > 0 && (
-                        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                            <PDFDownloadLink
-                                document={<SalesPDF userHandle={userHandle} filteredSales={filteredSales} totalVentas={totalVentas} precioTotalVentas={precioTotalVentas} />}
-                                fileName={`Resumen de ventas ${userHandle}.pdf`}
-                                style={{ textDecoration: 'none' }}
-                            >
-                                {({ loading }) => (
-                                    <Button leftIcon={<IconFileTypePdf />} style={{ background: '#0c2a85', color: 'white' }} size="md">
-                                        {loading ? 'Generando PDF...' : 'Descargar PDF'}
-                                    </Button>
-                                )}
-                            </PDFDownloadLink>
-                        </div>
-                    )}
-                </Group>
+                        <Text fz="lg" c="gray" fw={500}>Visualiza y filtra las ventas de productos</Text>
+                        {filteredSales.length > 0 && (
+                            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                                <PDFDownloadLink
+                                    document={<SalesPDF userHandle={userHandle} filteredSales={filteredSales} totalVentas={totalVentas} precioTotalVentas={precioTotalVentas} />}
+                                    fileName={`Resumen de ventas ${userHandle}.pdf`}
+                                    style={{ textDecoration: 'none' }}
+                                >
+                                    {({ loading }) => (
+                                        <Button leftIcon={<IconFileTypePdf />} style={{ background: '#0c2a85', color: 'white' }} size="md">
+                                            {loading ? 'Generando PDF...' : 'Descargar PDF'}
+                                        </Button>
+                                    )}
+                                </PDFDownloadLink>
+                            </div>
+                        )}
+                    </Group>
 
 
-                <Select
-                    label={<Text fz="lg" c="black" fw={500}>Selecciona un filtro de fecha</Text>}
-                    placeholder="Elige una opción"
-                    radius="md"
-                    mb={10}
-                    size="md"
-                    icon={<IconCalendarSearch color='#0c2a85' stroke={2} />}
-                    data={[
-                        { value: 'all', label: 'Todas las ventas' },
-                        { value: 'today', label: 'Hoy' },
-                        { value: 'specific', label: 'Día en específico' },
-                        { value: 'range', label: 'Rango de días' },
-                    ]}
-                    value={selectedDateFilter}
-                    onChange={(value) => setSelectedDateFilter(value ?? 'all')}
-                    transition="pop-top-left"
-                    transitionDuration={80}
-                    transitionTimingFunction="ease"
-                    styles={() => ({
-                        item: {
-                            '&[data-selected]': {
-                                '&, &:hover': {
-                                    backgroundColor: '#0c2a85',
-                                    color: 'white',
+                    <Select
+                        label={<Text fz="lg" c="black" fw={500}>Selecciona un filtro de fecha</Text>}
+                        placeholder="Elige una opción"
+                        radius="md"
+                        mb={10}
+                        size="md"
+                        icon={<IconCalendarSearch color='#0c2a85' stroke={2} />}
+                        data={[
+                            { value: 'all', label: 'Todas las ventas' },
+                            { value: 'today', label: 'Hoy' },
+                            { value: 'specific', label: 'Día en específico' },
+                            { value: 'range', label: 'Rango de días' },
+                        ]}
+                        value={selectedDateFilter}
+                        onChange={(value) => setSelectedDateFilter(value ?? 'all')}
+                        transition="pop-top-left"
+                        transitionDuration={80}
+                        transitionTimingFunction="ease"
+                        styles={() => ({
+                            item: {
+                                '&[data-selected]': {
+                                    '&, &:hover': {
+                                        backgroundColor: '#0c2a85',
+                                        color: 'white',
+                                    },
                                 },
                             },
-                        },
-                    })}
-                />
-
-                {selectedDateFilter === 'specific' && (
-                    <DatePicker
-                        placeholder="Selecciona una fecha"
-                        label="Fecha específica"
-                        value={selectedDate}
-                        radius="md"
-                        size="md"
-                        mb={10}
-                        dropdownType="modal"
-                        onChange={setSelectedDate}
+                        })}
                     />
-                )}
 
-                {selectedDateFilter === 'range' && (
-                    <DateRangePicker
-                        label="Rango de fechas"
-                        placeholder="Selecciona el rango"
-                        value={selectedDateRange}
-                        onChange={setSelectedDateRange}
-                        radius="md"
-                        mb={10}
-                        dropdownType="modal"
-                        size="md"
-                    />
-                )}
+                    {selectedDateFilter === 'specific' && (
+                        <DatePicker
+                            placeholder="Selecciona una fecha"
+                            label="Fecha específica"
+                            value={selectedDate}
+                            radius="md"
+                            size="md"
+                            mb={10}
+                            dropdownType="modal"
+                            onChange={setSelectedDate}
+                        />
+                    )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    {filteredSales.length === 0 ? (
-                        <p>No hay ventas para mostrar.</p>
-                    ) : (
-                        <>
-                            <Card
-                                style={{
-                                    background: "linear-gradient(9deg, rgba(2,0,36,1) 0%, rgba(12,42,133,1) 100%)",
-                                }}
-                                shadow="sm"
-                                p="lg"
-                                radius="md"
-                                withBorder
-                            >
+                    {selectedDateFilter === 'range' && (
+                        <DateRangePicker
+                            label="Rango de fechas"
+                            placeholder="Selecciona el rango"
+                            value={selectedDateRange}
+                            onChange={setSelectedDateRange}
+                            radius="md"
+                            mb={10}
+                            dropdownType="modal"
+                            size="md"
+                        />
+                    )}
 
-                                <Group position="apart">
-                                    <Title c='white' order={4}>Total de Ventas</Title>
-                                    <Group>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        {filteredSales.length === 0 ? (
+                            <p>No hay ventas para mostrar.</p>
+                        ) : (
+                            <>
+                                <Card
+                                    style={{
+                                        background: "linear-gradient(9deg, rgba(2,0,36,1) 0%, rgba(12,42,133,1) 100%)",
+                                    }}
+                                    shadow="sm"
+                                    p="lg"
+                                    radius="md"
+                                    withBorder
+                                >
 
-                                        <Text fz="xl" c='white' fw={700}>{totalVentas} ventas</Text>
-                                        <Text fz="xl" c="green" fw={700}>${precioTotalVentas.toFixed(2)}</Text>
-                                    </Group>
-                                </Group>
-                            </Card>
-
-                            <Title mt={15} order={4}>Resumen de productos:</Title>
-                            {sortedProductSummary.map(([productName, { count, totalPrice }]) => (
-                                <Card shadow="sm" p="lg" radius="md" withBorder key={productName}>
                                     <Group position="apart">
-                                        <Title order={5}>{productName}</Title>
-                                        <Text fz="xl" c="#0c2a85" fw={700}>{count} Ventas</Text>
-                                        <Text fz="xl" c="green" fw={700}>${totalPrice.toFixed(2)}</Text>
+                                        <Title c='white' order={4}>Total de Ventas</Title>
+                                        <Group>
+
+                                            <Text fz="xl" c='white' fw={700}>{totalVentas} ventas</Text>
+                                            <Text fz="xl" c="green" fw={700}>${precioTotalVentas.toFixed(2)}</Text>
+                                        </Group>
                                     </Group>
                                 </Card>
-                            ))}
 
-                        </>
-                    )}
-                </div>
+                                <Title mt={15} order={4}>Resumen de productos:</Title>
+                                {sortedProductSummary.map(([productName, { count, totalPrice }]) => (
+                                    <Card shadow="sm" p="lg" radius="md" withBorder key={productName}>
+                                        <Group position="apart">
+                                            <Title order={5}>{productName}</Title>
+                                            <Text fz="xl" c="#0c2a85" fw={700}>{count} Ventas</Text>
+                                            <Text fz="xl" c="green" fw={700}>${totalPrice.toFixed(2)}</Text>
+                                        </Group>
+                                    </Card>
+                                ))}
 
-            </ScrollArea>
+                            </>
+                        )}
+                    </div>
+
+                </ScrollArea>
+
+            )}
         </>
     );
 }
