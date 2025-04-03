@@ -45,7 +45,6 @@ type SalesPDFProps = {
 };
 
 const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioTotalVentas }) => {
-    // Agrupar ventas por producto
     const productSummary = filteredSales.reduce((acc, sale) => {
         if (!acc[sale.productName]) {
             acc[sale.productName] = { count: 0, totalPrice: 0 };
@@ -55,7 +54,6 @@ const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioT
         return acc;
     }, {} as Record<string, { count: number; totalPrice: number }>);
 
-    // Agrupar ventas por usuario
     const salesByUser = filteredSales.reduce((acc, sale) => {
         const userHandle = sale.user?.handle || 'Desconocido';
         if (!acc[userHandle]) {
@@ -93,7 +91,6 @@ const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioT
                 </View>
             </Page>
 
-            {/* Páginas separadas para cada usuario */}
             {Object.entries(salesByUser).map(([user, sales]) => {
                 const totalUserSales = sales.length;
                 const totalUserPrice = sales.reduce((sum, sale) => sum + sale.totalPrice, 0);

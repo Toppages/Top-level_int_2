@@ -285,7 +285,7 @@ function VentasmasterG() {
                 {(selectedUsers.length === 0 || (selectedUsers.length > 1 && !selectedUsers.includes('all'))) && (
     <>
         <Title mt={15} order={4}>Ventas por usuario:</Title>
-        {users.slice(1).map(user => { // Iteramos sobre todos los usuarios excluyendo "Todas las ventas"
+        {users.slice(1).map(user => { 
             const ventasUsuario = filteredSales.filter(sale => sale.user?.handle === user.value);
 
             if (ventasUsuario.length === 0) return null;
