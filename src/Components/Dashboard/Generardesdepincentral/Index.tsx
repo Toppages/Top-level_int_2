@@ -1,17 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Modal, Button, Stepper, Group, Table, ActionIcon, Text, NumberInput } from '@mantine/core';
 import axios from 'axios';
+import moment from 'moment';
+import CryptoJS from 'crypto-js';
 import { toast } from 'sonner';
 import { IconShoppingCart } from '@tabler/icons-react';
+import { useState, useEffect } from 'react';
+import { Modal, Button, Stepper, Group, Table, ActionIcon, Text, NumberInput } from '@mantine/core';
 
 function Generardesdepincentral() {
     const [opened, setOpened] = useState(false);
     const [active, setActive] = useState(0);
-    const [products, setProducts] = useState<{ name: string; price: number }[]>([]);
-    const [selectedProduct, setSelectedProduct] = useState<{ name: string; price: number } | null>(null);
+    const [products, setProducts] = useState<{ code: any; name: string; price: number }[]>([]);
+    const [selectedProduct, setSelectedProduct] = useState<{
+        code: any; name: string; price: number
+    } | null>(null);
     const [loading, setLoading] = useState(false);
     const [quantity, setQuantity] = useState(1);
 
+    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
     const nextStep = () => setActive((current) => (current < 3 ? current + 1 : current));
     const prevStep = () => setActive((current) => (current > 0 ? current - 1 : current));
 
@@ -26,7 +31,12 @@ function Generardesdepincentral() {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`);
             if (response.status === 200) {
-                const sortedProducts = response.data.sort((a: any, b: any) => a.price - b.price);
+                const sortedProducts = response.data.map((product: any) => ({
+                    code: product.code || "defaultCode", // Ensure code exists
+                    name: product.name,
+                    price: product.price
+                })).sort((a: any, b: any) => a.price - b.price);
+
                 setProducts(sortedProducts);
             }
         } catch (error) {
@@ -35,6 +45,131 @@ function Generardesdepincentral() {
             setLoading(false);
         }
     };
+
+
+    const handleAuthorize = async () => {
+        if (!selectedProduct) {
+            return;
+        }
+
+        if (quantity < 1 || quantity > 10) {
+            return;
+        }
+
+        setIsAuthorizing(true);
+
+        const apiKey = import.meta.env.VITE_API_KEY;
+        const apiSecret = import.meta.env.VITE_API_SECRET;
+
+        if (!apiKey || !apiSecret) {
+            setIsAuthorizing(false);
+            return;
+        }
+
+        const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
+        const url = 'https://pincentral.baul.pro/api/pins/authorize';
+        const route = "/api/pins/authorize";
+        const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
+
+        const body = {
+            product: selectedProduct.code,
+            quantity: quantity,
+            order_id: moment().format("YYYYMMDD_HHmmss"),
+            client_name: "Juan Pérez",
+            client_email: "juanperez@email.com"
+        };
+
+        const jsonBody = JSON.stringify(body);
+        const hmacData = `POST${routeForHmac}${date}${jsonBody}`;
+        const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
+        const authorizationHeader = `${apiKey}:${hmacSignature}`;
+
+        try {
+            const response = await axios.post(url, body, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Date': date,
+                    'Authorization': authorizationHeader
+                }
+            });
+
+            if (response.status === 200 && response.data.status === "authorized") {
+                const captureResponse = await handleCapture(response.data.id);
+                if (captureResponse.length > 0) {
+                    (captureResponse);
+                }
+            } else {
+                console.error("Error en la solicitud de autorización.");
+            }
+        } catch (error) {
+            console.error("Error en la solicitud de autorización:", error);
+        } finally {
+            setIsAuthorizing(false);
+        }
+    };
+
+    const handleCapture = async (playerId: string) => {
+        if (!playerId || !selectedProduct) {
+            setIsAuthorizing(false);
+            return [];
+        }
+    
+        const apiKey = import.meta.env.VITE_API_KEY;
+        const apiSecret = import.meta.env.VITE_API_SECRET;
+    
+        if (!apiKey || !apiSecret) {
+            console.error("Error en la solicitud de captura");
+            setIsAuthorizing(false);
+            return [];
+        }
+    
+        const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
+        const captureUrl = 'https://pincentral.baul.pro/api/pins/capture';
+        const captureBody = {
+            id: playerId
+        };
+    
+        const jsonBody = JSON.stringify(captureBody);
+    
+        const verb = "POST";
+        const route = "/api/pins/capture";
+        const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
+    
+        const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
+        const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
+        const authorizationHeader = `${apiKey}:${hmacSignature}`;
+    
+        try {
+            const response = await axios.post(captureUrl, captureBody, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Date': date,
+                    'Authorization': authorizationHeader
+                }
+            });
+    
+            if (response.status === 200 && response.data.status === "captured") {
+                const pins = response.data.pins.map((pin: { key: any; }) => pin.key);
+    
+                // Aquí almacenamos los pines en la base de datos
+                const inventoryLogData = {
+                    code: selectedProduct.code,
+                    pins: pins, // Pines obtenidos
+                };
+    
+                // Llamada al backend para agregar los pines al inventario y registrar el movimiento
+                await axios.post(`${import.meta.env.VITE_API_BASE_URL}/inventory/register-log`, inventoryLogData);
+                toast.success('Movimiento registrado exitosamente en el inventario');
+            }
+    
+        } catch (error) {
+            console.error("Error en la solicitud de captura:", error);
+        } finally {
+            setIsAuthorizing(false);
+        }
+    
+        return [];
+    }; 
 
     return (
         <>
@@ -98,16 +233,19 @@ function Generardesdepincentral() {
                                     size="md"
                                 />
                                 <Group mt={15} position="apart" mb="md">
-                                <Text size="md">Precio total: {(selectedProduct.price).toFixed(3)} USD</Text>
-                                <Text size="md">Precio total: {(selectedProduct.price * quantity).toFixed(3)} USD</Text>
+                                    <Text size="md">Precio total: {(selectedProduct.price).toFixed(3)} USD</Text>
+                                    <Text size="md">Precio total: {(selectedProduct.price * quantity).toFixed(3)} USD</Text>
                                 </Group>
                             </>
                         )}
                         <Group position="center" mt="xl">
+                            <Button style={{ background: 'grey', color: 'white' }} variant="default" onClick={prevStep}>Atras</Button>
                             <Button
-                                style={{ background: 'grey', color: 'white' }} variant="default" onClick={prevStep}>Back</Button>
-                            <Button
-                                style={{ background: '#0c2a85', color: 'white' }} onClick={nextStep}>Next step</Button>
+                                style={{ background: '#0c2a85', color: 'white' }}
+                                onClick={() => handleAuthorize()}
+                            >
+                                Generar
+                            </Button>
                         </Group>
                     </Stepper.Step>
 
@@ -117,7 +255,7 @@ function Generardesdepincentral() {
             </Modal>
 
             <Group position="center">
-                <Button onClick={() => setOpened(true)}>Pin central</Button>
+                <Button style={{ background: '#0c2a85', color: 'white' }} onClick={() => setOpened(true)}>Pin central</Button>
             </Group>
         </>
     );

@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { IconAdjustments, IconSearch } from '@tabler/icons-react';
 import { fetchProductsFromAPI, updateProductAPI } from '../../../utils/utils';
-import { Table, Button, Modal, ScrollArea, ActionIcon, Title, Group, Loader, Text, TextInput, Switch, NumberInput } from '@mantine/core';
+import { Table, Button, Modal, ActionIcon, Title, Group, Loader, Text, TextInput, Switch, NumberInput } from '@mantine/core';
 import * as XLSX from 'xlsx';
 
 const exportToExcel = (products: Product[]) => {
