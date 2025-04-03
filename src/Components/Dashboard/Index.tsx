@@ -85,7 +85,7 @@ function Dashboard({ user }: DashboardProps) {
                                     <AdministrartInventario navOpen={false} setActiveLink={function (): void {
 
                                     }} user={null} />
-                                    <Generardesdepincentral />
+                                    <Generardesdepincentral/>
                                     <DeleteUser />
                                 </Group>
                                 <Group>
