@@ -157,10 +157,10 @@ function Registrar() {
                             label="Nombre de usuario"
                             radius='md'
                             {...register("handle", {
-                                required: "El handle es obligatorio",
+                                required: "El Nombre de usuario es obligatorio",
                                 pattern: {
                                     value: /^[a-zA-Z0-9_]+$/,
-                                    message: "El handle solo puede contener letras, números y guiones bajos",
+                                    message: "El Nombre de usuario solo puede contener letras, números y guiones bajos",
                                 },
                             })}
                             error={errors.handle?.message}

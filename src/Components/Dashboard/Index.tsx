@@ -7,6 +7,7 @@ import AllRetiros from "./AllRetiros";
 import EditmyClients from "./EditmyClients/Index";
 import LimitesmyVend from "./LimitesmyVend/Index";
 import VentasmasterG from "./VentasmasterG";
+import EditUser from "./EditUser";
 import VentaVendedores from "./VentaVendedores";
 import VentaAdminClientes from "./VentaAdminClientes";
 import LimitVendedores from "./LimitVendedores/Index";
@@ -86,6 +87,7 @@ function Dashboard({ user }: DashboardProps) {
 
                                     }} user={null} />
                                     <Generardesdepincentral/>
+                                    <EditUser />
                                     <DeleteUser />
                                 </Group>
                                 <Group>
