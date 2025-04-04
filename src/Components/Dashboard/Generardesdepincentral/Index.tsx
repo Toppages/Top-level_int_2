@@ -2,9 +2,9 @@ import axios from 'axios';
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
 import { toast } from 'sonner';
-import { IconShoppingCart } from '@tabler/icons-react';
+import { IconCheck, IconCopy, IconShoppingCart } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
-import { Modal, Button, Stepper, Group, Table, ActionIcon, Text, NumberInput } from '@mantine/core';
+import { Modal, Button, Stepper, Group, Table, ActionIcon, Text, NumberInput, CopyButton, Tooltip } from '@mantine/core';
 
 function Generardesdepincentral() {
     const [opened, setOpened] = useState(false);
@@ -15,8 +15,10 @@ function Generardesdepincentral() {
     } | null>(null);
     const [loading, setLoading] = useState(false);
     const [quantity, setQuantity] = useState(1);
+    const [, setIsAuthorizing] = useState<boolean>(false);
+    const [generating, setGenerating] = useState<boolean>(false);
+    const [capturedPins, setCapturedPins] = useState<string[]>([]);
 
-    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
     const nextStep = () => setActive((current) => (current < 3 ? current + 1 : current));
     const prevStep = () => setActive((current) => (current > 0 ? current - 1 : current));
 
@@ -32,7 +34,7 @@ function Generardesdepincentral() {
             const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`);
             if (response.status === 200) {
                 const sortedProducts = response.data.map((product: any) => ({
-                    code: product.code || "defaultCode", // Ensure code exists
+                    code: product.code || "defaultCode",
                     name: product.name,
                     price: product.price
                 })).sort((a: any, b: any) => a.price - b.price);
@@ -46,7 +48,6 @@ function Generardesdepincentral() {
         }
     };
 
-
     const handleAuthorize = async () => {
         if (!selectedProduct) {
             return;
@@ -56,12 +57,14 @@ function Generardesdepincentral() {
             return;
         }
 
+        setGenerating(true); // Cambiar estado para mostrar "Generando"
         setIsAuthorizing(true);
 
         const apiKey = import.meta.env.VITE_API_KEY;
         const apiSecret = import.meta.env.VITE_API_SECRET;
 
         if (!apiKey || !apiSecret) {
+            setGenerating(false);
             setIsAuthorizing(false);
             return;
         }
@@ -96,8 +99,9 @@ function Generardesdepincentral() {
             if (response.status === 200 && response.data.status === "authorized") {
                 const captureResponse = await handleCapture(response.data.id);
                 if (captureResponse.length > 0) {
-                    (captureResponse);
+                    // Aquí puedes manejar la respuesta de la captura si es necesario
                 }
+                nextStep(); // Avanzar al paso 3
             } else {
                 console.error("Error en la solicitud de autorización.");
             }
@@ -105,6 +109,7 @@ function Generardesdepincentral() {
             console.error("Error en la solicitud de autorización:", error);
         } finally {
             setIsAuthorizing(false);
+            setGenerating(false); // Cambiar el estado a 'false' una vez que termine el proceso
         }
     };
 
@@ -113,32 +118,32 @@ function Generardesdepincentral() {
             setIsAuthorizing(false);
             return [];
         }
-    
+
         const apiKey = import.meta.env.VITE_API_KEY;
         const apiSecret = import.meta.env.VITE_API_SECRET;
-    
+
         if (!apiKey || !apiSecret) {
             console.error("Error en la solicitud de captura");
             setIsAuthorizing(false);
             return [];
         }
-    
+
         const date = moment().utc().format("YYYY-MM-DDTHH:mm:ss[Z]");
         const captureUrl = 'https://pincentral.baul.pro/api/pins/capture';
         const captureBody = {
             id: playerId
         };
-    
+
         const jsonBody = JSON.stringify(captureBody);
-    
+
         const verb = "POST";
         const route = "/api/pins/capture";
         const routeForHmac = route.startsWith("/") ? route.substring(1) : route;
-    
+
         const hmacData = `${verb}${routeForHmac}${date}${jsonBody}`;
         const hmacSignature = CryptoJS.HmacSHA256(hmacData, apiSecret).toString(CryptoJS.enc.Hex);
         const authorizationHeader = `${apiKey}:${hmacSignature}`;
-    
+
         try {
             const response = await axios.post(captureUrl, captureBody, {
                 headers: {
@@ -147,33 +152,40 @@ function Generardesdepincentral() {
                     'Authorization': authorizationHeader
                 }
             });
-    
+
             if (response.status === 200 && response.data.status === "captured") {
-                const pins = response.data.pins.map((pin: { key: any; }) => pin.key);
-    
-                // Aquí almacenamos los pines en la base de datos
+                const pins = response.data.pins.map((pin: { key: any }) => pin.key);
+                setCapturedPins(pins);
+
+
                 const inventoryLogData = {
                     code: selectedProduct.code,
-                    pins: pins, // Pines obtenidos
+                    pins: pins,
                 };
-    
-                // Llamada al backend para agregar los pines al inventario y registrar el movimiento
+
                 await axios.post(`${import.meta.env.VITE_API_BASE_URL}/inventory/register-log`, inventoryLogData);
                 toast.success('Movimiento registrado exitosamente en el inventario');
             }
-    
+
         } catch (error) {
             console.error("Error en la solicitud de captura:", error);
         } finally {
             setIsAuthorizing(false);
         }
-    
+
         return [];
-    }; 
+    };
+    const handleClose = () => {
+        setOpened(false);
+        setActive(0);
+        setCapturedPins([]); // Si querés limpiar los pines también
+        setSelectedProduct(null);
+        setQuantity(1);
+    };
 
     return (
         <>
-            <Modal size="lg" opened={opened} onClose={() => setOpened(false)} withCloseButton={false}>
+            <Modal size="lg" opened={opened} onClose={handleClose} withCloseButton={false}>
                 <Stepper color="#0c2a85" active={active} onStepClick={setActive} allowNextStepsSelect={false} breakpoint="sm">
                     <Stepper.Step label="Juegos">
                         <Table>
@@ -241,16 +253,94 @@ function Generardesdepincentral() {
                         <Group position="center" mt="xl">
                             <Button style={{ background: 'grey', color: 'white' }} variant="default" onClick={prevStep}>Atras</Button>
                             <Button
-                                style={{ background: '#0c2a85', color: 'white' }}
+                                style={{
+                                    background: generating ? 'grey' : '#0c2a85',
+                                    color: 'white'
+                                }}
                                 onClick={() => handleAuthorize()}
+                                disabled={generating}
                             >
-                                Generar
+                                {generating ? 'Generando...' : 'Generar'}
                             </Button>
+
                         </Group>
                     </Stepper.Step>
+                    <Stepper.Step label="Finalizar">
+                        <Text size="lg" weight={500} mb="sm">Pines generados:</Text>
+                        {capturedPins.length > 0 ? (
+                            <Table striped highlightOnHover>
+                                <thead style={{ background: '#0c2a85', color: 'white' }}>
+                                    <tr>
+                                        <th style={{ textAlign: 'center', color: 'white' }}>Pin</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {capturedPins.map((pin, index) => (
+                                        <tr key={index}>
+                                            <td style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span>{pin}</span>
+                                                <CopyButton value={pin} timeout={1500}>
+                                                    {({ copied, copy }) => (
+                                                        <Tooltip label={copied ? "Copiado" : "Copiar"} withArrow position="right">
+                                                            <Button
+                                                                size="xs"
+                                                                style={{
+                                                                    background: '#0c2a85',
+                                                                    color: 'white'
+                                                                }}
+                                                                color={copied ? 'teal' : 'blue'}
+                                                                onClick={copy}
+                                                            >
+                                                                {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                                                            </Button>
+                                                        </Tooltip>
+                                                    )}
+                                                </CopyButton>
+                                            </td>
+                                        </tr>
+                                    ))}
 
-                    <Stepper.Step label="Finalizar">Step 3 content: Get full access</Stepper.Step>
-                    <Stepper.Completed>Completed, click back button to get to previous step</Stepper.Completed>
+                                </tbody>
+                            </Table>
+                        ) : (
+                            <Text>No se recibieron pines.</Text>
+                        )}
+
+                        <Group position='center' mt="xl" mb="md">
+
+                            <CopyButton value={capturedPins.join('\n')} timeout={1500}>
+                                {({ copied, copy }) => (
+                                    <Tooltip label={copied ? "Todos copiados" : "Copiar todos"} withArrow position="right">
+                                        <Button
+                                            mb="md"
+                                            color={copied ? 'teal' : '#0c2a85'}
+                                            onClick={copy}
+                                            size="sm"
+                                            style={{
+                                                background: '#0c2a85',
+                                                color: 'white'
+                                            }}
+
+                                        >
+                                            {copied ? '✓ Todos copiados' : 'Copiar todos'}
+                                        </Button>
+                                    </Tooltip>
+                                )}
+                            </CopyButton>
+                        </Group>
+
+                        <Button
+                            fullWidth
+                            color="red"
+                            style={{ background: 'red', color: 'white' }}
+                            onClick={handleClose}
+                        >
+                            Finalizar
+                        </Button>
+                    </Stepper.Step>
+
+                    <Stepper.Completed>Completado</Stepper.Completed>
                 </Stepper>
             </Modal>
 
