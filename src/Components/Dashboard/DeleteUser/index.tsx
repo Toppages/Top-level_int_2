@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { Modal, Button, Group, Stack, Select } from "@mantine/core";
+import { IconUserX } from "@tabler/icons-react";
 
 interface Client {
     _id: string;
@@ -99,7 +100,7 @@ const DeleteUser = () => {
                     </Group>
                 </form>
             </Modal>
-            <Button style={{ background: '#c0392b' }} onClick={() => setOpened(true)}>
+            <Button size="md" leftIcon={<IconUserX />} style={{ background: '#c0392b' }} onClick={() => setOpened(true)}>
                 Eliminar Usuario
             </Button>
         </>

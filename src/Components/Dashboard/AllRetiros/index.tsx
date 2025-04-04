@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { IconCalendarWeek } from '@tabler/icons-react';
+import { IconCalendarWeek, IconWallet } from '@tabler/icons-react';
 import { useState, useEffect, useRef } from 'react';
 import { Modal, Tabs, Button, Group, Select, Title, Text, Card, ScrollArea } from '@mantine/core';
 import { BarChart as Newcha, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, } from 'recharts';
@@ -620,7 +620,7 @@ function AllRetiros() {
                 </Tabs>
             </Modal>
 
-            <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver retiros</Button>
+            <Button size="md" leftIcon={<IconWallet />} style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Ver retiros</Button>
 
         </>
     );

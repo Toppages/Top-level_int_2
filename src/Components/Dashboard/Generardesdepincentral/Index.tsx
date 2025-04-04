@@ -2,7 +2,7 @@ import axios from 'axios';
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
 import { toast } from 'sonner';
-import { IconCheck, IconCopy, IconShoppingCart } from '@tabler/icons-react';
+import { IconBuildingFactory2, IconCheck, IconCopy, IconShoppingCart } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 import { Modal, Button, Stepper, Group, Table, ActionIcon, Text, NumberInput, CopyButton, Tooltip } from '@mantine/core';
 
@@ -345,7 +345,7 @@ function Generardesdepincentral() {
             </Modal>
 
             <Group position="center">
-                <Button style={{ background: '#0c2a85', color: 'white' }} onClick={() => setOpened(true)}>Pin central</Button>
+                <Button size="md" leftIcon={<IconBuildingFactory2 />}  style={{ background: '#0c2a85', color: 'white' }} onClick={() => setOpened(true)}>Pin central</Button>
             </Group>
         </>
     );

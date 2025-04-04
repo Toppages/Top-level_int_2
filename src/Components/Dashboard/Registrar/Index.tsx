@@ -15,7 +15,7 @@ import {
     Popover,
     Box,
 } from "@mantine/core";
-import { IconX, IconCheck } from '@tabler/icons-react';
+import { IconX, IconCheck, IconUser } from '@tabler/icons-react';
 import { toast } from 'sonner'
 
 interface UserFormData {
@@ -153,62 +153,67 @@ function Registrar() {
             <Modal radius='lg' opened={opened} onClose={handleClose} withCloseButton={false}>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Stack>
-                        <TextInput
-                            label="Nombre de usuario"
-                            radius='md'
-                            {...register("handle", {
-                                required: "El Nombre de usuario es obligatorio",
-                                pattern: {
-                                    value: /^[a-zA-Z0-9_]+$/,
-                                    message: "El Nombre de usuario solo puede contener letras, números y guiones bajos",
-                                },
-                            })}
-                            error={errors.handle?.message}
-                        />
+                        <Group grow >
 
-                        <TextInput
-                            label="Nombre completo"
-                            radius='md'
-                            {...register("name", {
-                                required: "El nombre es obligatorio",
-                            })}
-                            error={errors.name?.message}
-                        />
+                            <TextInput
+                                label="Nombre de usuario"
+                                radius='md'
+                                {...register("handle", {
+                                    required: "El Nombre de usuario es obligatorio",
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9_]+$/,
+                                        message: "El Nombre de usuario solo puede contener letras, números y guiones bajos",
+                                    },
+                                })}
+                                error={errors.handle?.message}
+                            />
 
-                        <TextInput
-                            label="Correo Electrónico (Gmail)"
-                            radius='md'
-                            {...register("email", {
-                                required: "El correo electrónico es obligatorio",
-                                pattern: {
-                                    value: /^[a-zA-Z0-9._%+-]+@gmail\.com$/,
-                                    message: "El correo debe ser un Gmail válido",
-                                },
-                            })}
-                            error={errors.email?.message}
-                        />
+                            <TextInput
+                                label="Nombre completo"
+                                radius='md'
+                                {...register("name", {
+                                    required: "El nombre es obligatorio",
+                                })}
+                                error={errors.name?.message}
+                            />
+                        </Group>
+                        <Group grow >
 
-                        <Select
-                            label="Rol"
-                            radius="md"
-                            {...register("role", { required: "El rol es obligatorio" })}
-                            data={[
-                                { value: "admin", label: "Administrador" },
-                                { value: "vendedor", label: "Vendedor" },
-                                { value: "cliente", label: "Cliente" },
-                                { value: "master", label: "Master" },
-                            ]}
-                            onChange={(value) => {
-                                const selectedRole = value as "admin" | "vendedor" | "cliente" | "master";
-                                setValue("role", selectedRole);
-                                if (["admin", "vendedor", "master"].includes(selectedRole)) {
-                                    setValue("rango", "ultrap");
-                                } else {
-                                    setValue("rango", "bronce");
-                                }
-                            }}
-                            error={errors.role?.message}
-                        />
+                            <TextInput
+                                label="Correo Electrónico (Gmail)"
+                                radius='md'
+                                {...register("email", {
+                                    required: "El correo electrónico es obligatorio",
+                                    pattern: {
+                                        value: /^[a-zA-Z0-9._%+-]+@gmail\.com$/,
+                                        message: "El correo debe ser un Gmail válido",
+                                    },
+                                })}
+                                error={errors.email?.message}
+                            />
+
+                            <Select
+                                label="Rol"
+                                radius="md"
+                                {...register("role", { required: "El rol es obligatorio" })}
+                                data={[
+                                    { value: "admin", label: "Administrador" },
+                                    { value: "vendedor", label: "Vendedor" },
+                                    { value: "cliente", label: "Cliente" },
+                                    { value: "master", label: "Master" },
+                                ]}
+                                onChange={(value) => {
+                                    const selectedRole = value as "admin" | "vendedor" | "cliente" | "master";
+                                    setValue("role", selectedRole);
+                                    if (["admin", "vendedor", "master"].includes(selectedRole)) {
+                                        setValue("rango", "ultrap");
+                                    } else {
+                                        setValue("rango", "bronce");
+                                    }
+                                }}
+                                error={errors.role?.message}
+                            />
+                        </Group>
 
                         {watch('role') === 'cliente' && (
                             <>
@@ -265,56 +270,58 @@ function Registrar() {
                             min={100}
                             error={errors.saldo?.message}
                         />
+                        <Group grow >
 
-                        <Popover opened={popoverOpened} position="bottom" width="target" transition="pop">
-                            <Popover.Target>
-                                <div
-                                    onFocusCapture={() => setPopoverOpened(true)}
-                                    onBlurCapture={() => setPopoverOpened(false)}
-                                >
-                                    <PasswordInput
-                                        radius='md'
-                                        label="Contraseña"
-                                        placeholder="Contraseña"
-                                        {...register("password", {
-                                            required: "La contraseña es obligatoria",
-                                            minLength: {
-                                                value: 8,
-                                                message: "La contraseña debe tener al menos 8 caracteres",
-                                            },
-                                        })}
-                                        error={errors.password?.message}
-                                    />
-                                </div>
-                            </Popover.Target>
-                            <Popover.Dropdown>
-                                <Progress color={color} value={strength} size={5} style={{ marginBottom: 10 }} />
-                                <PasswordRequirement label="Incluye al menos 6 caracteres" meets={password.length > 5} />
-                                {requirements.map((requirement, index) => (
-                                    <PasswordRequirement key={index} label={requirement.label} meets={requirement.re.test(password)} />
-                                ))}
-                            </Popover.Dropdown>
-                        </Popover>
+                            <Popover opened={popoverOpened} position="bottom" width="target" transition="pop">
+                                <Popover.Target>
+                                    <div
+                                        onFocusCapture={() => setPopoverOpened(true)}
+                                        onBlurCapture={() => setPopoverOpened(false)}
+                                    >
+                                        <PasswordInput
+                                            radius='md'
+                                            label="Contraseña"
+                                            placeholder="Contraseña"
+                                            {...register("password", {
+                                                required: "La contraseña es obligatoria",
+                                                minLength: {
+                                                    value: 8,
+                                                    message: "La contraseña debe tener al menos 8 caracteres",
+                                                },
+                                            })}
+                                            error={errors.password?.message}
+                                        />
+                                    </div>
+                                </Popover.Target>
+                                <Popover.Dropdown>
+                                    <Progress color={color} value={strength} size={5} style={{ marginBottom: 10 }} />
+                                    <PasswordRequirement label="Incluye al menos 6 caracteres" meets={password.length > 5} />
+                                    {requirements.map((requirement, index) => (
+                                        <PasswordRequirement key={index} label={requirement.label} meets={requirement.re.test(password)} />
+                                    ))}
+                                </Popover.Dropdown>
+                            </Popover>
 
-                        <PasswordInput
-                            label="Confirmar Contraseña"
-                            radius='md'
-                            {...register("confirmPassword", {
-                                required: "Confirmar la contraseña es obligatorio",
-                                validate: (value) =>
-                                    value === password || "Las contraseñas no coinciden",
-                            })}
-                            error={errors.confirmPassword?.message}
-                        />
+                            <PasswordInput
+                                label="Confirmar Contraseña"
+                                radius='md'
+                                {...register("confirmPassword", {
+                                    required: "Confirmar la contraseña es obligatorio",
+                                    validate: (value) =>
+                                        value === password || "Las contraseñas no coinciden",
+                                })}
+                                error={errors.confirmPassword?.message}
+                            />
+                        </Group>
                     </Stack>
 
                     <Group position="center" mt="md">
-                        <Button type="submit">Registrar</Button>
+                        <Button fullWidth mt={15} style={{ background: '#0c2a85' }} type="submit">Registrar</Button>
                     </Group>
                 </form>
             </Modal>
 
-            <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Registrar Usuario</Button>
+            <Button size="md" leftIcon={<IconUser />} style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>Registrar Usuario</Button>
 
         </>
     );

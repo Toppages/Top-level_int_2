@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { IconMessageCircle, IconPhoto } from '@tabler/icons-react';
+import { IconBox, IconMessageCircle, IconPhoto } from '@tabler/icons-react';
 import { Modal, Button, Group, Tabs, Select, TextInput } from '@mantine/core';
 import TableM from '../../TableM/Index';
 import axios from 'axios';
@@ -97,7 +97,7 @@ function AdministrarInventario({ user }: HomeProps) {
             Productos en el sistema
             </Tabs.Tab>
             <Tabs.Tab value="Central" icon={<IconPhoto size={14} />}>
-              Pin Central
+              Inventario
             </Tabs.Tab>
             <Tabs.Tab value="Manualmente" icon={<IconMessageCircle size={14} />}>
               Manualmente
@@ -162,7 +162,7 @@ function AdministrarInventario({ user }: HomeProps) {
       </Modal>
 
       <Group position="center">
-        <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
+        <Button size="md" leftIcon={<IconBox />}  style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
           Administrar Inventario
         </Button>
       </Group>

@@ -9,6 +9,7 @@ import {
     Stack,
 } from "@mantine/core";
 import { toast } from 'sonner';
+import { IconLibraryPlus } from "@tabler/icons-react";
 
 interface AdminBalanceFormData {
     saldo: number;
@@ -83,7 +84,7 @@ const AdminBR = () => {
                 </form>
             </Modal>
 
-            <Button style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
+            <Button size="md" leftIcon={<IconLibraryPlus />} style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
                 Añadir Saldo Del baul
             </Button>
         </>
