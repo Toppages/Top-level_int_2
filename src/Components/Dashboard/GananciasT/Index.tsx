@@ -12,7 +12,7 @@ const extractDiamantes = (productName: string) => {
 function GananciasT() {
     const [clients, setClients] = useState<{ value: string; label: string }[]>([]);
     const [sales, setSales] = useState<any[]>([]);
-    const [products, setProducts] = useState<any[]>([]); 
+    const [products, setProducts] = useState<any[]>([]);
     const [selectedClientHandle, setSelectedClientHandle] = useState<string | null>(null);
     const [filterOption, setFilterOption] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -33,7 +33,7 @@ function GananciasT() {
     useEffect(() => {
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`)
             .then((response) => {
-                setProducts(response.data); 
+                setProducts(response.data);
             })
             .catch((error) => console.error('Error al obtener los productos:', error));
     }, []);
@@ -44,22 +44,22 @@ function GananciasT() {
 
             if (filterOption === 'ventas de hoy') {
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); 
-                const todayString = today.toISOString().split('T')[0]; 
+                today.setHours(0, 0, 0, 0);
+                const todayString = today.toISOString().split('T')[0];
                 url += `?date=${todayString}`;
             } else if (filterOption === 'ventas de un dia en especifico' && selectedDate) {
                 const selectedDay = new Date(selectedDate);
                 selectedDay.setHours(0, 30, 0, 0);
-                const selectedDayStartString = selectedDay.toISOString(); 
+                const selectedDayStartString = selectedDay.toISOString();
 
                 const selectedDayEnd = new Date(selectedDate);
                 selectedDayEnd.setHours(23, 59, 59, 999);
-                const selectedDayEndString = selectedDayEnd.toISOString(); 
+                const selectedDayEndString = selectedDayEnd.toISOString();
 
                 url += `?start=${selectedDayStartString}&end=${selectedDayEndString}`;
             } else if (filterOption === 'rango de dia' && dateRange[0] && dateRange[1]) {
                 const start = new Date(dateRange[0]);
-                start.setHours(0, 0, 0, 0); 
+                start.setHours(0, 0, 0, 0);
                 const end = new Date(dateRange[1]);
                 end.setHours(23, 59, 59, 999);
 
@@ -99,7 +99,10 @@ function GananciasT() {
 
                     setSales(filteredSales);
                 })
-                .catch((error) => console.error('Error al obtener las ventas:', error));
+                .catch((error) => {
+                    console.error('Error al obtener las ventas:', error);
+                    setSales([]); // Asegura que el componente diga "sin ventas"
+                });
         }
     }, [selectedClientHandle, filterOption, selectedDate, dateRange]);
 
@@ -121,19 +124,40 @@ function GananciasT() {
         return acc;
     }, {});
 
-    const rows = Object.values(groupedSales).map((sale: any) => (
-        <tr key={sale.productName}>
-            <td style={{ textAlign: 'center' }}>{sale.productName}</td>
-            <td style={{ textAlign: 'center' }}>{sale.quantity}</td>
-            <td style={{ textAlign: 'center' }}>{(sale.price * sale.quantity).toFixed(3)} USD</td>
-            <td style={{ textAlign: 'center' }}>{sale.totalPrice.toFixed(3)}  USD</td>
-            <td style={{ textAlign: 'center' }}>{(sale.totalPrice - (sale.price * sale.quantity)).toFixed(3)}  USD</td>
-        </tr>
-    ));
+    const rows = Object.values(groupedSales).map((sale: any) => {
+        const totalToplevel = (sale.price * sale.quantity);
+        const totalUsuario = sale.totalPrice;
+        const ganancia = totalUsuario - totalToplevel;
+    
+        return (
+            <tr key={sale.productName}>
+                <td style={{ textAlign: 'center' }}>{sale.productName}</td>
+                <td style={{ textAlign: 'center' }}>{sale.quantity}</td>
+                <td style={{ textAlign: 'center' }}>{totalToplevel.toFixed(3)} USD</td>
+                {!['topleveldetal'].includes(selectedClientHandle ?? '') && (
+                    <>
+                        <td style={{ textAlign: 'center' }}>{totalUsuario.toFixed(3)} USD</td>
+                        <td style={{ textAlign: 'center' }}>{ganancia.toFixed(3)} USD</td>
+                    </>
+                )}
+            </tr>
+        );
+    });
+    
+    
 
     const totalGanancia = Object.values(groupedSales).reduce((total: number, sale: any) => {
-        return total + (sale.totalPrice - (sale.price * sale.quantity));
+        const totalToplevel = sale.price * sale.quantity;
+        const totalUsuario = sale.totalPrice;
+        const ganancia = totalUsuario - totalToplevel;
+    
+        if (selectedClientHandle === 'topleveldetal') {
+            return total + totalToplevel;
+        }
+    
+        return total + ganancia;
     }, 0);
+    
 
     return (
         <div>
@@ -211,17 +235,22 @@ function GananciasT() {
 
             {selectedClientHandle && sales.length > 0 && (
                 <div>
-                     <Title order={2}>Ganancias de  {selectedClientHandle}</Title>
+                    <Title order={2}>Ganancias de  {selectedClientHandle}</Title>
                     <Table mt={10} striped highlightOnHover withBorder withColumnBorders>
-                        <thead style={{ background: '#0c2a85' }}>
-                            <tr>
-                                <th style={{ textAlign: 'center', color: 'white' }}>Producto</th>
-                                <th style={{ textAlign: 'center', color: 'white' }}>Cantidad</th>
-                                <th style={{ textAlign: 'center', color: 'white' }}>Total Toplevel</th>
-                                <th style={{ textAlign: 'center', color: 'white' }}>Total usuario</th>
-                                <th style={{ textAlign: 'center', color: 'white' }}>Ganancia Producto</th>
-                            </tr>
-                        </thead>
+                    <thead style={{ background: '#0c2a85' }}>
+    <tr>
+        <th style={{ textAlign: 'center', color: 'white' }}>Producto</th>
+        <th style={{ textAlign: 'center', color: 'white' }}>Cantidad</th>
+        <th style={{ textAlign: 'center', color: 'white' }}>Total Toplevel</th>
+        {!['topleveldetal'].includes(selectedClientHandle) && (
+            <>
+                <th style={{ textAlign: 'center', color: 'white' }}>Total usuario</th>
+                <th style={{ textAlign: 'center', color: 'white' }}>Ganancia Producto</th>
+            </>
+        )}
+    </tr>
+</thead>
+
                         <tbody>
                             {rows}
                             <tr>
@@ -232,10 +261,10 @@ function GananciasT() {
                     </Table>
                 </div>
             )}
-
             {selectedClientHandle && sales.length === 0 && (
-                <p>No se encontraron ventas para este cliente.</p>
+                <p>Sin ventas registradas.</p>
             )}
+
         </div>
     );
 }
