@@ -50,13 +50,14 @@ function Dashboard({ user }: DashboardProps) {
 
                 <Tabs defaultValue="Retiro">
 
-                    <Tabs.List>
-                        <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
-                        {(userRole === "master" || userRole === "admin" || (user?.rango === "oro" && userRole === "cliente")) && (
-                            <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
-                        )}
+                <Tabs.List>
+    <Tabs.Tab value="Retiro" icon={<IconCoins size={18} />}>Retiro</Tabs.Tab>
 
-                    </Tabs.List>
+    {(userRole === "master" && user?.handle !== "toplevelmaster" || userRole === "admin" || (user?.rango === "oro" && userRole === "cliente")) && (
+        <Tabs.Tab value="control" icon={<IconLayoutDashboard size={18} />}>Panel de control</Tabs.Tab>
+    )}
+</Tabs.List>
+
 
 
                     <Tabs.Panel value="Retiro" pt="xs">

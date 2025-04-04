@@ -45,7 +45,16 @@ type SalesPDFProps = {
     precioTotalVentas: number;
 };
 
-const SalesPDF: React.FC<SalesPDFProps> = ({ userHandle, filteredSales, totalVentas, precioTotalVentas }) => {
+const SalesPDF: React.FC<SalesPDFProps> = ({ userHandle, filteredSales, totalVentas }) => {
+    const productOrder = [
+        "Free Fire 100 Diamantes + 10 Bono",
+        "Free Fire - 310 Diamantes + 31 Bono",
+        "Free Fire 520 Diamantes + 52 Bono",
+        "Free Fire - 1060 Diamantes + 106 Bono",
+        "Free Fire - 2.180 Diamantes + 218 Bono",
+        "Free Fire - 5.600 Diamantes + 560 Bono"
+    ];
+
     const productSummary = filteredSales.reduce((acc, sale) => {
         if (!acc[sale.productName]) {
             acc[sale.productName] = { count: 0, totalPrice: 0 };
@@ -54,6 +63,10 @@ const SalesPDF: React.FC<SalesPDFProps> = ({ userHandle, filteredSales, totalVen
         acc[sale.productName].totalPrice += sale.totalPrice;
         return acc;
     }, {} as Record<string, { count: number; totalPrice: number }>);
+
+    const sortedProducts = productOrder
+        .filter(product => productSummary[product]) 
+        .map(product => [product, productSummary[product]] as const);
 
     return (
         <Document>
@@ -65,18 +78,14 @@ const SalesPDF: React.FC<SalesPDFProps> = ({ userHandle, filteredSales, totalVen
                         <Text style={styles.text}>Total de Ventas:</Text>
                         <Text style={styles.text}>{totalVentas}</Text>
                     </View>
-                    <View style={styles.row}>
-                        <Text style={styles.text}>Precio Total:</Text>
-                        <Text style={styles.text}>${precioTotalVentas.toFixed(2)}</Text>
-                    </View>
                 </View>
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Resumen por Producto</Text>
-                    {Object.entries(productSummary).map(([product, data]) => (
+                    {sortedProducts.map(([product, data]) => (
                         <View key={product} style={styles.row}>
                             <Text style={styles.text}>{product}</Text>
-                            <Text style={styles.text}>{data.count} ventas - ${data.totalPrice.toFixed(2)}</Text>
+                            <Text style={styles.text}>{data.count} ventas </Text>
                         </View>
                     ))}
                 </View>

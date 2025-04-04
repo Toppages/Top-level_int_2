@@ -145,9 +145,7 @@ function VentaVendedores({ userHandle }: VentaAdminClientesProps) {
     return (
         <>
             {error && <p style={{ color: 'red' }}>{error}</p>}
-            {filteredSales.length === 0 ? (
-                <p>No hay ventas registradas.</p>
-            ) : (
+         
                 <ScrollArea style={{ height: maxHeight - 50 }}>
                     <Title mt={5} order={3}> Resumen de Ventas</Title>
                     <Group position='apart'>
@@ -247,18 +245,16 @@ function VentaVendedores({ userHandle }: VentaAdminClientesProps) {
                                         <Group>
 
                                             <Text fz="xl" c='white' fw={700}>{totalVentas} ventas</Text>
-                                            <Text fz="xl" c="green" fw={700}>${precioTotalVentas.toFixed(2)}</Text>
                                         </Group>
                                     </Group>
                                 </Card>
 
                                 <Title mt={15} order={4}>Resumen de productos:</Title>
-                                {sortedProductSummary.map(([productName, { count, totalPrice }]) => (
+                                {sortedProductSummary.map(([productName, { count }]) => (
                                     <Card shadow="sm" p="lg" radius="md" withBorder key={productName}>
                                         <Group position="apart">
                                             <Title order={5}>{productName}</Title>
                                             <Text fz="xl" c="#0c2a85" fw={700}>{count} Ventas</Text>
-                                            <Text fz="xl" c="green" fw={700}>${totalPrice.toFixed(2)}</Text>
                                         </Group>
                                     </Card>
                                 ))}
@@ -269,7 +265,6 @@ function VentaVendedores({ userHandle }: VentaAdminClientesProps) {
 
                 </ScrollArea>
 
-            )}
         </>
     );
 }

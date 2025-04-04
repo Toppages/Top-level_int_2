@@ -63,7 +63,6 @@ function EditUser() {
             await axios.put(`${import.meta.env.VITE_API_BASE_URL}/user/${selectedUserId}`, formData);
             toast.success('Usuario actualizado correctamente');
 
-            // Cierra el modal y resetea los valores
             closeModal();
         } catch (error) {
             toast.error('Error al actualizar usuario');
@@ -72,8 +71,8 @@ function EditUser() {
 
     const closeModal = () => {
         setOpened(false);
-        setSelectedUserId(null); // Resetea la selección del usuario
-        setFormData(null); // Limpia los datos del formulario
+        setSelectedUserId(null);
+        setFormData(null); 
     };
 
     return (

@@ -59,7 +59,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
     } | null>(null);
 
     const data = [
-        { icon: IconGauge, label: 'CONTROL DE VENTAS' },
+        { icon: IconGauge, label: 'CONTROL GENERAL' },
         { icon: IconUsers, label:  'RECARGA DIRECTA' },
         { icon: IconReport, label: 'CONTROL DE VENTAS' },
         { icon: IconWallet, label: 'REPORTES DE INGRESO' },
@@ -152,6 +152,9 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                     if (item.label === 'REPORTES DE INGRESO' && userData?.role === 'vendedor') {
                         return null;
                     }
+                    if (userData?.handle === 'toplevelmaster' && item.label !== 'CONTROL GENERAL') {
+                        return null;
+                    }
                     if (item.label === 'PIN CENTRAL' && userData?.role !== 'master') {
                         return null;
                     }
@@ -168,7 +171,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 })}
             </div>
             <div>
-                {userData && userData.role === 'master' && (
+            {userData && userData.role === 'master' && userData.handle !== 'toplevelmaster' && (
                     <>
                         <Title  c='#0c2a85' order={6}>
                             PIN CENTRAL:  {adminBalance ? `${adminBalance.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
@@ -205,7 +208,8 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 <Divider />
                 <NavLink
                 mt={5}
-                    label={userData ? userData.email : 'User@gmail.com'}
+                label={userData ? `${userData.handle} (${userData.role || 'No role'})` : 'User@gmail.com'}
+
                     color="indigo"
                     icon={<IconUserFilled size={16} stroke={1.5} />}
                     style={{

@@ -16,7 +16,7 @@ interface Log {
     quantity: number;
     total_amount: number;
     date: string;
-    pins?: Pin[]; // <- nuevo campo
+    pins?: Pin[];
 }
 
 

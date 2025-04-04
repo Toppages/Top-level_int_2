@@ -185,6 +185,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                         <DatePicker
                             radius="md"
                             size="lg"
+                            dropdownType="modal"
                             icon={<IconCalendarWeek />}
                             placeholder="Filtrar Fecha"
                             label="Filtrar Fecha"
@@ -292,6 +293,7 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
                         <DatePicker
                             radius="md"
                             size="lg"
+                            dropdownType="modal"
                             icon={<IconCalendarWeek />}
                             placeholder="Filtrar Fecha"
                             label="Filtrar Fecha"

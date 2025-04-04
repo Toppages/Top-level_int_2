@@ -156,9 +156,7 @@ function VentaAdminClientes({ userHandle }: VentaAdminClientesProps) {
     return (
         <>
             {error && <p style={{ color: 'red' }}>{error}</p>}
-            {filteredSales.length === 0 ? (
-                <p>No hay ventas registradas.</p>
-            ) : (
+      
                 <ScrollArea style={{ height: maxHeight - 50 }}>
                     <Title mt={5} order={3}> Resumen de Ventas</Title>
                     <Group position='apart'>
@@ -220,7 +218,7 @@ function VentaAdminClientes({ userHandle }: VentaAdminClientesProps) {
                             },
                         })}
                     />
-
+  
                     {selectedDateFilter === 'specific' && (
                         <DatePicker
                             placeholder="Selecciona una fecha"
@@ -337,7 +335,6 @@ function VentaAdminClientes({ userHandle }: VentaAdminClientesProps) {
 
                 </ScrollArea>
 
-            )}
         </>
     );
 }

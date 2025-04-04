@@ -290,6 +290,7 @@ function Reports({ user }: ReportsProps) {
               label="Filtrar Fecha"
               inputFormat="DD/MM/YYYY"
               labelFormat="MM/YYYY"
+              dropdownType="modal"
               value={selectedDate}
               onChange={handleDateChange}
             />

@@ -57,7 +57,7 @@ function Generardesdepincentral() {
             return;
         }
 
-        setGenerating(true); // Cambiar estado para mostrar "Generando"
+        setGenerating(true); 
         setIsAuthorizing(true);
 
         const apiKey = import.meta.env.VITE_API_KEY;
@@ -99,9 +99,8 @@ function Generardesdepincentral() {
             if (response.status === 200 && response.data.status === "authorized") {
                 const captureResponse = await handleCapture(response.data.id);
                 if (captureResponse.length > 0) {
-                    // Aquí puedes manejar la respuesta de la captura si es necesario
                 }
-                nextStep(); // Avanzar al paso 3
+                nextStep();
             } else {
                 console.error("Error en la solicitud de autorización.");
             }
@@ -109,7 +108,7 @@ function Generardesdepincentral() {
             console.error("Error en la solicitud de autorización:", error);
         } finally {
             setIsAuthorizing(false);
-            setGenerating(false); // Cambiar el estado a 'false' una vez que termine el proceso
+            setGenerating(false); 
         }
     };
 
@@ -178,7 +177,7 @@ function Generardesdepincentral() {
     const handleClose = () => {
         setOpened(false);
         setActive(0);
-        setCapturedPins([]); // Si querés limpiar los pines también
+        setCapturedPins([]);
         setSelectedProduct(null);
         setQuantity(1);
     };

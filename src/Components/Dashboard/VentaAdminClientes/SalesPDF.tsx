@@ -45,6 +45,15 @@ type SalesPDFProps = {
 };
 
 const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioTotalVentas }) => {
+    const productOrder = [
+        "Free Fire 100 Diamantes + 10 Bono",
+        "Free Fire - 310 Diamantes + 31 Bono",
+        "Free Fire 520 Diamantes + 52 Bono",
+        "Free Fire - 1060 Diamantes + 106 Bono",
+        "Free Fire - 2.180 Diamantes + 218 Bono",
+        "Free Fire - 5.600 Diamantes + 560 Bono"
+    ];
+
     const productSummary = filteredSales.reduce((acc, sale) => {
         if (!acc[sale.productName]) {
             acc[sale.productName] = { count: 0, totalPrice: 0 };
@@ -63,9 +72,13 @@ const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioT
         return acc;
     }, {} as Record<string, Report[]>);
 
+    const sortSummary = (summary: Record<string, { count: number; totalPrice: number }>) =>
+        productOrder
+            .filter((product) => summary[product])
+            .map((product) => [product, summary[product]] as const);
+
     return (
         <Document>
-            {/* Página principal con totales generales y resumen de productos */}
             <Page size="A4" style={styles.page}>
                 <Text style={styles.title}>Resumen de Ventas</Text>
                 <View style={styles.section}>
@@ -82,7 +95,7 @@ const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioT
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Resumen por Producto</Text>
-                    {Object.entries(productSummary).map(([product, data]) => (
+                    {sortSummary(productSummary).map(([product, data]) => (
                         <View key={product} style={styles.row}>
                             <Text style={styles.text}>{product}</Text>
                             <Text style={styles.text}>{data.count} ventas - ${data.totalPrice.toFixed(2)}</Text>
@@ -110,7 +123,7 @@ const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioT
                         <Text style={styles.boldText}>Total de ventas: {totalUserSales} - ${totalUserPrice.toFixed(2)}</Text>
 
                         <Text style={styles.boldText}>Resumen por producto:</Text>
-                        {Object.entries(userProductSummary).map(([product, data]) => (
+                        {sortSummary(userProductSummary).map(([product, data]) => (
                             <View key={product} style={styles.row}>
                                 <Text style={styles.text}>{product}</Text>
                                 <Text style={styles.text}>{data.count} Ventas - ${data.totalPrice.toFixed(2)}</Text>

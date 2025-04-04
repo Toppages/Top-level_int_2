@@ -154,9 +154,7 @@ function VentasmasterG() {
     return (
         <>
             {error && <p style={{ color: 'red' }}>{error}</p>}
-            {filteredSales.length === 0 ? (
-                <p>No hay ventas registradas.</p>
-            ) : (
+         
                 <ScrollArea style={{ height: maxHeight - 50 }}>
                     <Title mt={5} order={3}> Resumen de Ventas</Title>
                     <Group position='apart'>
@@ -334,7 +332,7 @@ function VentasmasterG() {
                     )}
 
                 </ScrollArea>
-            )}
+            
         </>
     );
 }

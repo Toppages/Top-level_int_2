@@ -35,7 +35,7 @@ const LimitVendedores = () => {
                     if (data.purchaseLimits) {
                         const limits: Record<string, number> = {};
                         Object.keys(data.purchaseLimits).forEach((productCode) => {
-                            limits[productCode] = data.purchaseLimits[productCode].originLimit;
+                            limits[productCode] = data.purchaseLimits[productCode].limit;
                         });
                         setPurchaseLimits(limits);
                     }
