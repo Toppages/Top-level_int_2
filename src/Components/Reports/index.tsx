@@ -7,7 +7,7 @@ import { fetchUserRole, fetchReports, handlePinClick, formatDateTime } from '../
 import { Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Pagination, Divider, Select, Button } from '@mantine/core';
 
 interface ReportsProps {
-  user: { _id: string; name: string; email: string; handle: string; role: string; } | null;
+  user: { _id: string; name: string; email: string; handle: string; role: string;rango:string; } | null;
 }
 
 function Reports({ user }: ReportsProps) {
@@ -149,6 +149,13 @@ function Reports({ user }: ReportsProps) {
             {userRole !== 'cliente' && userRole !== 'vendedor' && (
               <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
             )}
+
+{userRole === 'cliente' && user?.rango === 'oro' && selectedReport?.originalVendedorHandle && (
+  <Group mt='md' position="apart" mb="md">
+    <Title order={4}>Usuario:</Title>
+    <Title order={4}>{selectedReport.originalVendedorHandle}</Title>
+  </Group>
+)}
             <Divider my="sm" size='md' variant="dashed" />
           </>
         )}
@@ -197,6 +204,7 @@ function Reports({ user }: ReportsProps) {
                 <td style={{ textAlign: 'left' }}>{selectedReport.fechaPago}</td>
               </tr>
             )}
+
 
           </tbody>
         </Table>
@@ -362,6 +370,11 @@ function Reports({ user }: ReportsProps) {
                   </>
                 )}
                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Producto</Title></th>
+                {!isMobile && userRole === 'cliente' && user?.rango === 'oro' && (
+  <th style={{ textAlign: 'center', color: 'white' }}>
+    <Title order={4}>Usuario</Title>
+  </th>
+)}
 
                 {userRole !== 'vendedor' && (
                   <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio total</Title></th>
@@ -398,7 +411,11 @@ function Reports({ user }: ReportsProps) {
 
                     </>
                   )}
+
                   <td style={{ textAlign: 'center' }}>{report.productName}</td>
+                  {!isMobile && userRole === 'cliente' && user?.rango === 'oro' && (
+  <td style={{ textAlign: 'center' }}>{report.originalVendedorHandle || report.user.handle}</td>
+)}
 
                   {userRole !== 'vendedor' && (
                     <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>

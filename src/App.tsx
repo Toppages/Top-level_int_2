@@ -12,7 +12,7 @@ function AppContent() {
   const [navOpen, setNavOpen] = useState(true);
   const [activeLink, setActiveLink] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [user, setUser] = useState<{ _id: string; name: string; email: string ;handle: string;role:string;purchaseLimits: any;saldo: number;rango: string;}  | null>(null);
+  const [user, setUser] = useState<{ _id: string; name: string; email: string ;handle: string;role:string;purchaseLimits: any;saldo: number;rango: string;admin: string;}  | null>(null);
 
   const isMobile = useMediaQuery('(max-width: 1000px)');
   const location = useLocation();

@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { useState, useEffect } from 'react';
-import { Modal, Button, Group, Select, TextInput, Box, Divider } from '@mantine/core';
-import { IconUser, IconUserEdit } from '@tabler/icons-react';
 import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
+import { IconUser, IconUserEdit } from '@tabler/icons-react';
+import { Modal, Button, Group, Select, TextInput, Box, Divider } from '@mantine/core';
 
 function EditUser() {
     const [opened, setOpened] = useState(false);
@@ -31,8 +31,6 @@ function EditUser() {
         if (user) {
             const { password, purchaseLimits, __v, ...cleanedUser } = user;
             setFormData(cleanedUser);
-        } else {
-            setFormData(null);
         }
     };
 
@@ -49,6 +47,14 @@ function EditUser() {
         group: user.role || 'Sin admin',
     }));
 
+    const adminOptions = users
+        .filter((user) => user.role === 'admin' || user.role === 'cliente')
+        .map((user) => ({
+            value: user.handle,
+            label: `${user.name} (${user.handle})`,
+            group: user.role,
+        }));
+
     const roleOptions = [
         { value: "admin", label: "Administrador" },
         { value: "vendedor", label: "Vendedor" },
@@ -63,18 +69,17 @@ function EditUser() {
             await axios.put(`${import.meta.env.VITE_API_BASE_URL}/user/${selectedUserId}`, formData);
             toast.success('Usuario actualizado correctamente');
 
-            closeModal();
+            setOpened(false);
         } catch (error) {
             toast.error('Error al actualizar usuario');
+
         }
     };
-
     const closeModal = () => {
         setOpened(false);
         setSelectedUserId(null);
-        setFormData(null); 
+        setFormData(null);
     };
-
     return (
         <>
             <Modal opened={opened} onClose={closeModal} withCloseButton={false} size="lg">
@@ -128,11 +133,13 @@ function EditUser() {
                             />
                         </Group>
                         <Group grow mb={10}>
+
                             <TextInput
                                 label="Correo Electrónico (Gmail)"
                                 value={formData.email}
                                 onChange={(e) => handleInputChange('email', e.currentTarget.value)}
                             />
+
                             <Select
                                 label="Rol"
                                 value={formData.role}
@@ -156,10 +163,102 @@ function EditUser() {
                             />
                         </Group>
 
+                        {formData.role !== 'master' && formData.role !== 'vendedor' && (
+                            <TextInput
+                                label="Saldo"
+                                type="number"
+                                value={formData.saldo}
+                                onChange={(e) => handleInputChange('saldo', parseFloat(e.currentTarget.value))}
+                            />
+                        )}
+
+
+                        {formData.role === 'vendedor' && (
+                            <Select
+                                label="Rango"
+                                value={formData.rango}
+                                onChange={(value) => handleInputChange('rango', value)}
+                                data={[
+                                    { value: "ultrap", label: "Top level" },
+                                    { value: "oro", label: "Oro" },
+                                ]}
+                                placeholder="Selecciona un rango"
+                                transition="pop-top-left"
+                                transitionDuration={80}
+                                transitionTimingFunction="ease"
+                                searchable
+                                styles={() => ({
+                                    item: {
+                                        '&[data-selected]': {
+                                            '&, &:hover': {
+                                                backgroundColor: '#0c2a85',
+                                                color: 'white',
+                                            },
+                                        },
+                                    },
+                                })}
+                            />
+                        )}
+
+                        {formData.role === 'cliente' && (
+                            <Select
+                                label="Rango"
+                                value={formData.rango}
+                                onChange={(value) => handleInputChange('rango', value)}
+                                data={[
+                                    { value: "oro", label: "Oro" },
+                                    { value: "plata", label: "Plata" },
+                                    { value: "bronce", label: "Bronce" },
+                                ]}
+                                placeholder="Selecciona un rango"
+                                transition="pop-top-left"
+                                transitionDuration={80}
+                                transitionTimingFunction="ease"
+                                searchable
+                                styles={() => ({
+                                    item: {
+                                        '&[data-selected]': {
+                                            '&, &:hover': {
+                                                backgroundColor: '#0c2a85',
+                                                color: 'white',
+                                            },
+                                        },
+                                    },
+                                })}
+                            />
+                        )}
+
+
+
+                        {formData.role !== 'master' && formData.role !== 'admin' && (
+                            <Select
+                                label="Admin"
+                                data={adminOptions}
+                                value={formData.admin}
+                                onChange={(value) => handleInputChange('admin', value)}
+                                placeholder="Selecciona un admin o cliente"
+                                searchable
+                                transition="pop-top-left"
+                                transitionDuration={80}
+                                transitionTimingFunction="ease"
+                                styles={() => ({
+                                    item: {
+                                        '&[data-selected]': {
+                                            '&, &:hover': {
+                                                backgroundColor: '#0c2a85',
+                                                color: 'white',
+                                            },
+                                        },
+                                    },
+                                })}
+                            />
+
+                        )}
                         <Button mt={20} fullWidth style={{ background: '#0c2a85' }} onClick={handleUpdateUser}>
                             Actualizar
                         </Button>
                     </div>
+
                 )}
             </Modal>
 

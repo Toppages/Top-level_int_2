@@ -28,6 +28,27 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
     const [opened, setOpened] = useState(false);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [adminBalance, setAdminBalance] = useState<{ saldo: number; inventarioSaldo: number } | null>(null);
+    const [inventoryValue, setInventoryValue] = useState<number | null>(null);
+
+
+    useEffect(() => {
+        const fetchInventoryValue = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/inventory-value`);
+                const data = await response.json();
+                if (response.ok) {
+                    setInventoryValue(data.totalInventoryValue);
+                }
+            } catch (error) {
+                console.error('Error fetching inventory value:', error);
+            }
+        };
+
+        fetchInventoryValue();
+
+        const intervalId = setInterval(fetchInventoryValue, 5000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     useEffect(() => {
         const fetchBalance = async () => {
@@ -44,23 +65,23 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 console.error('Error fetching balance:', error);
             }
         };
-    
+
         fetchBalance();
-    
+
         const intervalId = setInterval(fetchBalance, 5000);
         return () => clearInterval(intervalId);
     }, []);
-    
+
     const [totalSaldos, setTotalSaldos] = useState<{
         totalSaldoAdmins: number;
         totalSaldoClientes: number;
-        admins: { handle: string; correo: string; saldo: number }[]; 
+        admins: { handle: string; correo: string; saldo: number }[];
         clientes: { handle: string; correo: string; saldo: number }[];
     } | null>(null);
 
     const data = [
         { icon: IconGauge, label: 'CONTROL GENERAL' },
-        { icon: IconUsers, label:  'RECARGA DIRECTA' },
+        { icon: IconUsers, label: 'RECARGA DIRECTA' },
         { icon: IconReport, label: 'CONTROL DE VENTAS' },
         { icon: IconWallet, label: 'REPORTES DE INGRESO' },
         { icon: IconArchive, label: 'PIN CENTRAL' },
@@ -171,26 +192,26 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                 })}
             </div>
             <div>
-            {userData && userData.role === 'master' && userData.handle !== 'toplevelmaster' && (
+                {userData && userData.role === 'master' && userData.handle !== 'toplevelmaster' && (
                     <>
-                        <Title  c='#0c2a85' order={6}>
-                            PIN CENTRAL:  {adminBalance ? `${adminBalance.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
+                        <Title c='#0c2a85' order={6}>
+                            PIN CENTRAL: {adminBalance ? `${adminBalance.saldo.toFixed(3)} USD` : 'Saldo no disponible'}
                         </Title>
-                        {!(totalSaldos && userData) ? (
-                            <Loader color="indigo" variant="bars" />
-                        ) : (
-                            <Group>
-                                <Title  c="#0c2a85" order={6}>
-                                INVENTARIO:  {adminBalance ? `${adminBalance.inventarioSaldo.toFixed(3)} USD` : 'Saldo no disponible'}
-                                </Title>
 
-                                <ActionIcon ml={-17} color="indigo" size="xs" onClick={() => setOpened(true)}>
-                                    <IconInfoCircle size={26} />
-                                </ActionIcon>
-                            </Group>
-                        )}
+                        <Group>
+                            <Title c="#0c2a85" order={6}>
+                                INVENTARIO: {inventoryValue !== null ? `${inventoryValue.toFixed(3)} USD` : 'Cargando...'}
+                            </Title>
+
+                            <ActionIcon ml={-17} color="indigo" size="xs" onClick={() => setOpened(true)}>
+                                <IconInfoCircle size={26} />
+                            </ActionIcon>
+                        </Group>
+
+
                     </>
                 )}
+
 
                 {!userData || userData.role !== 'master' && userData.role !== 'vendedor' && (
                     <>
@@ -207,8 +228,8 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
 
                 <Divider />
                 <NavLink
-                mt={5}
-                label={userData ? `${userData.handle} (${userData.role || 'No role'})` : 'User@gmail.com'}
+                    mt={5}
+                    label={userData ? `${userData.handle} (${userData.role || 'No role'})` : 'User@gmail.com'}
 
                     color="indigo"
                     icon={<IconUserFilled size={16} stroke={1.5} />}

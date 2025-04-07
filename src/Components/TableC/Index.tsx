@@ -7,7 +7,7 @@ import { ActionIcon, Table, Loader } from '@mantine/core';
 
 
 interface TableMProps {
-    user: { purchaseLimits: any; _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
+    user: { purchaseLimits: any; _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string;admin: string; } | null;
 }
 const TableC: React.FC<TableMProps> = ({ user }) => {
     const [opened, setOpened] = useState<boolean>(false);

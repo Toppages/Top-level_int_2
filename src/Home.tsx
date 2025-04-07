@@ -22,6 +22,7 @@ interface HomeProps {
     purchaseLimits: any;
     saldo: number;
     rango: string;
+    admin: string;
   } | null;
 }
 

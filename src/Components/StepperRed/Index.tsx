@@ -22,7 +22,7 @@ interface StepperMaProps {
     onClose: () => void;
     products: Product[];
     user: {
-        purchaseLimits: any; _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string;
+        purchaseLimits: any; _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string;admin: string;
     } | null;
 
 }
@@ -122,20 +122,20 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
             setErrorMessage("Debe seleccionar un producto y un ID de jugador válido.");
             return;
         }
-
+    
         setIsProcessing(true);
         setErrorMessage("");
-
+    
         try {
             const pinResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products/${selectedProduct.code}/pin`);
             const pinData = pinResponse.data.pin;
-
+    
             if (!pinData || !pinData.pin_id) {
                 setErrorMessage("Error al obtener el PIN del producto.");
                 setIsProcessing(false);
                 return;
             }
-
+    
             const scrapeResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/redimir`, {
                 params: {
                     GameAccountId: playerId,
@@ -143,10 +143,10 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                     'product-code': selectedProduct.code
                 }
             });
-
+    
             if (scrapeResponse.status !== 200 || !scrapeResponse.data.success) {
                 const errorMsg = scrapeResponse.data.message || "Ocurrió un error en el proceso.";
-
+    
                 if (errorMsg.includes("PIN ya ha sido utilizado")) {
                     setErrorMessage("Este PIN ya fue utilizado. Intenta con otro.");
                 } else {
@@ -156,25 +156,49 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         pins: [{ pin_id: pinData?.pin_id || "DEFAULT_PIN_ID" }]
                     });
                 }
-
+    
                 setIsProcessing(false);
                 return;
             }
-
+    
             setRecargaInfo(scrapeResponse.data);
-
+    
             const purchaseLimit = user?.purchaseLimits?.[selectedProduct.code];
             const limit = purchaseLimit ? purchaseLimit.limit : 0;
-
+    
+            let userForSale = user;
+            let originalVendedor = null;
+    
+            if (user?.role === 'vendedor' && user?.rango === 'oro') {
+                try {
+                    const adminResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/user/${user.admin}`);
+                    userForSale = adminResponse.data;
+                    originalVendedor = {
+                        id: user._id,
+                        handle: user.handle,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        saldo: userData ? userData.saldo : 0
+                    };
+                } catch (err) {
+                    console.error("Error al obtener los datos del admin:", err);
+                    setErrorMessage("No se pudo obtener la información del administrador.");
+                    setIsProcessing(false);
+                    return;
+                }
+            }
+    
             const saleData = {
-                user: user ? {
-                    id: user._id,
-                    handle: user.handle,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    saldo: userData ? userData.saldo : 0
+                user: userForSale ? {
+                    id: userForSale._id,
+                    handle: userForSale.handle,
+                    name: userForSale.name,
+                    email: userForSale.email,
+                    role: userForSale.role,
+                    saldo: userForSale.saldo
                 } : null,
+                originalVendedorHandle: originalVendedor ? originalVendedor.handle : null,
                 playerId,
                 nickname: accountName,
                 quantity: 1,
@@ -183,7 +207,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                 productName: selectedProduct.name,
                 totalPrice: getPriceForUser(selectedProduct, user),
                 totalOriginalPrice: selectedProduct.price,
-                moneydisp: user ? user.saldo : 0,
+                moneydisp: userForSale ? userForSale.saldo : 0,
                 status: "completado",
                 order_id: `ORD-${Date.now()}`,
                 pins: [
@@ -196,9 +220,9 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                 ],
                 purchaseLimit: limit
             };
-
+    
             const saleResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData);
-
+    
             if (saleResponse.status === 201) {
                 setSaleResponse(saleResponse.data);
                 setActiveStep(2);
@@ -209,14 +233,12 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
             const errorMsg = axios.isAxiosError(error) && error.response?.data?.message
                 ? error.response.data.message
                 : "Ocurrió un error en el proceso.";
-
+    
             setErrorMessage(errorMsg);
-
         }
-
+    
         setIsProcessing(false);
     };
-
 
     useEffect(() => {
         const intervalId = setInterval(() => {
