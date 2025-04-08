@@ -138,10 +138,7 @@ function Dashboard({ user }: DashboardProps) {
                         )}
                         {(userRole === "cliente") && (
                             <>
-                                <Title fz="xl" mt={15} c='#0c2a85' order={5}>
-                                    General
-                                </Title>
-                                <AdmincargoReports user={user} />
+                              
 
                                 <Title fz="xl" mt={15} c='#0c2a85' order={5}>
                                     Vendedores

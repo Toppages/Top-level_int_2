@@ -212,7 +212,7 @@ function GananciasT() {
             {filterOption === 'ventas de un dia en especifico' && (
                 <DatePicker
                     label="Selecciona una fecha"
-                    placeholder="Pick a date"
+                    placeholder="Selecciona una fecha"
                     value={selectedDate}
                     onChange={(date) => {
                         setSelectedDate(date);
@@ -224,7 +224,7 @@ function GananciasT() {
             {filterOption === 'rango de dia' && (
                 <DateRangePicker
                     label="Selecciona un rango de fechas"
-                    placeholder="Pick dates range"
+                    placeholder="Selecciona una fecha"
                     value={dateRange}
                     onChange={(range) => {
                         setDateRange(range);

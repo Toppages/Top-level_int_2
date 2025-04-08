@@ -117,7 +117,7 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                             </Title>
 
                             <Title fz="xl" mt={15} ta="center" c='#0c2a85' order={5}>
-                                Total Saldo de Clientes: {totalSaldos.totalSaldoClientes} USD
+                                Total Saldo de Clientes: {totalSaldos.totalSaldoClientes.toFixed(3)} USD
                             </Title>
 
                             <Accordion mt={15} variant="separated">
