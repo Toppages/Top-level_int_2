@@ -14,25 +14,26 @@ function Reports({ user }: ReportsProps) {
 
   const exportToExcel = (data: any[]) => {
     const filteredData = data.map((report) => {
-      const { _id, product, order_id, productName, status, pins, saleId, __v, user, created_at, totalPrice, moneydisp, ...cleanedReport } = report;
-
+      const { _id, product, order_id, productName, status, pins, saleId, __v, user, created_at, totalPrice, moneydisp, originalVendedorHandle, ...cleanedReport } = report; // Excluir originalVendedorHandle
+  
       const formattedDate = new Date(report.created_at);
       const formattedDateStr = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours().toString().padStart(2, '0')}:${formattedDate.getMinutes().toString().padStart(2, '0')}`;
-
+  
       cleanedReport['Fecha'] = formattedDateStr;
       cleanedReport['ID'] = report.saleId;
       cleanedReport['Producto'] = report.productName;
       cleanedReport['Precio total'] = report.totalPrice;
       cleanedReport['Saldo Actual'] = report.moneydisp;
-
+  
       if (userRole !== 'cliente') {
         cleanedReport['Usuario'] = report.user.handle;
       }
-
+  
       return cleanedReport;
     });
-
+  
     let fileName = 'reportes_ventas';
+  
     if (selectedDate) {
       const dateStr = selectedDate.toISOString().split('T')[0];
       fileName += `_fecha_${dateStr}`;
@@ -40,7 +41,7 @@ function Reports({ user }: ReportsProps) {
     if (selectedUserHandle && selectedUserHandle !== 'todos') {
       fileName += `_usuario_${selectedUserHandle}`;
     }
-
+  
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(filteredData);
     XLSX.utils.book_append_sheet(wb, ws, 'Reportes');
@@ -62,6 +63,7 @@ function Reports({ user }: ReportsProps) {
   const [userHandles, setUserHandles] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedUserHandle, setSelectedUserHandle] = useState<string | null>(null);
+  const [availableHandles, setAvailableHandles] = useState<string[]>([]);
 
   useEffect(() => {
     if (userHandle) {
@@ -74,7 +76,16 @@ function Reports({ user }: ReportsProps) {
       fetchReports(user.handle, user.role, user.rango, setAllReports, setFilteredReports, setError);
     }
   }, [user]);
+  useEffect(() => {
+    if (userRole === 'cliente') {
+      const originalHandles = allReports
+        .map((r) => r.originalVendedorHandle)
+        .filter((handle) => handle); // elimina null/undefined
   
+      const uniqueHandles = Array.from(new Set([userHandle, ...originalHandles]));
+      setAvailableHandles(uniqueHandles);
+    }
+  }, [allReports, userRole, userHandle]);
 
   useEffect(() => {
     const uniqueHandles = [...new Set(allReports.map((report) => report.user.handle))];
@@ -97,16 +108,27 @@ function Reports({ user }: ReportsProps) {
     let filtered = allReports;
 
     if (selectedUserHandle && selectedUserHandle !== 'todos') {
-      filtered = filtered.filter(report => report.user.handle === selectedUserHandle);
-    }
-
-    if (selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0];
       filtered = filtered.filter(report => {
-        const reportDate = report.created_at.split('T')[0];
-        return reportDate === dateStr;
+        const userHandleMatch = report.user.handle === selectedUserHandle;
+        const originalHandleMatch = report.originalVendedorHandle === selectedUserHandle;
+        return userHandleMatch || originalHandleMatch;
       });
     }
+    
+
+if (selectedDate) {
+  const startOfDay = new Date(selectedDate);
+  startOfDay.setHours(0, 59, 0, 0); // 00:59
+
+  const endOfDay = new Date(selectedDate);
+  endOfDay.setHours(23, 59, 59, 999); // 23:59:59.999
+
+  filtered = filtered.filter(report => {
+    const reportDate = new Date(report.created_at);
+    return reportDate >= startOfDay && reportDate <= endOfDay;
+  });
+}
+
 
     setFilteredReports(filtered);
     setCurrentPage(1);
@@ -214,7 +236,71 @@ function Reports({ user }: ReportsProps) {
 
       <Title ta="center" weight={700} mb="lg" order={2}>Reportes de Ventas</Title>
 
-      {(userRole === 'cliente' || userRole === 'vendedor') && (
+      {(userRole === 'cliente') && (
+  <>
+    <Group
+      style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '2fr 2fr 1fr',
+        gap: '10px',
+        width: '100%',
+      }}
+    >
+      <Select
+        radius="md"
+        size="lg"
+        icon={<IconUser />}
+        placeholder="Filtrar por Usuario"
+        label="Filtrar Usuario"
+        transition="pop-top-left"
+        transitionDuration={80}
+        transitionTimingFunction="ease"
+        data={[{ value: 'todos', label: 'Todos' }, ...availableHandles.map(h => ({ value: h, label: h }))]}
+        value={selectedUserHandle}
+        onChange={setSelectedUserHandle}
+        styles={() => ({
+          item: {
+            '&[data-selected]': {
+              '&, &:hover': {
+                backgroundColor: '#0c2a85',
+                color: 'white',
+              },
+            },
+          },
+        })}
+      />
+
+      <DatePicker
+        dropdownType="modal"
+        radius="md"
+        size="lg"
+        icon={<IconCalendarWeek />}
+        placeholder="Filtrar Fecha"
+        label="Filtrar Fecha"
+        inputFormat="DD/MM/YYYY"
+        labelFormat="MM/YYYY"
+        value={selectedDate}
+        onChange={handleDateChange}
+      />
+
+      <Group mt={25}>
+        <Button
+          style={{ background: '#0c2a85', color: 'white' }}
+          leftIcon={<IconDownload />}
+          radius="md"
+          size="md"
+          color="indigo"
+          variant="filled"
+          onClick={() => exportToExcel(filteredReports)}
+        >
+          Descargar
+        </Button>
+      </Group>
+    </Group>
+  </>
+)}
+
+      {( userRole === 'vendedor') && (
         <>
           <Group
             style={{
@@ -254,7 +340,6 @@ function Reports({ user }: ReportsProps) {
           </Group>
         </>
       )}
-
       {userRole !== 'cliente' && userRole !== 'vendedor' && (
         <>
 
