@@ -64,13 +64,14 @@ function Dashboard({ user }: DashboardProps) {
                         {userRole === "master" ? (
                             <VentasmasterG />
                         ) : userRole === "vendedor" ? (
-                            user && <VentaVendedores userHandle={user.handle} />
+                            user && <VentaVendedores userHandle={user.handle} userRango={user.rango} />
                         ) : userRole === "cliente" && (user?.rango === "oro" || user?.rango === "plata") ? (
                             <VentaClientesOro userHandle={user.handle} />
                         ) : (
-                            user && <VentaAdminClientes userHandle={user.handle} />
+                            user && <VentaAdminClientes userHandle={user.handle} userRole={user.role} />
                         )}
                     </Tabs.Panel>
+
 
 
                     <Tabs.Panel value="control" pt="xs">

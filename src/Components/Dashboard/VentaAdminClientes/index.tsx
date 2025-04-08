@@ -9,8 +9,9 @@ import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/date
 import { Select, ScrollArea, Card, Group, Title, Text, MultiSelect, Divider, Badge, Button } from '@mantine/core';
 interface VentaAdminClientesProps {
     userHandle: string;
+    userRole:string;
 }
-function VentaAdminClientes({ userHandle }: VentaAdminClientesProps) {
+function VentaAdminClientes({ userHandle,userRole }: VentaAdminClientesProps) {
 
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
     const [users, setUsers] = useState<{ value: string; label: string }[]>([]);
@@ -165,8 +166,8 @@ function VentaAdminClientes({ userHandle }: VentaAdminClientesProps) {
                         {filteredSales.length > 0 && (
                             <div style={{ marginTop: '20px', textAlign: 'center' }}>
                                 <PDFDownloadLink
-                                    document={<SalesPDF filteredSales={filteredSales} totalVentas={totalVentas} precioTotalVentas={precioTotalVentas} />}
-                                    fileName="ventas top level.pdf"
+                                    document={<SalesPDF filteredSales={filteredSales} totalVentas={totalVentas} precioTotalVentas={precioTotalVentas} userRole={userRole} />}
+                                    fileName={`Resumen de ventas ${userHandle}.pdf`}
                                     style={{ textDecoration: 'none' }}
                                 >
                                     {({ loading }) => (
@@ -178,6 +179,7 @@ function VentaAdminClientes({ userHandle }: VentaAdminClientesProps) {
                             </div>
                         )}
                     </Group>
+                    {userRole !== 'cliente' && (
                     <MultiSelect
                         label={<Text fz="lg" c="black" fw={500}>Selecciona usuarios</Text>}
                         placeholder="Elige usuarios"
@@ -188,6 +190,7 @@ function VentaAdminClientes({ userHandle }: VentaAdminClientesProps) {
                         radius="md"
                         size="md"
                     />
+                )}
 
                     <Select
                         label={<Text fz="lg" c="black" fw={500}>Selecciona un filtro de fecha</Text>}
@@ -284,54 +287,56 @@ function VentaAdminClientes({ userHandle }: VentaAdminClientesProps) {
                             </>
                         )}
                     </div>
-                    {(selectedUsers.length === 0 || (selectedUsers.length > 1 && !selectedUsers.includes('all'))) && (
-                        <>
-                            <Title mt={15} order={4}>Ventas por usuario:</Title>
-                            {users.slice(1).map(user => {
-                                const ventasUsuario = filteredSales.filter(sale => sale.user?.handle === user.value);
 
-                                if (ventasUsuario.length === 0) return null;
+                    {userRole !== 'cliente' && (selectedUsers.length === 0 || (selectedUsers.length > 1 && !selectedUsers.includes('all'))) && (
+    <>
+        <Title mt={15} order={4}>Ventas por usuario:</Title>
+        {users.slice(1).map(user => {
+            const ventasUsuario = filteredSales.filter(sale => sale.user?.handle === user.value);
 
-                                const resumenPorProducto = ventasUsuario.reduce((acc: Record<string, { count: number; totalPrice: number }>, sale) => {
-                                    if (!acc[sale.productName]) {
-                                        acc[sale.productName] = { count: 0, totalPrice: 0 };
-                                    }
-                                    acc[sale.productName].count += 1;
-                                    acc[sale.productName].totalPrice += sale.totalPrice;
-                                    return acc;
-                                }, {} as Record<string, { count: number; totalPrice: number }>);
+            if (ventasUsuario.length === 0) return null;
 
-                                const totalUsuario = ventasUsuario.reduce((sum, sale) => sum + sale.totalPrice, 0);
+            const resumenPorProducto = ventasUsuario.reduce((acc: Record<string, { count: number; totalPrice: number }>, sale) => {
+                if (!acc[sale.productName]) {
+                    acc[sale.productName] = { count: 0, totalPrice: 0 };
+                }
+                acc[sale.productName].count += 1;
+                acc[sale.productName].totalPrice += sale.totalPrice;
+                return acc;
+            }, {} as Record<string, { count: number; totalPrice: number }>);
 
-                                return (
-                                    <Card mt={10} shadow="sm" p="lg" radius="md" withBorder key={user.value}>
-                                        <Group position="apart">
-                                            <Title order={5}>{user.label}</Title>
-                                            <Group>
-                                                <Badge fz="md" color="gray">Total de ventas: {ventasUsuario.length}</Badge>
-                                                <Text fz="xl" c="green" fw={700}>${totalUsuario.toFixed(2)}</Text>
-                                            </Group>
-                                        </Group>
-                                        <Divider my={10} />
-                                        <Title order={6} mt={10}>Resumen por producto:</Title>
-                                        {Object.entries(resumenPorProducto)
-                                            .sort(([productA], [productB]) => productOrder.indexOf(productA) - productOrder.indexOf(productB))
-                                            .map(([product, data]) => (
-                                                <Card key={product} shadow="xs" p="md" radius="md" withBorder mt={10}>
-                                                    <Group position="apart">
-                                                        <Text fz="md">{product}</Text>
-                                                        <Group>
-                                                            <Text fz="xl" c="#0c2a85" fw={700}>{data.count} <strong>Ventas</strong></Text>
-                                                            <Text fz="xl" c="green" fw={700}> ${data.totalPrice.toFixed(2)}</Text>
-                                                        </Group>
-                                                    </Group>
-                                                </Card>
-                                            ))}
-                                    </Card>
-                                );
-                            })}
-                        </>
-                    )}
+            const totalUsuario = ventasUsuario.reduce((sum, sale) => sum + sale.totalPrice, 0);
+
+            return (
+                <Card mt={10} shadow="sm" p="lg" radius="md" withBorder key={user.value}>
+                    <Group position="apart">
+                        <Title order={5}>{user.label}</Title>
+                        <Group>
+                            <Badge fz="md" color="gray">Total de ventas: {ventasUsuario.length}</Badge>
+                            <Text fz="xl" c="green" fw={700}>${totalUsuario.toFixed(2)}</Text>
+                        </Group>
+                    </Group>
+                    <Divider my={10} />
+                    <Title order={6} mt={10}>Resumen por producto:</Title>
+                    {Object.entries(resumenPorProducto)
+                        .sort(([productA], [productB]) => productOrder.indexOf(productA) - productOrder.indexOf(productB))
+                        .map(([product, data]) => (
+                            <Card key={product} shadow="xs" p="md" radius="md" withBorder mt={10}>
+                                <Group position="apart">
+                                    <Text fz="md">{product}</Text>
+                                    <Group>
+                                        <Text fz="xl" c="#0c2a85" fw={700}>{data.count} <strong>Ventas</strong></Text>
+                                        <Text fz="xl" c="green" fw={700}> ${data.totalPrice.toFixed(2)}</Text>
+                                    </Group>
+                                </Group>
+                            </Card>
+                        ))}
+                </Card>
+            );
+        })}
+    </>
+)}
+
 
                 </ScrollArea>
 

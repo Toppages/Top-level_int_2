@@ -7,10 +7,13 @@ import { useEffect, useState } from 'react';
 import { IconCalendarSearch, IconFileTypePdf } from '@tabler/icons-react';
 import { DatePicker, DateRangePicker, DateRangePickerValue } from '@mantine/dates';
 import { Select, ScrollArea, Card, Group, Title, Text, Button } from '@mantine/core';
+
 interface VentaAdminClientesProps {
     userHandle: string;
+    userRango: string;
 }
-function VentaVendedores({ userHandle }: VentaAdminClientesProps) {
+
+function VentaVendedores({ userHandle,userRango }: VentaAdminClientesProps) {
 
     const isSmallScreen = useMediaQuery('(max-width: 768px)');
     const [error, setError] = useState<string | null>(null);
@@ -49,9 +52,7 @@ function VentaVendedores({ userHandle }: VentaAdminClientesProps) {
         setTotalVentas(filteredSales.length);
         setPrecioTotalVentas(filteredSales.reduce((sum, sale) => sum + sale.totalPrice, 0));
     }, [filteredSales]);
-
-
-
+    
     useEffect(() => {
         const fetchSales = async () => {
             const token = localStorage.getItem('token');
@@ -59,23 +60,26 @@ function VentaVendedores({ userHandle }: VentaAdminClientesProps) {
                 setError('No se encontró el token. Inicia sesión nuevamente.');
                 return;
             }
-
+    
+            const endpoint = ['oro', 'plata'].includes(userRango.toLowerCase())
+                ? `/sales/original-vendedor/${userHandle}`
+                : `/sales/user/${userHandle}`;
+    
             try {
-                const response = await axios.get<Report[]>(`${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`, {
+                const response = await axios.get<Report[]>(`${import.meta.env.VITE_API_BASE_URL}${endpoint}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-
+    
                 setSales(response.data);
-
                 setFilteredSales(response.data);
             } catch (err) {
                 setError('Error al obtener los usuarios de las ventas.');
             }
         };
-
+    
         fetchSales();
     }, []);
-
+    
     useEffect(() => {
         let filtered = sales;
         if (selectedUsers.length > 0 && !selectedUsers.includes('all')) {

@@ -42,9 +42,10 @@ type SalesPDFProps = {
     filteredSales: Report[];
     totalVentas: number;
     precioTotalVentas: number;
+    userRole: string
 };
 
-const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioTotalVentas }) => {
+const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioTotalVentas, userRole }) => {
     const productOrder = [
         "Free Fire 100 Diamantes + 10 Bono",
         "Free Fire - 310 Diamantes + 31 Bono",
@@ -104,7 +105,7 @@ const SalesPDF: React.FC<SalesPDFProps> = ({ filteredSales, totalVentas, precioT
                 </View>
             </Page>
 
-            {Object.entries(salesByUser).map(([user, sales]) => {
+            {userRole !== 'cliente' && Object.entries(salesByUser).map(([user, sales]) => {
                 const totalUserSales = sales.length;
                 const totalUserPrice = sales.reduce((sum, sale) => sum + sale.totalPrice, 0);
 
