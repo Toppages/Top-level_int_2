@@ -29,6 +29,7 @@ export interface Pin {
 }
 
 export interface Report {
+    originalVendedorHandle: string;
     _id: {
         $oid: string;
     };

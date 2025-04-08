@@ -70,10 +70,11 @@ function Reports({ user }: ReportsProps) {
   }, [userHandle]);
 
   useEffect(() => {
-    if (userHandle && userRole) {
-      fetchReports(userHandle, userRole, setAllReports, setFilteredReports, setError);
+    if (user?.handle && user?.role && user?.rango) {
+      fetchReports(user.handle, user.role, user.rango, setAllReports, setFilteredReports, setError);
     }
-  }, [userHandle, userRole]);
+  }, [user]);
+  
 
   useEffect(() => {
     const uniqueHandles = [...new Set(allReports.map((report) => report.user.handle))];
@@ -150,7 +151,7 @@ function Reports({ user }: ReportsProps) {
               <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
             )}
 
-{userRole === 'cliente' && user?.rango === 'oro' && selectedReport?.originalVendedorHandle && (
+{userRole === 'cliente' && (user?.rango === 'oro' || user?.rango === 'plata') && selectedReport?.originalVendedorHandle && (
   <Group mt='md' position="apart" mb="md">
     <Title order={4}>Usuario:</Title>
     <Title order={4}>{selectedReport.originalVendedorHandle}</Title>
@@ -413,7 +414,7 @@ function Reports({ user }: ReportsProps) {
                   )}
 
                   <td style={{ textAlign: 'center' }}>{report.productName}</td>
-                  {!isMobile && userRole === 'cliente' && user?.rango === 'oro' && (
+                  {!isMobile && userRole === 'cliente' && (user?.rango === 'oro' || user?.rango === 'plata') && (
   <td style={{ textAlign: 'center' }}>{report.originalVendedorHandle || report.user.handle}</td>
 )}
 

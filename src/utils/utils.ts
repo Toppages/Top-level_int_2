@@ -33,6 +33,7 @@ export const handleSearchChange = (
 export const fetchReports = async (
   userHandle: string,
   userRole: string,
+  userRango: string,
   setAllReports: React.Dispatch<React.SetStateAction<any[]>>,
   setFilteredReports: React.Dispatch<React.SetStateAction<any[]>>,
   setError: React.Dispatch<React.SetStateAction<string | null>>
@@ -46,16 +47,26 @@ export const fetchReports = async (
   }
 
   try {
-    const url = userRole === 'master'
-      ? `${import.meta.env.VITE_API_BASE_URL}/sales`
-      : `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
+    let url = '';
+
+    if (userRole === 'master') {
+      url = `${import.meta.env.VITE_API_BASE_URL}/sales`;
+    } else if (userRole === 'admin') {
+      url = `${import.meta.env.VITE_API_BASE_URL}/sales/admin/${userHandle}`;
+    } else if (
+      userRole === 'vendedor' &&
+      (userRango === 'oro' || userRango === 'plata')
+    ) {
+      url = `${import.meta.env.VITE_API_BASE_URL}/sales/original-vendedor/${userHandle}`;
+    } else {
+      url = `${import.meta.env.VITE_API_BASE_URL}/sales/user/${userHandle}`;
+    }
 
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     const sortedReports = response.data.reverse();
-
     setAllReports(sortedReports);
     setFilteredReports(sortedReports);
 
@@ -63,6 +74,7 @@ export const fetchReports = async (
     setError('Hubo un error al obtener los reportes.');
   }
 };
+
 
 export const fetchTransactions = async (
   userHandle: string,

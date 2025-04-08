@@ -67,9 +67,6 @@ function VentaVendedores({ userHandle }: VentaAdminClientesProps) {
 
                 setSales(response.data);
 
-
-
-
                 setFilteredSales(response.data);
             } catch (err) {
                 setError('Error al obtener los usuarios de las ventas.');
