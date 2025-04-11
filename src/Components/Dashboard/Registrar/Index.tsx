@@ -30,6 +30,7 @@ interface UserFormData {
 }
 
 interface Client {
+    role: any;
     handle: string;
     _id: string;
     name: string;
@@ -75,17 +76,19 @@ function Registrar() {
 
     useEffect(() => {
         if (opened) {
-            axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/admins`)
+            axios.get<Client[]>(`${import.meta.env.VITE_API_BASE_URL}/users/CYA`)
                 .then(({ data }) => {
-                    setadmins(data.map(client => ({
+                    const grouped = data.map(client => ({
                         value: client.handle,
                         label: `${client.name} (${client.email})`,
-                    })));
+                        group: client.role
+                    }));
+                    setadmins(grouped);
                 })
                 .catch(error => console.error('Error fetching admins:', error));
         }
     }, [opened]);
-
+    
     const {
         register,
         handleSubmit,
