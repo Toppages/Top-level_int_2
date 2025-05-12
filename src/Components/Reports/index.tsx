@@ -7,33 +7,37 @@ import { fetchUserRole, fetchReports, handlePinClick, formatDateTime } from '../
 import { Group, ScrollArea, Table, Text, Modal, Title, ActionIcon, Pagination, Divider, Select, Button } from '@mantine/core';
 
 interface ReportsProps {
-  user: { _id: string; name: string; email: string; handle: string; role: string;rango:string; } | null;
+  user: { _id: string; name: string; email: string; handle: string; role: string; rango: string; } | null;
 }
 
 function Reports({ user }: ReportsProps) {
 
   const exportToExcel = (data: any[]) => {
     const filteredData = data.map((report) => {
-      const { _id, product, order_id, productName, status, pins, saleId, __v, user, created_at, totalPrice, moneydisp, originalVendedorHandle, ...cleanedReport } = report; // Excluir originalVendedorHandle
-  
+      const { _id, product, order_id, productName, status, pins, saleId, __v, user, created_at, totalPrice, moneydisp, originalVendedorHandle, quantity, previousInventarioSaldo, ...cleanedReport } = report; // Excluir los campos quantity y previousInventarioSaldo
+
       const formattedDate = new Date(report.created_at);
       const formattedDateStr = `${formattedDate.getDate().toString().padStart(2, '0')}/${(formattedDate.getMonth() + 1).toString().padStart(2, '0')}/${formattedDate.getFullYear()} ${formattedDate.getHours().toString().padStart(2, '0')}:${formattedDate.getMinutes().toString().padStart(2, '0')}`;
-  
+
       cleanedReport['Fecha'] = formattedDateStr;
       cleanedReport['ID'] = report.saleId;
       cleanedReport['Producto'] = report.productName;
       cleanedReport['Precio total'] = report.totalPrice;
-      cleanedReport['Saldo Actual'] = report.moneydisp;
-  
+
+      // Si el usuario es cliente, no incluir 'Saldo Actual'
+      if (userRole !== 'cliente') {
+        cleanedReport['Saldo Actual'] = report.moneydisp; // Solo agregar este campo si no es cliente
+      }
+
       if (userRole !== 'cliente') {
         cleanedReport['Usuario'] = report.user.handle;
       }
-  
+
       return cleanedReport;
     });
-  
+
     let fileName = 'reportes_ventas';
-  
+
     if (selectedDate) {
       const dateStr = selectedDate.toISOString().split('T')[0];
       fileName += `_fecha_${dateStr}`;
@@ -41,7 +45,7 @@ function Reports({ user }: ReportsProps) {
     if (selectedUserHandle && selectedUserHandle !== 'todos') {
       fileName += `_usuario_${selectedUserHandle}`;
     }
-  
+
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(filteredData);
     XLSX.utils.book_append_sheet(wb, ws, 'Reportes');
@@ -81,7 +85,7 @@ function Reports({ user }: ReportsProps) {
       const originalHandles = allReports
         .map((r) => r.originalVendedorHandle)
         .filter((handle) => handle); // elimina null/undefined
-  
+
       const uniqueHandles = Array.from(new Set([userHandle, ...originalHandles]));
       setAvailableHandles(uniqueHandles);
     }
@@ -114,20 +118,20 @@ function Reports({ user }: ReportsProps) {
         return userHandleMatch || originalHandleMatch;
       });
     }
-    
 
-if (selectedDate) {
-  const startOfDay = new Date(selectedDate);
-  startOfDay.setHours(0, 59, 0, 0); // 00:59
 
-  const endOfDay = new Date(selectedDate);
-  endOfDay.setHours(23, 59, 59, 999); // 23:59:59.999
+    if (selectedDate) {
+      const startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 59, 0, 0); // 00:59
 
-  filtered = filtered.filter(report => {
-    const reportDate = new Date(report.created_at);
-    return reportDate >= startOfDay && reportDate <= endOfDay;
-  });
-}
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999); // 23:59:59.999
+
+      filtered = filtered.filter(report => {
+        const reportDate = new Date(report.created_at);
+        return reportDate >= startOfDay && reportDate <= endOfDay;
+      });
+    }
 
 
     setFilteredReports(filtered);
@@ -162,7 +166,7 @@ if (selectedDate) {
               <Title order={4}>{formatDateTime(selectedReport.created_at)}</Title>
             </Group>
 
-            {userRole !== 'vendedor' && (
+            {userRole !== 'vendedor' && userRole !== 'cliente' && (
               <Group mt='md' position="apart" mb="md">
                 <Title order={4}>Saldo Disponible:</Title>
                 <Title order={4}>{selectedReport.moneydisp} USD</Title>
@@ -173,12 +177,12 @@ if (selectedDate) {
               <Title ta='center' order={4}>{selectedReport.user.handle}</Title>
             )}
 
-{userRole === 'cliente' && (user?.rango === 'oro' || user?.rango === 'plata') && selectedReport?.originalVendedorHandle && (
-  <Group mt='md' position="apart" mb="md">
-    <Title order={4}>Usuario:</Title>
-    <Title order={4}>{selectedReport.originalVendedorHandle}</Title>
-  </Group>
-)}
+            {userRole === 'cliente' && (user?.rango === 'oro' || user?.rango === 'plata') && selectedReport?.originalVendedorHandle && (
+              <Group mt='md' position="apart" mb="md">
+                <Title order={4}>Usuario:</Title>
+                <Title order={4}>{selectedReport.originalVendedorHandle}</Title>
+              </Group>
+            )}
             <Divider my="sm" size='md' variant="dashed" />
           </>
         )}
@@ -237,70 +241,70 @@ if (selectedDate) {
       <Title ta="center" weight={700} mb="lg" order={2}>Reportes de Ventas</Title>
 
       {(userRole === 'cliente') && (
-  <>
-    <Group
-      style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '2fr 2fr 1fr',
-        gap: '10px',
-        width: '100%',
-      }}
-    >
-      <Select
-        radius="md"
-        size="lg"
-        icon={<IconUser />}
-        placeholder="Filtrar por Usuario"
-        label="Filtrar Usuario"
-        transition="pop-top-left"
-        transitionDuration={80}
-        transitionTimingFunction="ease"
-        data={[{ value: 'todos', label: 'Todos' }, ...availableHandles.map(h => ({ value: h, label: h }))]}
-        value={selectedUserHandle}
-        onChange={setSelectedUserHandle}
-        styles={() => ({
-          item: {
-            '&[data-selected]': {
-              '&, &:hover': {
-                backgroundColor: '#0c2a85',
-                color: 'white',
-              },
-            },
-          },
-        })}
-      />
+        <>
+          <Group
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '2fr 2fr 1fr',
+              gap: '10px',
+              width: '100%',
+            }}
+          >
+            <Select
+              radius="md"
+              size="lg"
+              icon={<IconUser />}
+              placeholder="Filtrar por Usuario"
+              label="Filtrar Usuario"
+              transition="pop-top-left"
+              transitionDuration={80}
+              transitionTimingFunction="ease"
+              data={[{ value: 'todos', label: 'Todos' }, ...availableHandles.map(h => ({ value: h, label: h }))]}
+              value={selectedUserHandle}
+              onChange={setSelectedUserHandle}
+              styles={() => ({
+                item: {
+                  '&[data-selected]': {
+                    '&, &:hover': {
+                      backgroundColor: '#0c2a85',
+                      color: 'white',
+                    },
+                  },
+                },
+              })}
+            />
 
-      <DatePicker
-        dropdownType="modal"
-        radius="md"
-        size="lg"
-        icon={<IconCalendarWeek />}
-        placeholder="Filtrar Fecha"
-        label="Filtrar Fecha"
-        inputFormat="DD/MM/YYYY"
-        labelFormat="MM/YYYY"
-        value={selectedDate}
-        onChange={handleDateChange}
-      />
+            <DatePicker
+              dropdownType="modal"
+              radius="md"
+              size="lg"
+              icon={<IconCalendarWeek />}
+              placeholder="Filtrar Fecha"
+              label="Filtrar Fecha"
+              inputFormat="DD/MM/YYYY"
+              labelFormat="MM/YYYY"
+              value={selectedDate}
+              onChange={handleDateChange}
+            />
 
-      <Group mt={25}>
-        <Button
-          style={{ background: '#0c2a85', color: 'white' }}
-          leftIcon={<IconDownload />}
-          radius="md"
-          size="md"
-          color="indigo"
-          variant="filled"
-          onClick={() => exportToExcel(filteredReports)}
-        >
-          Descargar
-        </Button>
-      </Group>
-    </Group>
-  </>
-)}
+            <Group mt={25}>
+              <Button
+                style={{ background: '#0c2a85', color: 'white' }}
+                leftIcon={<IconDownload />}
+                radius="md"
+                size="md"
+                color="indigo"
+                variant="filled"
+                onClick={() => exportToExcel(filteredReports)}
+              >
+                Descargar
+              </Button>
+            </Group>
+          </Group>
+        </>
+      )}
 
-      {( userRole === 'vendedor') && (
+      {(userRole === 'vendedor') && (
         <>
           <Group
             style={{
@@ -457,15 +461,15 @@ if (selectedDate) {
                 )}
                 <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Producto</Title></th>
                 {!isMobile && userRole === 'cliente' && user?.rango === 'oro' && (
-  <th style={{ textAlign: 'center', color: 'white' }}>
-    <Title order={4}>Usuario</Title>
-  </th>
-)}
+                  <th style={{ textAlign: 'center', color: 'white' }}>
+                    <Title order={4}>Usuario</Title>
+                  </th>
+                )}
 
                 {userRole !== 'vendedor' && (
                   <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Precio total</Title></th>
                 )}
-                {!isMobile && userRole !== 'vendedor' && (
+                {!isMobile && userRole !== 'vendedor' && userRole !== 'cliente' && (
                   <>
                     <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Saldo Actual</Title></th>
                   </>
@@ -500,13 +504,13 @@ if (selectedDate) {
 
                   <td style={{ textAlign: 'center' }}>{report.productName}</td>
                   {!isMobile && userRole === 'cliente' && (user?.rango === 'oro' || user?.rango === 'plata') && (
-  <td style={{ textAlign: 'center' }}>{report.originalVendedorHandle || report.user.handle}</td>
-)}
+                    <td style={{ textAlign: 'center' }}>{report.originalVendedorHandle || report.user.handle}</td>
+                  )}
 
                   {userRole !== 'vendedor' && (
                     <td style={{ textAlign: 'center' }}>{report.totalPrice} USD</td>
                   )}
-                  {!isMobile && userRole !== 'vendedor' && (
+                  {!isMobile && userRole !== 'vendedor' && userRole !== 'cliente' && (
                     <>
                       <td style={{ textAlign: 'center' }}>{report.moneydisp}  USD</td>
                     </>

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { IconBox, IconMessageCircle, IconPhoto } from '@tabler/icons-react';
-import { Modal, Button, Group, Tabs, Select, TextInput } from '@mantine/core';
 import TableM from '../../TableM/Index';
 import axios from 'axios';
 import ManagePro from '../ManagePro';
-import { Product } from '../../../types/types';
 import { toast } from 'sonner';
+import { Product } from '../../../types/types';
+import { useState, useEffect } from 'react';
+import { IconBox, IconMessageCircle, IconPhoto } from '@tabler/icons-react';
+import { Modal, Button, Group, Tabs, Select, Textarea, Text } from '@mantine/core';
 
 interface HomeProps {
   navOpen: boolean;
@@ -30,7 +30,7 @@ function AdministrarInventario({ user }: HomeProps) {
   const [opened, setOpened] = useState(false);
   const [products, setProducts] = useState<SelectItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
-  const [pin, setPin] = useState('');
+  const [pins, setPins] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [, setModalStepOpened] = useState(false);
@@ -60,9 +60,9 @@ function AdministrarInventario({ user }: HomeProps) {
     fetchProducts();
   }, []);
 
-  const handleAddPin = async () => {
-    if (!selectedProduct || !pin) {
-      toast.error('Selecciona un producto y escribe un pin válido');
+  const handleAddPins = async () => {
+    if (!selectedProduct || pins.every(pin => pin === '')) {
+      toast.error('Selecciona un producto y escribe al menos un pin válido');
       return;
     }
 
@@ -70,15 +70,15 @@ function AdministrarInventario({ user }: HomeProps) {
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/products/add-pins-without-deduction`, {
         code: selectedProduct,
-        pins: [pin],
+        pins: pins.filter(pin => pin !== ''),
       });
 
       if (response.status === 200) {
-        toast.success('Pin agregado correctamente al inventario');
-        setPin('');
+        toast.success('Pins agregados correctamente al inventario');
+        setPins([]);
       }
     } catch (error) {
-      toast.error('Error al agregar el pin');
+      toast.error('Error al agregar los pins');
     } finally {
       setSending(false);
     }
@@ -88,13 +88,14 @@ function AdministrarInventario({ user }: HomeProps) {
     setOpened(false);
     setModalStepOpened(false);
   };
+
   return (
     <>
       <Modal opened={opened} onClose={handleCloseModals} title="Administrar Inventario" size="lg">
-      <Tabs defaultValue="Productos">
+        <Tabs defaultValue="Productos">
           <Tabs.List>
             <Tabs.Tab value="Productos" icon={<IconMessageCircle size={14} />}>
-            Productos en el sistema
+              Productos en el sistema
             </Tabs.Tab>
             <Tabs.Tab value="Central" icon={<IconPhoto size={14} />}>
               Inventario
@@ -105,7 +106,7 @@ function AdministrarInventario({ user }: HomeProps) {
           </Tabs.List>
 
           <Tabs.Panel value="Central" pt="xs">
-          <TableM user={user} setModalStepOpened={setModalStepOpened} />
+            <TableM user={user} setModalStepOpened={setModalStepOpened} />
           </Tabs.Panel>
 
           <Tabs.Panel value="Manualmente" pt="xs">
@@ -123,7 +124,7 @@ function AdministrarInventario({ user }: HomeProps) {
                 item: {
                   '&[data-selected]': {
                     '&, &:hover': {
-                      backgroundColor: '#0c2a85',
+                      backgroundColor: '#cc000e',
                       color: 'white',
                     },
                   },
@@ -131,38 +132,56 @@ function AdministrarInventario({ user }: HomeProps) {
               })}
             />
 
-            <TextInput
-              mt={10}
-              placeholder="Pin"
-              label="Pin a agregar"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-            />
+<Textarea
+  mt={10}
+  label="Pega los PINs (uno por línea)"
+  placeholder={`Ejemplo:\nXXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX\n\nReglas:\n• 1 PIN por línea\n• Sin espacios\n• Formato UUID (8-4-4-4-12)\n• Solo letras y números en mayúsculas`}
+  autosize
+  minRows={5}
+  value={pins.join('\n')}
+  onChange={(e) => {
+    const rawPins = e.currentTarget.value
+      .split('\n')
+      .map(pin => pin.trim().toUpperCase())
+      .filter(pin => pin !== '');
+
+    const validPins = rawPins.filter(pin =>
+      /^[A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}$/.test(pin)
+    );
+
+    const uniquePins = Array.from(new Set(validPins));
+    setPins(uniquePins);
+  }}
+/>
+
+
+            <Text mt={8} fz="sm" fw={700} c={pins.length === 0 ? 'red' : 'green'}>
+              {pins.length} Pin{pins.length === 1 ? '' : 'es'} válid{pins.length === 1 ? 'o' : 'os'} detectad{pins.length === 1 ? 'o' : 'os'}
+            </Text>
 
             <Button
               mt={15}
               fullWidth
               style={{
-                background: !selectedProduct || !pin || sending ? '#d3d3d3' : '#0c2a85',
-                cursor: !selectedProduct || !pin || sending ? 'not-allowed' : 'pointer',
+                background: !selectedProduct || pins.every(pin => pin === '') || sending ? '#d3d3d3' : '#0c2a85',
+                cursor: !selectedProduct || pins.every(pin => pin === '') || sending ? 'not-allowed' : 'pointer',
               }}
-              onClick={handleAddPin}
-              disabled={!selectedProduct || !pin || sending}
+              onClick={handleAddPins}
+              disabled={!selectedProduct || pins.every(pin => pin === '') || sending}
               loading={sending}
             >
               Agregar
             </Button>
-
           </Tabs.Panel>
 
           <Tabs.Panel value="Productos" pt="xs">
-         <ManagePro/>
+            <ManagePro />
           </Tabs.Panel>
         </Tabs>
       </Modal>
 
       <Group position="center">
-        <Button size="md" leftIcon={<IconBox />}  style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
+        <Button size="md" leftIcon={<IconBox />} style={{ background: '#0c2a85' }} onClick={() => setOpened(true)}>
           Administrar Inventario
         </Button>
       </Group>
