@@ -342,73 +342,58 @@ const BalanceReports: React.FC<{ user: any }> = ({ user }) => {
 
             {filteredTransactions.length > 0 && (
                 <Table mt={10} striped highlightOnHover withBorder withColumnBorders>
-                    <thead style={{ background: '#0c2a85' }}>
-                        <tr>
-                            <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
-                            <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
-                            {!isMobile && userRole !== 'cliente' && (
-                                <>
-                                    <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Realizado por</Title></th>
-                                    <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Beneficiado</Title></th>
-                                </>
-                            )}
-                            {!isMobile && (
-                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Saldo Anterior</Title></th>
-                            )}
-                            <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Carga de saldo</Title></th>
-                            {!isMobile && (
-                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Saldo Final</Title></th>
-                            )}
-                            {isMobile && (
-                                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Info</Title></th>
-                            )}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedReports.map((transaction) => (
-                            <tr key={transaction._id}>
-                                <td style={{ textAlign: 'center' }}>{transaction.transactionId}</td>
-                                <td style={{ textAlign: 'center' }}>
-                                    {new Date(transaction.created_at).toLocaleString('es-ES', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}
-                                </td>
+<thead style={{ background: '#0c2a85' }}>
+    <tr>
+        <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>ID</Title></th>
+        <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Fecha</Title></th>
+        {!isMobile && userRole !== 'cliente' && (
+            <>
+                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Realizado por</Title></th>
+                <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Beneficiado</Title></th>
+            </>
+        )}
+        <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Carga de saldo</Title></th>
+        {isMobile && userRole !== 'cliente' && (
+            <th style={{ textAlign: 'center', color: 'white' }}><Title order={4}>Info</Title></th>
+        )}
+    </tr>
+</thead>
 
-                                {!isMobile && userRole !== 'cliente' && (
-                                    <>
-                                        <td style={{ textAlign: 'center' }}>{transaction.transactionUserName}</td>
-                                        <td style={{ textAlign: 'center' }}>{transaction.userhandle}</td>
-                                    </>
-                                )}
-                                {!isMobile && (
-                                    <td style={{ textAlign: 'center' }}>{transaction.previousBalance} USD</td>
-                                )}
-                                <td style={{ textAlign: 'center' }}>{transaction.amount} USD</td>
-                                {!isMobile && (
-                                    <td style={{ textAlign: 'center' }}>{transaction.amount + transaction.previousBalance} USD</td>
-                                )}
-                                {isMobile && (
-
-                                    <td style={{ textAlign: 'center' }}>
-                                        <ActionIcon
-                                            style={{ background: '#0c2a85', color: 'white' }}
-                                            size="xl"
-                                            variant="filled"
-                                            onClick={() => openModal(transaction)}
-                                        >
-                                            <IconInfoCircle size={32} />
-                                        </ActionIcon>
-                                    </td>
-                                )}
-
-                            </tr>
-
-                        ))}
-                    </tbody>
+<tbody>
+    {paginatedReports.map((transaction) => (
+        <tr key={transaction._id}>
+            <td style={{ textAlign: 'center' }}>{transaction.transactionId}</td>
+            <td style={{ textAlign: 'center' }}>
+                {new Date(transaction.created_at).toLocaleString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                })}
+            </td>
+            {!isMobile && userRole !== 'cliente' && (
+                <>
+                    <td style={{ textAlign: 'center' }}>{transaction.transactionUserName}</td>
+                    <td style={{ textAlign: 'center' }}>{transaction.userhandle}</td>
+                </>
+            )}
+            <td style={{ textAlign: 'center' }}>{transaction.amount} USD</td>
+            {isMobile && userRole !== 'cliente' && (
+                <td style={{ textAlign: 'center' }}>
+                    <ActionIcon
+                        style={{ background: '#0c2a85', color: 'white' }}
+                        size="xl"
+                        variant="filled"
+                        onClick={() => openModal(transaction)}
+                    >
+                        <IconInfoCircle size={32} />
+                    </ActionIcon>
+                </td>
+            )}
+        </tr>
+    ))}
+</tbody>
 
                 </Table>
             )}

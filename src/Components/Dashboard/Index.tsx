@@ -1,24 +1,25 @@
 import AdminBR from "./AdminBR";
+import EditUser from "./EditUser";
 import Registrar from "./Registrar/Index";
-import EditAdmins from "./EditAdmins/Index";
 import EditClient from "./EditClient/Index";
 import DeleteUser from "./DeleteUser";
 import AllRetiros from "./AllRetiros";
+import EditAdmins from "./EditAdmins/Index";
 import EditmyClients from "./EditmyClients/Index";
 import LimitesmyVend from "./LimitesmyVend/Index";
 import VentasmasterG from "./VentasmasterG";
-import EditUser from "./EditUser";
-import VentaClientesOro from "./VentaClientesOro";
-import VentaVendedores from "./VentaVendedores";
-import VentaAdminClientes from "./VentaAdminClientes";
 import LimitVendedores from "./LimitVendedores/Index";
+import VentaVendedores from "./VentaVendedores";
+import VentaClientesOro from "./VentaClientesOro";
 import AdmincargoReports from "./AdmincargoReports";
 import UserCountsDisplay from "./UserCountsDisplay/Index";
-import AdministrartInventario from "./AdministrartInventario/Index";
+import VentaAdminClientes from "./VentaAdminClientes";
 import Generardesdepincentral from "./Generardesdepincentral/Index";
+import AdministrartInventario from "./AdministrartInventario/Index";
 import { Group, Tabs, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { IconCoins, IconLayoutDashboard } from "@tabler/icons-react";
+
 interface DashboardProps {
     user: { _id: string; name: string; email: string; handle: string; role: string; saldo: number; rango: string; } | null;
 }
@@ -65,7 +66,7 @@ function Dashboard({ user }: DashboardProps) {
                             <VentasmasterG />
                         ) : userRole === "vendedor" ? (
                             user && <VentaVendedores userHandle={user.handle} userRango={user.rango} />
-                        ) : userRole === "cliente" && (user?.rango === "oro" || user?.rango === "plata") ? (
+                        ) : userRole === "cliente" && user?.rango === "oro" ? (
                             <VentaClientesOro userHandle={user.handle} />
                         ) : (
                             user && <VentaAdminClientes userHandle={user.handle} userRole={user.role} />
@@ -138,7 +139,7 @@ function Dashboard({ user }: DashboardProps) {
                         )}
                         {(userRole === "cliente") && (
                             <>
-                              
+
 
                                 <Title fz="xl" mt={15} c='#0c2a85' order={5}>
                                     Vendedores

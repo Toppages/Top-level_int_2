@@ -304,7 +304,6 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                                             <tr key={product.code}>
                                                 <td style={tableTextStyle}>
                                                     {product.name.replace(/free fire\s*-\s*/gi, '').replace(/free fire/gi, '')}
-                                                    <span style={{ marginLeft: '10px' }}>({product.inventario.length} en stock)</span>
                                                 </td>
 
                                                 <td style={{ fontSize: '12px', textAlign: 'center' }}>
@@ -334,6 +333,9 @@ const StepperMa: React.FC<StepperMaProps> = ({ opened, onClose, products, active
                         )}
                     </div>
                 </Stepper.Step>
+
+
+
                 <Stepper.Step label="Confirmar" description="Ingresa cantidad de Pines">
                     {selectedProduct && (
                         <div>

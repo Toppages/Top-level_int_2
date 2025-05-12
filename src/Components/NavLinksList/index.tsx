@@ -7,7 +7,7 @@ import { UserData, NavLinksProps } from "../../types/types";
 import { fetchTotalSaldos, fetchUserData, handleLogout } from "../../utils/utils";
 import { Stack, Image, Divider, Title, NavLink, Group, Loader, Text, ActionIcon, Modal, Accordion, ScrollArea } from "@mantine/core";
 import { IconGauge, IconWallet, IconArchive, IconUsers, IconReport, IconUserFilled, IconX, IconInfoCircle } from "@tabler/icons-react";
-
+import { usePrecioTotalVentas } from "./usePrecioTotalVentas";
 
 const getSaldoColor = (rango: string) => {
     switch (rango) {
@@ -29,7 +29,64 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
     const [userData, setUserData] = useState<UserData | null>(null);
     const [adminBalance, setAdminBalance] = useState<{ saldo: number; inventarioSaldo: number } | null>(null);
     const [inventoryValue, setInventoryValue] = useState<number | null>(null);
+    const [inventoryList, setInventoryList] = useState<{ name: string; count: number }[]>([]);
+    const precioTotalVentas = usePrecioTotalVentas(userData?.handle ?? '');
+    const [totalTransactionAmount, setTotalTransactionAmount] = useState<number>(0);
 
+
+    useEffect(() => {
+        if (!userData) return;
+
+        const fetchAndSumTransactions = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                let url = '';
+                if (userData.role === 'master') {
+                    url = `${import.meta.env.VITE_API_BASE_URL}/transactions`;
+                } else {
+                    url = `${import.meta.env.VITE_API_BASE_URL}/transactions/${userData.handle}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    const totalAmount = data.reduce((acc, tx) => acc + (tx.amount || 0), 0);
+                    setTotalTransactionAmount(totalAmount);
+                }
+            } catch (error) {
+                console.error("Error al obtener las transacciones:", error);
+            }
+        };
+
+        fetchAndSumTransactions();
+
+        const intervalId = setInterval(fetchAndSumTransactions, 10000);
+        return () => clearInterval(intervalId);
+    }, [userData]);
+
+    useEffect(() => {
+        const fetchInventory = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products/inventory-count`);
+                const data = await response.json();
+                setInventoryList(data);
+            } catch (error) {
+                console.error('Error al traer el inventario:', error);
+            }
+        };
+
+        fetchInventory();
+        const intervalId = setInterval(fetchInventory, 5000);
+
+        return () => clearInterval(intervalId);
+    }, []);
 
     useEffect(() => {
         const fetchInventoryValue = async () => {
@@ -160,6 +217,34 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
                                         </ScrollArea>
                                     </Accordion.Panel>
                                 </Accordion.Item>
+
+                                <Accordion.Item value="Inventario">
+                                    <Accordion.Control>
+                                        <Title ta="center" c='#0c2a85' order={6}>
+                                            Detalles de Inventario:
+                                        </Title>
+                                    </Accordion.Control>
+                                    <Accordion.Panel>
+
+                                        <Title ta="center" c='#0c2a85' order={6}>
+                                            Total de Inventario: {inventoryValue !== null ? `${inventoryValue.toFixed(3)} USD` : 'Cargando...'}
+                                        </Title>
+
+                                        <ScrollArea style={{ height: 200 }}>
+                                            {inventoryList.length === 0 ? (
+                                                <Text color="gray">No hay datos disponibles.</Text>
+                                            ) : (
+                                                inventoryList.map((item, index) => (
+                                                    <Group key={index} position="apart" mt={4} mb={4}>
+                                                        <Text>{item.name.replace(/Free Fire\s*-?\s*([\d,.]+)\s*Diamantes\s*\+\s*([\d,.]+)\s*Bono/, "$1 + $2")} Diamantes</Text>
+                                                        <Text fw={500} c="indigo">{item.count}</Text>
+                                                    </Group>
+                                                ))
+                                            )}
+                                        </ScrollArea>
+
+                                    </Accordion.Panel>
+                                </Accordion.Item>
                             </Accordion>
                         </>
                     ) : (
@@ -215,14 +300,20 @@ function NavLinks({ active, setActiveLink }: NavLinksProps) {
 
                 {!userData || userData.role !== 'master' && userData.role !== 'vendedor' && (
                     <>
-                        <Group ml={5} mr={5} position='apart'>
-                            <Title ta="center" c='#0c2a85' order={5}>
+
+                        <Group ml={5} mr={5} position="apart">
+                            <Title ta="center" c="#0c2a85" order={5}>
                                 Saldo:
                             </Title>
                             <Title ta="center" c={userData ? getSaldoColor(userData.rango) : '#000000'} order={6}>
-                                {userData ? `${userData.saldo} USD` : 'Saldo no disponible'}
+                                {userData && userData.role === 'cliente'
+                                    ? `${(totalTransactionAmount - precioTotalVentas).toFixed(2)} USD`
+                                    : userData
+                                        ? `${userData.saldo} USD`
+                                        : 'Saldo no disponible'}
                             </Title>
                         </Group>
+
                     </>
                 )}
 

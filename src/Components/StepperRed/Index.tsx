@@ -145,7 +145,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
             });
     
             if (scrapeResponse.status !== 200 || !scrapeResponse.data.success) {
-                const errorMsg = scrapeResponse.data.message || "Ocurrió un error en el proceso.";
+                const errorMsg = scrapeResponse.data.message || "Ocurrió un error en el proceso. Vuelva a procesar la compra. Si el error persiste, comuníquese con un supervisor.";
     
                 if (errorMsg.includes("PIN ya ha sido utilizado")) {
                     setErrorMessage("Este PIN ya fue utilizado. Intenta con otro.");
@@ -232,7 +232,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
         } catch (error) {
             const errorMsg = axios.isAxiosError(error) && error.response?.data?.message
                 ? error.response.data.message
-                : "Ocurrió un error en el proceso.";
+                : "Ocurrió un error en el proceso. Vuelva a procesar la compra. Si el error persiste, comuníquese con un supervisor.";
     
             setErrorMessage(errorMsg);
         }
@@ -393,7 +393,7 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         <Button
                             onClick={handleNextStep}
                             disabled={isProcessing}
-                            style={{ display: isValidId ? 'inline-block' : 'none', background: '#0c2a85' }}
+                            style={{ background: '#0c2a85' }}
                         >
                             {isProcessing ? "Procesando..." : "Procesar"}
                         </Button>

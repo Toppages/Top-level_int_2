@@ -5,22 +5,22 @@ import { useState, useEffect } from 'react';
 import { IconAdjustments, IconSearch } from '@tabler/icons-react';
 import { fetchProductsFromAPI, updateProductAPI } from '../../../utils/utils';
 import { Table, Button, Modal, ActionIcon, Title, Group, Loader, Text, TextInput, Switch, NumberInput } from '@mantine/core';
-import * as XLSX from 'xlsx';
+// import * as XLSX from 'xlsx';
 
-const exportToExcel = (products: Product[]) => {
-    const data = products.map((product) => {
-        return product.inventario.map((item: { pin_id: any; }) => ({
-            name: product.name,
-            pin_id: item.pin_id
-        }));
-    }).flat();
+// const exportToExcel = (products: Product[]) => {
+//     const data = products.map((product) => {
+//         return product.inventario.map((item: { pin_id: any; }) => ({
+//             name: product.name,
+//             pin_id: item.pin_id
+//         }));
+//     }).flat();
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Inventarios");
+//     const ws = XLSX.utils.json_to_sheet(data);
+//     const wb = XLSX.utils.book_new();
+//     XLSX.utils.book_append_sheet(wb, ws, "Inventarios");
 
-    XLSX.writeFile(wb, "Inventarios_Productos.xlsx");
-};
+//     XLSX.writeFile(wb, "Inventarios_Productos.xlsx");
+// };
 function ManagePro() {
     const [productModalOpen, setProductModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -110,14 +110,14 @@ function ManagePro() {
                     onChange={(e) => handleSearchChange(e.currentTarget.value)}
                 />
             </Group>
-            <Button
+            {/* <Button
                 mb={10}
                 style={{ background: '#0c2a85' }}
                 fullWidth
                 onClick={() => exportToExcel(filteredProducts)}
             >
                 Descargar Inventarios
-            </Button>
+            </Button> */}
 
             {loading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
@@ -158,7 +158,6 @@ function ManagePro() {
                     <form onSubmit={handleSubmit(handleUpdateProduct)}>
                         <Title mt={5} order={1}>{selectedProduct.name}</Title>
                         <Title mt={15} order={5}></Title>
-                        <Text fw={500} fz="xl">Productos en el inventario: {selectedProduct.inventario.length}</Text>
                         <Group mt={15} mb={15} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '10px', width: '100%' }}>
                             <Controller
                                 control={control}

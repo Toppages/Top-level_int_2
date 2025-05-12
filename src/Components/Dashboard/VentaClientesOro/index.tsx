@@ -68,7 +68,6 @@ function VentaClientesOro({ userHandle }: VentaAdminClientesProps) {
 
                 setSales(response.data);
 
-                // ✅ Dentro del useEffect de fetchSales
                 const handlesSet = new Set<string>();
 
                 response.data.forEach(sale => {
