@@ -34,6 +34,10 @@ function AdministrarInventario({ user }: HomeProps) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [, setModalStepOpened] = useState(false);
+  const [selectedProductInfo, setSelectedProductInfo] = useState<Product | null>(null);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  
+  const [productsData, setProductsData] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -49,6 +53,7 @@ function AdministrarInventario({ user }: HomeProps) {
           }));
 
           setProducts(formattedProducts);
+          setProductsData(sortedProducts); 
         }
       } catch (error) {
         toast.error('Hubo un problema al obtener los productos');
@@ -116,7 +121,11 @@ function AdministrarInventario({ user }: HomeProps) {
               data={products}
               disabled={loading}
               value={selectedProduct}
-              onChange={setSelectedProduct}
+              onChange={(value) => {
+                setSelectedProduct(value);
+                const product = productsData.find((p: Product) => p.code.toString() === value);
+                setSelectedProductInfo(product || null);
+              }}
               transition="pop-top-left"
               transitionDuration={80}
               transitionTimingFunction="ease"
@@ -124,7 +133,7 @@ function AdministrarInventario({ user }: HomeProps) {
                 item: {
                   '&[data-selected]': {
                     '&, &:hover': {
-                      backgroundColor: '#cc000e',
+                      backgroundColor: '#0c2a85',
                       color: 'white',
                     },
                   },
@@ -132,6 +141,7 @@ function AdministrarInventario({ user }: HomeProps) {
               })}
             />
 
+         
 <Textarea
   mt={10}
   label="Pega los PINs (uno por línea)"
@@ -154,9 +164,10 @@ function AdministrarInventario({ user }: HomeProps) {
   }}
 />
 
-
             <Text mt={8} fz="sm" fw={700} c={pins.length === 0 ? 'red' : 'green'}>
-              {pins.length} Pin{pins.length === 1 ? '' : 'es'} válid{pins.length === 1 ? 'o' : 'os'} detectad{pins.length === 1 ? 'o' : 'os'}
+              {pins.length > 0 && selectedProductInfo
+                ? `Se agregarán ${pins.length} pin${pins.length === 1 ? '' : 'es'} a ${selectedProductInfo.name.replace(/Free Fire\s*-?\s*([\d,.]+)\s*Diamantes\s*\+\s*([\d,.]+)\s*Bono/, "$1 + $2 Diamantes")}`
+                : `${pins.length} PIN${pins.length === 1 ? '' : 'es'} válid${pins.length === 1 ? 'o' : 'os'} detectad${pins.length === 1 ? 'o' : 'os'}`}
             </Text>
 
             <Button
@@ -166,12 +177,47 @@ function AdministrarInventario({ user }: HomeProps) {
                 background: !selectedProduct || pins.every(pin => pin === '') || sending ? '#d3d3d3' : '#0c2a85',
                 cursor: !selectedProduct || pins.every(pin => pin === '') || sending ? 'not-allowed' : 'pointer',
               }}
-              onClick={handleAddPins}
+              onClick={() => setConfirmModalOpen(true)}
               disabled={!selectedProduct || pins.every(pin => pin === '') || sending}
-              loading={sending}
             >
               Agregar
             </Button>
+            <Modal
+              opened={confirmModalOpen}
+              onClose={() => setConfirmModalOpen(false)}
+              title="Confirmar acción"
+              centered
+            >
+              <Text mb="md">
+                ¿Estás seguro de que deseas agregar{' '}
+                <Text span color="#0c2a85" weight={700}>
+                  {pins.length}
+                </Text>{' '}
+                PIN{pins.length !== 1 ? 'es' : ''} al producto{' '}
+                <Text span color="#0c2a85" weight={700}>
+                  {selectedProductInfo?.name || 'seleccionado'}
+                </Text>
+                ?
+              </Text>
+
+
+              <Group position="right">
+                <Button variant="default" onClick={() => setConfirmModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  color="#0c2a85"
+                  loading={sending}
+                  onClick={async () => {
+                    await handleAddPins();
+                    setConfirmModalOpen(false);
+                  }}
+                >
+                  Confirmar
+                </Button>
+              </Group>
+            </Modal>
+
           </Tabs.Panel>
 
           <Tabs.Panel value="Productos" pt="xs">

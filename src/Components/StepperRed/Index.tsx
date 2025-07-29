@@ -10,48 +10,41 @@ import {
     Table,
     ActionIcon,
     Text,
-    TextInput,
     Card,
+    TextInput,
 } from '@mantine/core';
-import { IconEye } from '@tabler/icons-react';
+import { IconEye,IconCopy  } from '@tabler/icons-react';
 import { fetchUserData } from "../../utils/utils";
 import { Product } from '../../types/types';
+import { toast } from 'sonner';
 
 interface StepperMaProps {
     opened: boolean;
     onClose: () => void;
     products: Product[];
     user: {
-        purchaseLimits: any; _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string;admin: string;
+        purchaseLimits: any; _id: string; name: string; email: string, handle: string; role: string; saldo: number; rango: string; admin: string;
     } | null;
-
 }
 
 const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user }) => {
     const [activeStep, setActiveStep] = useState<number>(0);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-    const [playerId, setPlayerId] = useState<string>('');
-    const [isValidId, setIsValidId] = useState<boolean>(false);
-    const [errorMessage, setErrorMessage] = useState<string>('');
-    const [isAuthorizing, setIsAuthorizing] = useState<boolean>(false);
+    const [, setSelectedProduct] = useState<Product | null>(null);
+    const [, setErrorMessage] = useState<string>('');
     const [accountName, setAccountName] = useState<string>('');
-    const [recargaInfo, setRecargaInfo] = useState<{ alerta: string; mensaje: string; Nickname?: string } | null>(null);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [saleResponse, setSaleResponse] = useState<any>(null);
     const [userData, setUserData] = useState(user);
+    const [clientId, setClientId] = useState<string>('');
 
     const getPriceForUser = (product: Product, user: { rango: string } | null) => {
         const userRango = user ? user.rango : 'default';
 
         switch (userRango) {
-            case 'oro':
-                return product.price_oro;
-            case 'plata':
-                return product.price_plata;
-            case 'bronce':
-                return product.price_bronce;
-            default:
-                return product.price;
+            case 'oro': return product.price_oro;
+            case 'plata': return product.price_plata;
+            case 'bronce': return product.price_bronce;
+            default: return product.price;
         }
     };
 
@@ -66,109 +59,48 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
 
     const resetState = () => {
         setSelectedProduct(null);
-        setPlayerId('');
-        setIsValidId(false);
         setErrorMessage('');
         setAccountName('');
     };
 
-    const handleIdChange = (value: string) => {
-        setPlayerId(value);
-        setErrorMessage('');
-    };
 
-    const validatePlayerId = async () => {
-        if (!playerId) {
-            setErrorMessage("El ID del jugador no puede estar vacío.");
-            return;
-        }
-
-        setIsAuthorizing(true);
-        setErrorMessage('');
-
-        try {
-            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/validar/${playerId}`);
-            const data = response.data;
-
-            if (data.alerta === 'green') {
-                setAccountName(data.Nickname);
-                setIsValidId(true);
-            } else {
-                setErrorMessage(data.mensaje);
-                setIsValidId(false);
-            }
-        } catch (error) {
-            setErrorMessage("Error al validar el ID del jugador.");
-            setIsValidId(false);
-        }
-
-        setIsAuthorizing(false);
-    };
 
     const handleFinishClick = () => {
-
         onClose();
         setActiveStep(0);
         resetState();
         window.location.reload();
     };
+
     const handleClose = () => {
         window.location.reload();
         onClose();
     };
 
-    const handleNextStep = async () => {
-        if (!selectedProduct || !playerId) {
-            setErrorMessage("Debe seleccionar un producto y un ID de jugador válido.");
-            return;
-        }
-    
+    const handleNextStep = async (product: Product) => {
+        setSelectedProduct(product);
         setIsProcessing(true);
         setErrorMessage("");
-    
+
+        // Usa el producto directamente
         try {
-            const pinResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products/${selectedProduct.code}/pin`);
+            const pinResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products/${product.code}/pin`);
             const pinData = pinResponse.data.pin;
-    
+
             if (!pinData || !pinData.pin_id) {
-                setErrorMessage("Error al obtener el PIN del producto.");
+                const msg = "Error al obtener el PIN del producto.";
+                setErrorMessage(msg);
+                toast.error(msg);
                 setIsProcessing(false);
                 return;
             }
-    
-            const scrapeResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/redimir`, {
-                params: {
-                    GameAccountId: playerId,
-                    'hpws-pin': pinData.pin_id,
-                    'product-code': selectedProduct.code
-                }
-            });
-    
-            if (scrapeResponse.status !== 200 || !scrapeResponse.data.success) {
-                const errorMsg = scrapeResponse.data.message || "Ocurrió un error en el proceso. Vuelva a procesar la compra. Si el error persiste, comuníquese con un supervisor.";
-    
-                if (errorMsg.includes("PIN ya ha sido utilizado")) {
-                    setErrorMessage("Este PIN ya fue utilizado. Intenta con otro.");
-                } else {
-                    setErrorMessage(errorMsg);
-                    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/products/add-pins-without-deduction`, {
-                        code: selectedProduct.code,
-                        pins: [{ pin_id: pinData?.pin_id || "DEFAULT_PIN_ID" }]
-                    });
-                }
-    
-                setIsProcessing(false);
-                return;
-            }
-    
-            setRecargaInfo(scrapeResponse.data);
-    
-            const purchaseLimit = user?.purchaseLimits?.[selectedProduct.code];
+
+            const purchaseLimit = user?.purchaseLimits?.[product.code];
             const limit = purchaseLimit ? purchaseLimit.limit : 0;
-    
+
             let userForSale = user;
             let originalVendedor = null;
-    
+
             if (user?.role === 'vendedor' && user?.rango === 'oro') {
                 try {
                     const adminResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/user/${user.admin}`);
@@ -182,13 +114,14 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         saldo: userData ? userData.saldo : 0
                     };
                 } catch (err) {
-                    console.error("Error al obtener los datos del admin:", err);
-                    setErrorMessage("No se pudo obtener la información del administrador.");
+                    const msg = "No se pudo obtener la información del administrador.";
+                    setErrorMessage(msg);
+                    toast.error(msg);
                     setIsProcessing(false);
                     return;
                 }
             }
-    
+
             const saleData = {
                 user: userForSale ? {
                     id: userForSale._id,
@@ -199,14 +132,14 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                     saldo: userForSale.saldo
                 } : null,
                 originalVendedorHandle: originalVendedor ? originalVendedor.handle : null,
-                playerId,
+                playerId: clientId,
                 nickname: accountName,
                 quantity: 1,
-                price: getPriceForUser(selectedProduct, user),
-                product: selectedProduct.code,
-                productName: selectedProduct.name,
-                totalPrice: getPriceForUser(selectedProduct, user),
-                totalOriginalPrice: selectedProduct.price,
+                price: getPriceForUser(product, user),
+                product: product.code,
+                productName: product.name,
+                totalPrice: getPriceForUser(product, user),
+                totalOriginalPrice: product.price,
                 moneydisp: userForSale ? userForSale.saldo : 0,
                 status: "completado",
                 order_id: `ORD-${Date.now()}`,
@@ -215,30 +148,36 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                         serial: pinData.pin_id,
                         key: pinData.pin || "DEFAULT_KEY",
                         usado: false,
-                        productName: selectedProduct.name
+                        productName: product.name
                     }
                 ],
                 purchaseLimit: limit
             };
-    
+
             const saleResponse = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/sales`, saleData);
-    
+
             if (saleResponse.status === 201) {
                 setSaleResponse(saleResponse.data);
-                setActiveStep(2);
+                setActiveStep(1);
             } else {
-                setErrorMessage("Error al registrar la venta.");
+                const msg = "Error al registrar la venta.";
+                setErrorMessage(msg);
+                toast.error(msg);
+
             }
         } catch (error) {
             const errorMsg = axios.isAxiosError(error) && error.response?.data?.message
                 ? error.response.data.message
                 : "Ocurrió un error en el proceso. Vuelva a procesar la compra. Si el error persiste, comuníquese con un supervisor.";
-    
+
             setErrorMessage(errorMsg);
+            toast.error(errorMsg);
+
         }
-    
+
         setIsProcessing(false);
     };
+
 
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -258,6 +197,15 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                             Selecciona un Producto
                         </Title>
                         <Divider my="sm" variant="dashed" style={{ borderColor: '#ddd' }} />
+                        <TextInput
+                            placeholder="ID del cliente"
+                            label="ID del cliente"
+                            withAsterisk
+                            mb={15}
+                            value={clientId}
+                            onChange={(e) => setClientId(e.currentTarget.value)}
+                        />
+
                         {products.length > 0 ? (
 
                             <Table striped highlightOnHover>
@@ -286,6 +234,8 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                                         const isPriceGreaterThanBalance = productPrice > (user?.saldo || 0);
 
                                         const isDisabled = isLimitZero || isPriceGreaterThanBalance;
+                                        const isClientIdEmpty = clientId.trim() === '';
+                                        const isDisabledFinal = isDisabled || isProcessing || isClientIdEmpty;
 
                                         if (user?.role === 'vendedor') {
                                             const purchaseLimit = user?.purchaseLimits?.[product.code];
@@ -299,21 +249,25 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                                                     </td>
                                                     <td>
                                                         <ActionIcon
-                                                            onClick={() => {
-                                                                setSelectedProduct(product);
-                                                                setActiveStep(1);
-                                                            }}
+                                                            onClick={() => handleNextStep(product)}
                                                             style={{
-                                                                background: isDisabled ? '#d3d3d3' : '#0c2a85',
-                                                                color: isDisabled ? '#a0a0a0' : 'white',
-                                                                marginLeft: '10px'
+                                                                background: isDisabledFinal ? '#d3d3d3' : '#0c2a85',
+                                                                color: isDisabledFinal ? '#a0a0a0' : 'white',
+                                                                marginLeft: '10px',
+                                                                pointerEvents: isDisabledFinal ? 'none' : 'auto',
                                                             }}
                                                             size="lg"
                                                             variant="filled"
-                                                            disabled={isDisabled}
+                                                            disabled={isDisabledFinal}
                                                         >
-                                                            <IconEye size={26} />
+
+                                                            {isProcessing ? (
+                                                                <Text size="xs" color="white" fw={500}>...</Text> // opcional: "..." como indicativo
+                                                            ) : (
+                                                                <IconEye size={26} />
+                                                            )}
                                                         </ActionIcon>
+
                                                     </td>
                                                 </tr>
                                             );
@@ -326,20 +280,22 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                                                     </td>
                                                     <td>
                                                         <ActionIcon
-                                                            onClick={() => {
-                                                                setSelectedProduct(product);
-                                                                setActiveStep(1);
-                                                            }}
+                                                            onClick={() => handleNextStep(product)}
                                                             style={{
-                                                                background: isDisabled ? '#d3d3d3' : '#0c2a85',
-                                                                color: isDisabled ? '#a0a0a0' : 'white',
-                                                                marginLeft: '10px'
+                                                                background: isDisabledFinal ? '#d3d3d3' : '#0c2a85',
+                                                                color: isDisabledFinal ? '#a0a0a0' : 'white',
+                                                                marginLeft: '10px',
+                                                                pointerEvents: isDisabledFinal ? 'none' : 'auto',
                                                             }}
                                                             size="lg"
                                                             variant="filled"
-                                                            disabled={isDisabled}
+                                                            disabled={isDisabledFinal}
                                                         >
-                                                            <IconEye size={26} />
+                                                            {isProcessing ? (
+                                                                <Text size="xs" color="white" fw={500}>...</Text> // opcional: "..." como indicativo
+                                                            ) : (
+                                                                <IconEye size={26} />
+                                                            )}
                                                         </ActionIcon>
                                                     </td>
                                                 </tr>
@@ -357,97 +313,81 @@ const StepperRed: React.FC<StepperMaProps> = ({ opened, onClose, products, user 
                     </div>
                 </Stepper.Step>
 
-                <Stepper.Step label="Confirmar" description="Ingresa el ID del jugador">
-                    <TextInput
-                        label="ID del jugador"
-                        placeholder="Ingresa el ID"
-                        value={playerId}
-                        onChange={(e) => handleIdChange(e.target.value)}
-                        error={errorMessage}
-                    />
-
-                    {selectedProduct && (
-                        <div style={{ marginTop: '10px', display: 'none', padding: '10px', border: '1px solid #ddd' }}>
-                            <Text><strong>Producto Seleccionado:</strong> {selectedProduct.name}</Text>
-                            <Text><strong>Precio:</strong> {selectedProduct.price} USD</Text>
-                        </div>
-                    )}
-
-                    {accountName && isValidId && (
-                        <Text align="center" mt="sm" style={{ fontWeight: 'bold', color: '#28a745' }}>
-                            Nombre de cuenta validado: {accountName}
-                        </Text>
-                    )}
-
-                    <Group position="center" mt="xl">
-                        <Button variant="default" onClick={() => setActiveStep(0)}>
-                            Atrás
-                        </Button>
-                        <Button
-                            disabled={isAuthorizing}
-                            onClick={validatePlayerId}
-                            style={{ background: '#0c2a85' }}
-                        >
-                            {isAuthorizing ? "Validando..." : "Confirmar ID"}
-                        </Button>
-                        <Button
-                            onClick={handleNextStep}
-                            disabled={isProcessing}
-                            style={{ background: '#0c2a85' }}
-                        >
-                            {isProcessing ? "Procesando..." : "Procesar"}
-                        </Button>
 
 
-                    </Group>
-                </Stepper.Step>
+<Stepper.Step label="Finalización" description="Detalles de la venta">
+  <div style={{ textAlign: "center" }}>
+    {isProcessing ? (
+      <Text size="md" color="blue">Procesando venta...</Text>
+    ) : saleResponse ? (
+      <>
+        <Card>
+          <Text size="lg" fw={700} color="green">
+            Venta Registrada
+          </Text>
 
-                <Stepper.Step label="Finalización" description="Detalles de la venta">
-                    <div style={{ textAlign: "center" }}>
-                        {saleResponse ? (
-                            <>
-                                <Card>
-                                    <Text size="lg" weight={700} color="green">
-                                        🎉🎉   Recarga exitosa   🎉🎉
-                                    </Text>
-                                    <Text size="md">
-                                        <strong>Id:</strong> {saleResponse.sale.saleId}
-                                    </Text>
-                                    <Text size="md">
-                                        <strong>Producto:</strong> {saleResponse.sale.productName}
-                                    </Text>
-                                    <Text size="md">
-                                        <strong>Jugador:</strong> {saleResponse.sale.nickname} ({saleResponse.sale.playerId})
-                                    </Text>
-                                    <Text size="md">
-                                        <strong>Fecha:</strong> {`${new Date(saleResponse.sale.created_at).toISOString().split('T')[0]} ${new Date(saleResponse.sale.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
-                                    </Text>
+          <Group position="center" mt="sm">
+            <Text size="md" fw={500}>
+              ID del Cliente: {clientId}
+            </Text>
+            <ActionIcon
+              onClick={() => navigator.clipboard.writeText(clientId)}
+              variant="light"
+              color="blue"
+              size="sm"
+              title="Copiar ID"
+            >
+              <IconCopy size={16} color='blue' />
+            </ActionIcon>
+          </Group>
 
-                                    {recargaInfo && (
-                                        <div style={{ display: 'none', marginTop: '10px' }}>
-                                            <Text size="sm" color="blue">
-                                                <strong>Detalles de la Recarga:</strong>
-                                            </Text>
-                                            <Text size="sm">Alerta: {recargaInfo.alerta}</Text>
-                                            <Text size="sm">Mensaje: {recargaInfo.mensaje}</Text>
-                                            {recargaInfo.Nickname && (
-                                                <Text size="sm">Nickname: {recargaInfo.Nickname}</Text>
-                                            )}
-                                        </div>
-                                    )}
-                                </Card>
-                            </>
-                        ) : (
-                            <Text size="md">Cargando detalles de la venta...</Text>
-                        )}
-                    </div>
+          <Group position="center" mt="xs">
+            <Text size="md" fw={500}>
+              PIN: {saleResponse.sale.pins?.[0]?.serial || "No disponible"}
+            </Text>
+            <ActionIcon
+              onClick={() =>
+                saleResponse.sale.pins?.[0]?.serial &&
+                navigator.clipboard.writeText(saleResponse.sale.pins[0].serial)
+              }
+              variant="light"
+              color="blue"
+              size="sm"
+              title="Copiar PIN"
+            >
+ <IconCopy size={16} color='blue' />            </ActionIcon>
+          </Group>
 
-                    <Group position="center" mt="xl">
-                        <Button onClick={handleFinishClick} style={{ background: '#0c2a85' }}>
-                            Finalizar
-                        </Button>
-                    </Group>
-                </Stepper.Step>
+          <Text size="md" mt="xs">
+            <strong>Fecha:</strong> {`${new Date(saleResponse.sale.created_at).toISOString().split('T')[0]} ${new Date(saleResponse.sale.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
+          </Text>
+
+          <Text
+            component="a"
+            href="https://redeempins.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            color="blue"
+            mt="md"
+            style={{ display: 'inline-block' }}
+          >
+            Ir a Redimir
+          </Text>
+        </Card>
+      </>
+    ) : (
+      <Text size="md">Cargando detalles de la venta...</Text>
+    )}
+  </div>
+
+  {!isProcessing && (
+    <Group position="center" mt="xl">
+      <Button onClick={handleFinishClick} style={{ background: '#0c2a85' }}>
+        Finalizar
+      </Button>
+    </Group>
+  )}
+</Stepper.Step>
 
 
             </Stepper>
